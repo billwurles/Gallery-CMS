@@ -1,16 +1,22 @@
 package es.burl.cms.data;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
-@RequiredArgsConstructor
+import java.util.List;
+
 @AllArgsConstructor
+@Getter
 @EqualsAndHashCode
+@ToString
 public class Page {
 
-	private String name;
-	private String contentHTML;
-	private boolean showInMenu = true;
+	private String title;
+	private String url;
+	@Setter
+	private int menuOrder;
+	private String content;
+	private boolean showInMenu; // = true;
+	private List<Painting> gallery;
 
 }

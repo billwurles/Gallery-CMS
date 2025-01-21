@@ -1,0 +1,378 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="|Editor Home - ${name}|"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <!-- jQuery UI -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
+
+    <!-- jQuery UI CSS for styling -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
+
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Initialize Quill editor
+        var quill = new Quill('#richTextEditor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ header: [1, 2, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // Populate Quill editor with existing content
+        var existingContent = document.querySelector("textarea[name='content']").value;
+        if (existingContent) {
+            quill.root.innerHTML = existingContent;
+        }
+
+        // Handle form submission to include Quill content
+        document.querySelector("form").addEventListener("submit", function () {
+            var contentField = document.querySelector("textarea[name='content']");
+            contentField.value = quill.root.innerHTML; // Set the Quill content to the hidden textarea
+        });
+
+        // Function to generate URL from Title
+        function generateUrl() {
+            var title = document.getElementById('title').value; // Get the title value
+            var url = title
+                .toLowerCase() // Convert to lowercase
+                .replace(/[^\w\s-]/g, '') // Remove all non-word characters (except spaces and hyphens)
+                .replace(/\s+/g, '-') // Replace spaces with hyphens
+                .replace(/-+/g, '-'); // Replace multiple hyphens with a single hyphen
+
+            // Set the generated url into the URL field
+            document.getElementById('url').value = url;
+        }
+
+        // Add event listener to title input field
+        document.getElementById('title').addEventListener('input', generateUrl);
+    });
+</script>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-container container">
+        <input type="checkbox" name="" id=""/>
+        <div class="hamburger-lines">
+            <span class="line line1"></span>
+            <span class="line line2"></span>
+            <span class="line line3"></span>
+        </div>
+        <ul class="menu-items">
+            <li th:each="item : ${menuItems}" class="links">
+                <a href="#" th:href="@{${item.url}}"
+                   th:text="${item.name}">
+                    th:classappend="${item.url == '/${page}' ? 'active' : ''}">
+                </a>
+            </li>
+        </ul>
+        <h1 class="logo">
+            <a href="/">AHC Web Editor</a>
+        </h1>
+    </div>
+</nav>
+<div>
+    <h1 th:text="|${name}|"></h1>
+    <div th:if="${message}" style="color: green;">
+        <p th:text="${message}"></p>
+    </div>
+
+    <h1>Site Content:</h1>
+    <form th:action="@{/edit/{url}/save(url=${page.url})}" th:object="${page}" method="post">
+        <!-- Save Button -->
+        <button type="submit">Save</button><br>
+        <!-- Page title and URL -->
+        <label for="title">Title:</label>
+        <input id="title" type="text" th:field="*{title}" placeholder="Enter the title" required />
+        <br>
+
+        <label for="url">URL:</label>
+        <input id="url" type="text" th:field="*{url}" placeholder="Enter the URL" required />
+        <br>
+
+        <label for="showInMenu">Show page in Navigation menu:</label>
+        <input id="showInMenu" type="checkbox" th:field="*{showInMenu}" />
+        <br>
+
+        <label for="richTextEditor">Content:</label>
+        <div id="richTextEditor" style="height: 200px; background: #fff; border: 1px solid #ccc;"></div>
+        <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
+        <br>
+
+        <!-- Gallery section -->
+        <a th:href="@{/edit/{url}/gallery(url=${page.url})}">
+            <h2>Edit Gallery</h2>
+        </a>
+    </form>
+
+    <!-- Display saved content -->
+    <h2>Content Preview:</h2>
+    <div th:if="${page.content}" th:utext="${page.content}"></div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Make the image list sortable
+        $("#image-list").sortable({
+            placeholder: "sortable-placeholder"
+        });
+
+        // Serialize the order of images before form submission
+        $("form").on("submit", function () {
+            const orderedPaintingTitles = $("#image-list li").map(function () {
+                return $(this).data("id"); // Extract the title from the data-id attribute
+            }).get();
+
+            // Set the ordered painting titles as a hidden input value
+            $("#orderedPaintingTitles").val(JSON.stringify(orderedPaintingTitles));
+        });
+    });
+</script>
+</body>
+
+<style>
+*,
+*::after,
+*::before {
+box-sizing: border-box;
+padding: 0;
+margin: 0;
+}
+
+.html {
+font-size: 62.5%;
+}
+
+.navbar input[type="checkbox"],
+.navbar .hamburger-lines {
+display: none;
+}
+
+.container {
+max-width: 1200px;
+width: 90%;
+margin: auto;
+}
+
+.navbar {
+/* box-shadow: 0px 5px 10px 0px #aaa; */
+/* position: fixed; */
+width: 100%;
+background: #fff;
+color: #000;
+opacity: 0.85;
+z-index: 100;
+}
+
+.navbar-container {
+display: flex;
+justify-content: space-between;
+height: 64px;
+align-items: center;
+}
+
+.menu-items {
+order: 2;
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+}
+.logo {
+order: 1;
+font-size: 1.2rem;
+}
+
+.menu-items li {
+list-style: none;
+font-size: 1.2rem;
+margin-left: 1rem;
+padding-top: 5px;
+}
+
+.navbar a {
+color: #2c3e50;
+text-decoration: none;
+font-weight: 500;
+font-weight: bold;
+/* transition: color 0.3s ease-in-out; */
+}
+
+.navbar a.router-link-exact-active {
+color: #42b983;
+}
+
+.navbar a:hover {
+color: #117964;
+}
+
+@media (max-width: 778px) {
+.navbar {
+opacity: 0.95;
+}
+
+.navbar-container input[type="checkbox"],
+.navbar-container .hamburger-lines {
+display: block;
+}
+
+.navbar-container {
+display: block;
+position: relative;
+height: px;
+}
+
+.navbar-container input[type="checkbox"] {
+position: absolute;
+display: block;
+height: 32px;
+width: 30px;
+top: 20px;
+left: 20px;
+z-index: 5;
+opacity: 0;
+cursor: pointer;
+}
+
+.navbar-container .hamburger-lines {
+display: block;
+height: 28px;
+width: 35px;
+position: absolute;
+top: 20px;
+left: 20px;
+z-index: 2;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+}
+
+.navbar-container .hamburger-lines .line {
+display: block;
+height: 4px;
+width: 100%;
+border-radius: 10px;
+background: #333;
+}
+
+.navbar-container .hamburger-lines .line1 {
+transform-origin: 0% 0%;
+transition: transform 0.3s ease-in-out;
+}
+
+.navbar-container .hamburger-lines .line2 {
+transition: transform 0.2s ease-in-out;
+}
+
+.navbar-container .hamburger-lines .line3 {
+transform-origin: 0% 100%;
+transition: transform 0.3s ease-in-out;
+}
+
+.navbar .menu-items {
+padding-top: 100px;
+background: #fff;
+height: 100vh;
+max-width: 300px;
+transform: translate(-150%);
+display: flex;
+flex-direction: column;
+margin-left: -40px;
+padding-left: 40px;
+transition: transform 0.5s ease-in-out;
+box-shadow: 5px 0px 10px 0px #aaa;
+overflow: scroll;
+}
+
+.navbar .menu-items li {
+margin-bottom: 1.8rem;
+font-size: 1.1rem;
+font-weight: 500;
+}
+
+.logo {
+position: absolute;
+top: 18px;
+right: 15px;
+font-size: 1.5rem;
+}
+
+.navbar-container input[type="checkbox"]:checked ~ .menu-items {
+transform: translateX(0);
+}
+
+.navbar-container input[type="checkbox"]:checked ~ .hamburger-lines .line1 {
+transform: rotate(45deg);
+}
+
+.navbar-container input[type="checkbox"]:checked ~ .hamburger-lines .line2 {
+transform: scaleY(0);
+}
+
+.navbar-container input[type="checkbox"]:checked ~ .hamburger-lines .line3 {
+transform: rotate(-45deg);
+}
+}
+
+@media (max-width: 500px) {
+.navbar-container input[type="checkbox"]:checked ~ .logo {
+display: none;
+}
+}
+/* #nav {
+display: flex;
+align-items: center;
+top: 0;
+z-index: 1;
+}
+
+nav {
+padding: 0px 30px;
+}
+
+nav a {
+padding-bottom: 10px;
+font-weight: bold;
+color: #33404e;
+text-decoration: none;
+font-weight: bold;
+}
+
+nav a.active-nav-link {
+color: #605f6c;
+}
+
+.nav-links {
+display: flex;
+flex-wrap: wrap;
+padding-bottom: 5px;
+}
+.links {
+padding-left: 20px;
+padding-bottom: 10px;
+list-style: none;
+}
+.links a:hover {
+color: #706f7c;
+}
+.logo {
+font-size: 20px;
+color: darkslategray;
+font-weight: bold;
+} */
+
+</style>
+</html>

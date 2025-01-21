@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>iWeb Importer</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<h1>Upload and Extract ZIP File</h1>
+
+<form method="post" action="/import/upload" enctype="multipart/form-data">
+  <input type="file" name="file" accept=".zip" required>
+  <button type="submit">Upload</button>
+</form>
+
+<p th:if="${message}" th:text="${message}"></p>
+
+<div th:if="${extractedPath}">
+  <h2>Extracted Files:</h2>
+  <p th:text="'Files are extracted to: ' + ${extractedPath}"></p>
+</div>
+</body>
+</html>

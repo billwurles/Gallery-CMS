@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+<!-- Console Appender: Output logs to the console -->
+<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+        <!-- Pattern for console log output -->
+<!--        <pattern>-->
+<!--            %clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%-5level]){blue} %clr(%logger{36}){yellow} - %msg%n-->
+<!--        </pattern>-->
+        <pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+</appender>
+
+<!-- Root logger: Default logging level -->
+<root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+</root>
+
+<!-- Log level for common Spring packages -->
+<logger name="org.springframework.web" level="ERROR"/>
+<logger name="org.springframework" level="INFO"/>
+
+<!-- Enable debug level logging for certain packages -->
+<logger name="es.burl" level="DEBUG"/>
+
+</configuration>

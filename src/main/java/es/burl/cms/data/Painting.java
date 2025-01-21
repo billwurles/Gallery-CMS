@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class Painting {
-	private String imagePath;
-	private String title;
+	private final String title;
+	private final String imagePath;
 	private String dimensions;
 	private boolean sold = false;
 }
