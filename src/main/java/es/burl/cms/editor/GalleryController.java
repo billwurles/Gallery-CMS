@@ -1,11 +1,7 @@
 package es.burl.cms.editor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import es.burl.cms.data.Gallery;
-import es.burl.cms.data.Page;
-import es.burl.cms.data.Painting;
-import es.burl.cms.data.Site;
+import es.burl.cms.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,15 +13,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -60,31 +55,33 @@ public class GalleryController {
 	}
 
 	@PostMapping("/save")
-	public String saveGallery(@PathVariable("pageUrl") String pageUrl,
-							  @RequestBody Gallery gallery,
-							  Model model) {
+	public ResponseEntity<Map<String, String>> saveGallery(
+								@PathVariable("pageUrl") String pageUrl,
+							  	@RequestBody Gallery gallery) {
 		// Get the page object
 		Page page = site.getPage(pageUrl);
-//		if (page != null && gallery != null) {
-//			List<Painting> updatedGallery = new ArrayList<>();
-//
-//			// Update the gallery with the new list of paintings
-//			page.setGallery(gallery);
-//		}
 
-		// Save the updated page with the new gallery order
-		site.addNewPage(page.getTitle(), pageUrl, page.getContent(), page.isShowInMenu(), gallery);
+		// Prepare a response map
+		Map<String, String> response = new HashMap<>();
 
-		// Pass the saved content back to the view
-		model.addAttribute("message", "Content saved successfully!");
-		model.addAttribute("page", page);
-		model.addAttribute("hasGallery", page.getGallery() != null);
-		model.addAttribute("menuItems", site.getMenuItems());
+		if (page != null && gallery != null) {
+			// Replace the old gallery with the new one
+			page.setGallery(gallery);
 
-		return "editor/EditGallery";
+			// Save the updated page with the new gallery
+			site.addNewPage(page.getTitle(), pageUrl, page.getContent(), page.isShowInMenu(), gallery);
+
+			// Success message
+			response.put("status", "success");
+			response.put("message", "Content saved successfully!");
+        	return ResponseEntity.ok(response);
+		} else {
+			// Failure message
+			response.put("status", "failure");
+			response.put("message", "Error: Page or gallery data is missing.");
+        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    	}
 	}
-
-
 
 	@GetMapping("/upload")
 	public String getUploadPage(@PathVariable("pageUrl") String pageUrl, Model model) {
@@ -101,46 +98,30 @@ public class GalleryController {
 
 	@PostMapping("/upload")
 	public String uploadGallery(@PathVariable("pageUrl") String pageUrl,
-								@RequestParam("images") List<MultipartFile> images,
-								@RequestParam("metadata") String metadataJson,
+                            	@RequestBody ImageUploadDTO imageUploadDTO, // Handle JSON payload
 								Model model) throws JsonProcessingException {
 		Page page = site.getPage(pageUrl);
 		if (page == null) {
 			return "404"; // Return a 404 page if the page is not found
 		}
 
-		// Parse the metadata JSON into Painting objects
-		ObjectMapper objectMapper = new ObjectMapper();
-		List<Painting> paintings = objectMapper.readValue(metadataJson,
-				objectMapper.getTypeFactory().constructCollectionType(List.class, Painting.class));
+    	// Iterate over the images and metadata
+		for (ImageUploadDTO.ImageData newImage : imageUploadDTO.getImages()) {
+			String imageData = newImage.imageData();
+			byte[] imageBytes = Base64.getDecoder().decode(imageData.split(",")[1]); // Decode base64 image
 
-		// Check if the number of images matches the number of metadata entries
-		if (paintings.size() != images.size()) {
-			log.warn("Mismatch between images and metadata: {} images, {} metadata entries", images.size(), paintings.size());
-			// TODO: send this message to frontend
-			// Optionally, send this message to the frontend
-			// Return error page or message if necessary
-		}
+			// Construct the file path and save the image
+			Path uploadPath = Paths.get(galleryRoot, pageUrl, newImage.filename());
+			try {
+				Files.createDirectories(uploadPath.getParent());
+				Files.write(uploadPath, imageBytes);  // Save the image file
 
-		// Save images to the filesystem and update painting objects with the image path
-		for (int i = 0; i < images.size(); i++) {
-			MultipartFile image = images.get(i);
-			Painting painting = paintings.get(i); // Get the current painting metadata
-
-			if (!image.isEmpty()) {
-				String filename = painting.getFilename();  // Use the filename from the request
-				Path uploadPath = Paths.get(galleryRoot, pageUrl, filename);
-				try {
-					Files.createDirectories(uploadPath.getParent());
-					Files.write(uploadPath, image.getBytes());
-
-					// Save updated gallery to the site object
-					page.addPaintingToGallery(painting);
-				} catch (IOException e) {
-					log.error("Failed to save image: {}", filename, e);
-				}
-			} else {
-				log.warn("Skipped empty file: {}", image.getOriginalFilename());
+				// Create a Painting object and update gallery
+				Painting painting = new Painting(newImage.title(), newImage.filename(), newImage.dimensions(),
+						newImage.sold(), newImage.order());
+						page.addPaintingToGallery(painting);
+			} catch (IOException e) {
+				log.error("Failed to save image: {}", newImage.filename(), e);
 			}
 		}
 

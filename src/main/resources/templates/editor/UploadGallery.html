@@ -31,7 +31,7 @@
     const previewContainer = $('#preview-container');
     const metadata = [];
 
-    // Custom function to generate a ID in the format xxxxxxx-xxxx
+    // Custom function to generate a unique ID
     function generateID() {
         return 'xxxxxxx-xxxx'.replace(/[x]/g, function() {
             var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -62,7 +62,7 @@
                     title: "",
                     dimensions: "",
                     sold: false,
-                    originalFilename: file.name  // Save original filename for reference
+                    imageData: e.target.result // Store base64 image data
                 });
             };
             reader.readAsDataURL(file);
@@ -98,7 +98,7 @@
                         <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
                     </div>
                 `);
-                metadata.push({ file, title: "", dimensions: "", sold: false });
+                metadata.push({ file, title: "", dimensions: "", sold: false, imageData: e.target.result });
             };
             reader.readAsDataURL(file);
         });
@@ -122,33 +122,27 @@
             metadata[id].sold = $(this).is(':checked');
         });
 
-        id = generateID();
+        // Create a new unique ID for the batch
+        const id = generateID();
 
-        // Create FormData object to send with AJAX
-        const formData = new FormData();
-        metadata.forEach((meta, index) => {
-            // Construct the new filename format
-            const newFilename = `${meta.title}_${meta.dimensions}_${meta.sold}_${id}.jpg`;
-
-            // Attach the file with the new filename
-            formData.append('images', meta.file, newFilename);
-        });
-
-        // Also include the metadata as JSON
-        formData.append('metadata', JSON.stringify(metadata.map(meta => ({
+        // Create JSON data structure
+        const jsonData = {
+            newImages: metadata.map((meta, index) => ({
             title: meta.title,
+            filename: `${meta.title}_${meta.dimensions}_${meta.sold}_${id}.jpg`,
             dimensions: meta.dimensions,
             sold: meta.sold,
-            filename: `${meta.title}_${meta.dimensions}_${meta.sold}_${id}.jpg` // Include the new filename format in metadata
-        }))));
+                order: index + 1,  // Assuming "order" starts from 1
+                imageData: meta.imageData
+            }))
+        };
 
-        // Send the data via AJAX
+        // Send data via AJAX
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
-            data: formData,
-            processData: false,  // Let the browser set the content type
-            contentType: false,  // Don't set content type because FormData does this
+            contentType: 'application/json',
+            data: JSON.stringify(jsonData),  // Send as JSON
             success: function () {
                 alert('Gallery and metadata saved successfully!');
                 location.reload();

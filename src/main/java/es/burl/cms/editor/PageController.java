@@ -1,6 +1,7 @@
 package es.burl.cms.editor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import es.burl.cms.data.Gallery;
 import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
@@ -26,10 +27,9 @@ public class PageController {
 
 	@GetMapping(value = { "", "/" })
 	public String newPage(Model model){
-		List<MenuItem> menu = site.getMenuItems();
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("message", "Creating new page");
-		model.addAttribute("page", new Page("","",-10,"",true, null));
+		model.addAttribute("page", new Page("","",-10,"",true, Gallery.Empty()));
 		return "editor/EditPage";
 	}
 
@@ -42,7 +42,7 @@ public class PageController {
 		if (page != null) {
 			model.addAttribute("message", "Editing page "+page.getTitle());
 			model.addAttribute("page", page);  // Pass the page to the model
-			model.addAttribute("hasGallery", page.getGallery() != null);
+			model.addAttribute("hasGallery", page.hasGallery());
 			return "editor/EditPage";
 		} else {
 			return "404";  // Return a "404.html" page if page not found
@@ -56,8 +56,7 @@ public class PageController {
 							  @RequestParam String url,
 							  @RequestParam String content,
 							  @RequestParam boolean showInMenu,
-							  @RequestParam(required = false) String orderedPaintingTitles,
-							  Model model) throws JsonProcessingException {
+							  Model model) {
 		// Save the page content (title, url, content, showInMenu)
 
 		site.addNewPage(title, url, content, showInMenu, site.getPageGallery(originalPageUrl));
@@ -70,7 +69,7 @@ public class PageController {
 		Page page = site.getPage(url);
 		model.addAttribute("message", "Content saved successfully!");
 		model.addAttribute("page", page); // Pass the saved content back to the view
-		model.addAttribute("hasGallery", page.getGallery() != null);
+		model.addAttribute("hasGallery", page.hasGallery());
 		model.addAttribute("menuItems", site.getMenuItems());
 		return "editor/EditPage";
 	}

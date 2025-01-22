@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 public class Gallery {
 
 	@JsonProperty("gallery")
-	private Map<String, Painting> gallery;
+	private final Map<String, Painting> gallery;
 
 	@JsonCreator
 	public Gallery(@JsonProperty("gallery") Map<String, Painting> gallery){
@@ -32,6 +33,14 @@ public class Gallery {
 	public List<Painting> getGalleryInOrder(){
 		return gallery.values().stream()
 				.sorted(Comparator.comparingInt(Painting::getOrder))
-				.collect(Collectors.toUnmodifiableList());
+				.toList();
+	}
+
+	public boolean isEmpty(){
+		return gallery.isEmpty();
+	}
+
+	public static Gallery Empty(){
+		return new Gallery(new HashMap<String, Painting>());
 	}
 }

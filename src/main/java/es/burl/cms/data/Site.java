@@ -1,19 +1,11 @@
 package es.burl.cms.data;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -73,11 +65,6 @@ public class Site {
 		return pages.get(url).getGallery();
 	}
 
-	public List<Painting> getPageGalleryOrderedList(String url) {
-		return pages.get(url).getGallery().getGalleryInOrder();
-	}
-
-
 
 
 
@@ -97,7 +84,7 @@ public class Site {
 		for(int i=1; i<3; i++){
 			String url = "pageurl"+i;
 			pages.put(url,
-					new Page("pageTitle"+i, url, i, "some content"+i, true, null)
+					new Page("pageTitle"+i, url, i, "some content"+i, true, new Gallery(new ArrayList<>()))
 			);
 		}
 		pages.put("the-sea", new Page("The Sea","the-sea",3,"",true, getImageFiles(galleryDir)));
@@ -126,7 +113,7 @@ public class Site {
 		}
 
 		// List to hold ImageFile objects
-		HashMap<String, Painting> imageFiles = new HashMap();
+		Map<String, Painting> imageFiles = new HashMap<>();
 
 		boolean sold = true;
 		// Traverse the directory
@@ -140,8 +127,7 @@ public class Site {
 				String fileNameWithoutExt = file.getName().replace(".jpg", "");
 
 				// Add the Painting object to the list
-				if(sold) sold = false;
-				else sold = true;
+				sold = !sold;
 				imageFiles.put(fileNameWithoutExt, new Painting(fileNameWithoutExt, file.getName(), "10x10", sold, i++));
 			}
 		}

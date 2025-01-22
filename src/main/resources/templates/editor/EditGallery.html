@@ -25,8 +25,8 @@
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
                 <a href="#" th:href="@{${item.url}}"
-                   th:text="${item.name}">
-                    th:classappend="${item.url == '/${page}' ? 'active' : ''}">
+                   th:text="${item.name}"
+                   th:classappend="${item.url == '/${page}' ? 'active' : ''}">
                 </a>
             </li>
         </ul>
@@ -38,8 +38,8 @@
 
 <div>
     <h1 th:text="|${name}|"></h1>
-    <div th:if="${message}" style="color: green;">
-        <p th:text="${message}"></p>
+    <div th:if="${message}" th:style="'color: ' + (${status} == 'success' ? 'green' : 'red')">
+        <p id="messageContainer" th:text="${message}"></p>
     </div>
     <a th:href="@{/page/{url}/gallery/upload(url=${page.url})}">Upload Images to Gallery</a>
     <h1>Gallery Content:</h1>
@@ -53,21 +53,21 @@
         <h2 th:if="${hasGallery}">Gallery of Paintings:</h2>
         <div th:if="${hasGallery}">
             <ul id="image-list">
-                <li th:each="painting, iterStat : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}">
+    <li th:each="painting : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}" th:data-order="${painting.order}">
                     <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.url},filename=${painting.filename})}"
                          th:alt="${painting.title}"
                          style="width: 100px; height: auto;" />
 
                     <!-- Editable Fields for title, dimensions, and sold -->
                     <div>
-                        <label for="title-[[${iterStat.index}]]">Title:</label>
-                        <input type="text" id="title-[[${iterStat.index}]]" value="${painting.title}" />
+                        <label th:for="'title-' + ${painting.order}">Title:</label>
+                        <input type="text" th:id="'title-' + ${painting.order}" th:value="${painting.title}" />
 
-                        <label for="dimensions-[[${iterStat.index}]]">Dimensions:</label>
-                        <input type="text" id="dimensions-[[${iterStat.index}]]" value="${painting.dimensions}" />
+                        <label th:for="'dimensions-' + ${painting.order}">Dimensions:</label>
+                        <input type="text" th:id="'dimensions-' + ${painting.order}" th:value="${painting.dimensions}" />
 
-                        <label for="sold-[[${iterStat.index}]]">Sold:</label>
-                        <input type="checkbox" id="sold-[[${iterStat.index}]]" th:checked="${painting.sold}" />
+                        <label th:for="'sold-' + ${painting.order}">Sold:</label>
+                        <input type="checkbox" th:id="'sold-' + ${painting.order}" th:checked="${painting.sold}" />
                     </div>
                 </li>
             </ul>
@@ -76,39 +76,71 @@
         <input type="hidden" id="galleryData" name="galleryData" />
     </form>
 </div>
-</body>
 
 <script>
     $(document).ready(function () {
         // Make the image list sortable
         $("#image-list").sortable({
-            placeholder: "sortable-placeholder"
+            placeholder: "sortable-placeholder",
+            update: function (event, ui) {
+                // After the list is reordered, update the order of each painting
+                $("#image-list li").each(function (index) {
+                    $(this).attr("data-order", index + 1); // Update the order based on the new position
+                });
+            }
         });
 
         // Serialize the gallery data before form submission
-        $("#galleryForm").on("submit", function () {
+        $("#galleryForm").on("submit", function (event) {
+            event.preventDefault(); // Prevent the default form submission
+
             const galleryData = {
                 gallery: {}
             };
 
             // Loop through each image and create the gallery data object
-            $("#image-list li").each(function (index) {
+            $("#image-list li").each(function () {
                 const filename = $(this).data("id");
+                const order = $(this).data("order");
 
-                // Gather the painting data
+                // Gather the painting data from the input fields using painting.order
                 galleryData.gallery[filename] = {
-                    title: $("#title-" + index).val(),
-                    dimensions: $("#dimensions-" + index).val(),
-                    sold: $("#sold-" + index).prop("checked"),
-                    order: index // Set the order based on the position in the list
+                    title: $("#title-" + $(this).find("input[id^='title-']").attr("id").split('-')[1]).val(),
+                    filename: filename, // Add the filename
+                    dimensions: $("#dimensions-" + $(this).find("input[id^='dimensions-']").attr("id").split('-')[1]).val(),
+                    sold: $("#sold-" + $(this).find("input[id^='sold-']").attr("id").split('-')[1]).prop("checked"),
+                    order: order // Get the updated order from the data-order attribute
                 };
             });
 
-            // Set the gallery data as a hidden field value in JSON format
-            $("#galleryData").val(JSON.stringify(galleryData));
+            // Send the data via AJAX
+            $.ajax({
+                url: $(this).attr("action"), // Use the form's action URL
+                method: "POST",
+                contentType: "application/json", // Set Content-Type to JSON
+                data: JSON.stringify(galleryData), // Send the gallery data as a JSON string
+                success: function (response) {
+                // Update the message container based on the status
+                const messageContainer = $("#messageContainer");
+                const responseMessage = response.message;
+
+                if (response.status === "success") {
+                    messageContainer.html("<p style='color: green;'>" + responseMessage + "</p>");
+                } else if (response.status === "failure") {
+                    messageContainer.html("<p style='color: red;'>" + responseMessage + "</p>");
+                }
+                },
+                error: function (xhr, status, error) {
+                // On error, display a failure message
+                $("#messageContainer").html("<p style='color: red;'>An error occurred: " + error + "</p>");
+                }
+            });
         });
     });
 </script>
+
+</body>
+
 
 <style>
 *,
