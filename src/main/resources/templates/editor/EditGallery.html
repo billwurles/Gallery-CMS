@@ -12,7 +12,6 @@
 
     <!-- jQuery UI CSS for styling -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
-
 </head>
 <body>
 <nav class="navbar">
@@ -36,35 +35,48 @@
         </h1>
     </div>
 </nav>
+
 <div>
     <h1 th:text="|${name}|"></h1>
     <div th:if="${message}" style="color: green;">
         <p th:text="${message}"></p>
     </div>
+    <a th:href="@{/page/{url}/gallery/upload(url=${page.url})}">Upload Images to Gallery</a>
+    <h1>Gallery Content:</h1>
+    <p>Drag paintings to rearrange</p>
 
-    <h1>Site Content:</h1>
-    <form th:action="@{/edit/{url}/gallery/save(url=${page.url})}" th:object="${page}" method="post">
+    <form id="galleryForm" th:action="@{/page/{url}/gallery/save(url=${page.url})}" method="post">
         <!-- Save Button -->
-        <button type="submit">Save</button>
+        <button type="submit">Save Changes</button>
 
         <!-- Gallery section -->
         <h2 th:if="${hasGallery}">Gallery of Paintings:</h2>
         <div th:if="${hasGallery}">
             <ul id="image-list">
-                <li th:each="painting : ${page.gallery}"
-                    th:data-id="${painting.title}"
-                    th:data-path="${painting.imagePath}">
-                    <img th:src="@{${painting.imagePath}}"
+                <li th:each="painting, iterStat : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}">
+                    <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.url},filename=${painting.filename})}"
                          th:alt="${painting.title}"
                          style="width: 100px; height: auto;" />
-                    <span th:text="${painting.title}"></span>
+
+                    <!-- Editable Fields for title, dimensions, and sold -->
+                    <div>
+                        <label for="title-[[${iterStat.index}]]">Title:</label>
+                        <input type="text" id="title-[[${iterStat.index}]]" value="${painting.title}" />
+
+                        <label for="dimensions-[[${iterStat.index}]]">Dimensions:</label>
+                        <input type="text" id="dimensions-[[${iterStat.index}]]" value="${painting.dimensions}" />
+
+                        <label for="sold-[[${iterStat.index}]]">Sold:</label>
+                        <input type="checkbox" id="sold-[[${iterStat.index}]]" th:checked="${painting.sold}" />
+                    </div>
                 </li>
             </ul>
-            <!-- Hidden input to store the ordered list of painting titles -->
-            <input type="hidden" id="orderedPaintingTitles" name="orderedPaintingTitles" />
         </div>
+        <!-- Hidden input to store the gallery JSON -->
+        <input type="hidden" id="galleryData" name="galleryData" />
     </form>
 </div>
+</body>
 
 <script>
     $(document).ready(function () {
@@ -73,18 +85,30 @@
             placeholder: "sortable-placeholder"
         });
 
-        // Serialize the order of images before form submission
-        $("form").on("submit", function () {
-            const orderedPaintingTitles = $("#image-list li").map(function () {
-                return $(this).data("id"); // Extract the title from the data-id attribute
-            }).get();
+        // Serialize the gallery data before form submission
+        $("#galleryForm").on("submit", function () {
+            const galleryData = {
+                gallery: {}
+            };
 
-            // Set the ordered painting titles as a hidden input value
-            $("#orderedPaintingTitles").val(JSON.stringify(orderedPaintingTitles));
+            // Loop through each image and create the gallery data object
+            $("#image-list li").each(function (index) {
+                const filename = $(this).data("id");
+
+                // Gather the painting data
+                galleryData.gallery[filename] = {
+                    title: $("#title-" + index).val(),
+                    dimensions: $("#dimensions-" + index).val(),
+                    sold: $("#sold-" + index).prop("checked"),
+                    order: index // Set the order based on the position in the list
+                };
+            });
+
+            // Set the gallery data as a hidden field value in JSON format
+            $("#galleryData").val(JSON.stringify(galleryData));
         });
     });
 </script>
-</body>
 
 <style>
 *,

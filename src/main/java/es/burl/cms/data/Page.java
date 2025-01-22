@@ -17,6 +17,13 @@ public class Page {
 	private int menuOrder;
 	private String content;
 	private boolean showInMenu; // = true;
-	private List<Painting> gallery;
+	private Gallery gallery;
 
+	public void addPaintingToGallery(Painting painting){
+		gallery.addPainting(painting);
+	}
+
+	public void replaceGallery(Gallery gallery){
+		this.gallery = gallery;
+	}
 }

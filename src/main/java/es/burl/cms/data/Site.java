@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
@@ -31,7 +32,7 @@ public class Site {
 		return pages.values().stream()
 				.filter(Page::isShowInMenu)
 				.sorted(Comparator.comparingInt(Page::getMenuOrder))
-				.map(page -> new MenuItem(page.getTitle(), "/edit/"+page.getUrl()))
+				.map(page -> new MenuItem(page.getTitle(), "/page/"+page.getUrl()))
 				.collect(Collectors.toList());
 	}
 
@@ -58,7 +59,7 @@ public class Site {
 		}
 	}
 
-	public void addNewPage(String title, String url, String content, boolean showInMenu, List<Painting> gallery){
+	public void addNewPage(String title, String url, String content, boolean showInMenu, Gallery gallery){
 		log.debug("Saving page to site: {}, {}, {}, {}", title,url,content,showInMenu);
 		pages.put(url, new Page(title, url, pages.size()+1, content, showInMenu, gallery));
 	}
@@ -68,7 +69,30 @@ public class Site {
 		pages.remove(url);
 	}
 
-	public static Site getFakeSite(){ //TODO: make a test class
+	public Gallery getPageGallery(String url) {
+		return pages.get(url).getGallery();
+	}
+
+	public List<Painting> getPageGalleryOrderedList(String url) {
+		return pages.get(url).getGallery().getGalleryInOrder();
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	public static Site getFakeSite(String galleryDir){ //TODO: make a test class
 		HashMap<String, Page> pages = new HashMap<>();
 		for(int i=1; i<3; i++){
 			String url = "pageurl"+i;
@@ -76,41 +100,53 @@ public class Site {
 					new Page("pageTitle"+i, url, i, "some content"+i, true, null)
 			);
 		}
-		pages.put("the-sea", new Page("The Sea","the-sea",3,"",true, getImageFiles()));
+		pages.put("the-sea", new Page("The Sea","the-sea",3,"",true, getImageFiles(galleryDir)));
 //		pages.put("otherulr", new Page("pagetitlenoshow","otherulr",-1,"more content",false, null));
 		return new Site("Editor CMS thing", pages);
 	}
 
-	public static List<Painting> getImageFiles() {
+	public static Gallery getImageFiles(String galleryDir) {
 		// Locate the folder in the static/images directory
-		File imageDir = null;
-		try {
-			imageDir = new ClassPathResource("static/images/extracted-ahc-images/thesea").getFile();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		File imageDir = null;
+//		try {
+//			imageDir = new ClassPathResource("static/images/extracted-ahc-images/thesea").getFile();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+		// Locate the folder in the uploadDir folder instead of resources
+		File imageDir = new File(galleryDir, "the-sea");
 
-		// List to hold ImageFile objects
-		List<Painting> imageFiles = new ArrayList<>();
-
-		// Traverse the directory
-		for (File file : imageDir.listFiles()) {
-			// Ensure it's a file and ends with .jpg
-			if (file.isFile() && file.getName().endsWith(".jpg")) {
-				// Extract filename without extension
-				String fileNameWithoutExt = file.getName().replace(".jpg", "");
-
-				String relativePath = "/images/extracted-ahc-images/thesea/" + file.getName();
-
-				// Add the Painting object to the list
-				imageFiles.add(new Painting(fileNameWithoutExt, relativePath));
+		// Check if the directory exists, create it if necessary
+		if (!imageDir.exists()) {
+			log.debug("Directory {} does not exist, creating",imageDir);
+			if (!imageDir.mkdirs()) {
+				// Handle error if directory cannot be created
+				log.error("Failed to create directory: " + imageDir.getAbsolutePath());
 			}
 		}
 
-		return imageFiles;
+		// List to hold ImageFile objects
+		HashMap<String, Painting> imageFiles = new HashMap();
+
+		boolean sold = true;
+		// Traverse the directory
+		int i = 0;
+		for (File file : imageDir.listFiles()) {
+//			log.debug("Traversing dir for file: {}",file);
+			// Ensure it's a file and ends with .jpg
+			if (file.isFile() && file.getName().endsWith(".jpg")) {
+//				log.debug("Found jpg - {}", file.getName());
+				// Extract filename without extension
+				String fileNameWithoutExt = file.getName().replace(".jpg", "");
+
+				// Add the Painting object to the list
+				if(sold) sold = false;
+				else sold = true;
+				imageFiles.put(fileNameWithoutExt, new Painting(fileNameWithoutExt, file.getName(), "10x10", sold, i++));
+			}
+		}
+
+		return new Gallery(imageFiles);
 	}
 
-	public List<Painting> getPageGallery(String url) {
-		return pages.get(url).getGallery();
-	}
 }

@@ -92,7 +92,7 @@
     </div>
 
     <h1>Site Content:</h1>
-    <form th:action="@{/edit/{url}/save(url=${page.url})}" th:object="${page}" method="post">
+    <form th:action="@{/page/{url}/save(url=${page.url})}" th:object="${page}" method="post">
         <!-- Save Button -->
         <button type="submit">Save</button><br>
         <!-- Page title and URL -->
@@ -114,7 +114,7 @@
         <br>
 
         <!-- Gallery section -->
-        <a th:href="@{/edit/{url}/gallery(url=${page.url})}">
+        <a th:href="@{/page/{url}/gallery(url=${page.url})}">
             <h2>Edit Gallery</h2>
         </a>
     </form>

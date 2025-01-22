@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="|Gallery Upload - ${page.title}|"></title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+<nav class="navbar">
+    <h1 th:text="|Gallery Upload for ${page.title}|"></h1>
+</nav>
+
+<div>
+    <h2 th:text="${message}"></h2>
+
+    <!-- Drag-and-Drop Zone -->
+    <div id="drag-and-drop-zone" style="border: 2px dashed #ccc; padding: 20px; text-align: center;">
+        <p>Drag and drop images here</p>
+        <input type="file" id="file-input" multiple style="display: none;">
+        <button type="button" id="file-input-trigger">Select Files</button>
+    </div>
+
+    <!-- Preview and Metadata Form -->
+    <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{/page/{pageUrl}/gallery/upload(pageUrl=${page.url})}">
+        <div id="preview-container"></div>
+        <input type="hidden" name="metadata" id="metadata">
+        <button type="submit">Save All</button>
+    </form>
+</div>
+
+<script>
+    const previewContainer = $('#preview-container');
+    const metadata = [];
+
+    // Custom function to generate a ID in the format xxxxxxx-xxxx
+    function generateID() {
+        return 'xxxxxxx-xxxx'.replace(/[x]/g, function() {
+            var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            return chars.charAt(Math.floor(Math.random() * chars.length));
+        });
+    }
+
+    // Trigger file input when 'Select Files' button is clicked
+    $('#file-input-trigger').on('click', () => $('#file-input').click());
+
+    // Handle the file input change (when files are selected from the file dialog)
+    $('#file-input').on('change', function () {
+        const files = this.files;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const fileId = metadata.length;
+                previewContainer.append(`
+                    <div>
+                        <img src="${e.target.result}" alt="Preview" style="width: 100px;">
+                        <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title">
+                        <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
+                        <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
+                    </div>
+                `);
+                metadata.push({
+                    file,
+                    title: "",
+                    dimensions: "",
+                    sold: false,
+                    originalFilename: file.name  // Save original filename for reference
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Drag over handler to prevent default behavior (browser will try to open the image)
+    $('#drag-and-drop-zone').on('dragover', function (e) {
+        e.preventDefault();
+        $(this).css('background-color', '#f0f0f0'); // Optional: change background color when dragging over
+    });
+
+    // Drag leave handler to reset the background color
+    $('#drag-and-drop-zone').on('dragleave', function () {
+        $(this).css('background-color', ''); // Reset background color when drag leaves
+    });
+
+    // Handle drop event for the drag-and-drop zone
+    $('#drag-and-drop-zone').on('drop', function (e) {
+        e.preventDefault();  // Prevent the browser from trying to open the image
+        $(this).css('background-color', ''); // Reset background color when the files are dropped
+
+        const files = e.originalEvent.dataTransfer.files;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const fileId = metadata.length;
+                previewContainer.append(`
+                    <div>
+                        <img src="${e.target.result}" alt="Preview" style="width: 100px;">
+                        <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title">
+                        <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
+                        <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
+                    </div>
+                `);
+                metadata.push({ file, title: "", dimensions: "", sold: false });
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Submit the form and send the data using AJAX
+    $('#metadata-form').on('submit', function (e) {
+        e.preventDefault();
+
+        // Collect metadata (title, dimensions, sold)
+        $('.metadata-title').each(function () {
+            const id = $(this).data('id');
+            metadata[id].title = $(this).val();
+        });
+        $('.metadata-dimensions').each(function () {
+            const id = $(this).data('id');
+            metadata[id].dimensions = $(this).val();
+        });
+        $('.metadata-sold').each(function () {
+            const id = $(this).data('id');
+            metadata[id].sold = $(this).is(':checked');
+        });
+
+        id = generateID();
+
+        // Create FormData object to send with AJAX
+        const formData = new FormData();
+        metadata.forEach((meta, index) => {
+            // Construct the new filename format
+            const newFilename = `${meta.title}_${meta.dimensions}_${meta.sold}_${id}.jpg`;
+
+            // Attach the file with the new filename
+            formData.append('images', meta.file, newFilename);
+        });
+
+        // Also include the metadata as JSON
+        formData.append('metadata', JSON.stringify(metadata.map(meta => ({
+            title: meta.title,
+            dimensions: meta.dimensions,
+            sold: meta.sold,
+            filename: `${meta.title}_${meta.dimensions}_${meta.sold}_${id}.jpg` // Include the new filename format in metadata
+        }))));
+
+        // Send the data via AJAX
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: formData,
+            processData: false,  // Let the browser set the content type
+            contentType: false,  // Don't set content type because FormData does this
+            success: function () {
+                alert('Gallery and metadata saved successfully!');
+                location.reload();
+            },
+            error: function () {
+                alert('Error saving gallery.');
+            }
+        });
+    });
+</script>
+
+
+</body>
+</html>
