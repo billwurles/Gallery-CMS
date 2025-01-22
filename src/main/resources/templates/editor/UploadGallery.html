@@ -31,10 +31,10 @@
     const previewContainer = $('#preview-container');
     const metadata = [];
 
-    // Custom function to generate a unique ID
-    function generateID() {
-        return 'xxxxxxx-xxxx'.replace(/[x]/g, function() {
-            var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+// Function to generate a unique ID for each image
+    function generateUniqueID() {
+        return 'xxx-xxx'.replace(/[x]/g, function() {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             return chars.charAt(Math.floor(Math.random() * chars.length));
         });
     }
@@ -42,27 +42,27 @@
     // Trigger file input when 'Select Files' button is clicked
     $('#file-input-trigger').on('click', () => $('#file-input').click());
 
-    // Handle the file input change (when files are selected from the file dialog)
+    // Handle file input change (when files are selected via dialog)
     $('#file-input').on('change', function () {
         const files = this.files;
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function (e) {
                 const fileId = metadata.length;
+const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename without extension
                 previewContainer.append(`
                     <div>
                         <img src="${e.target.result}" alt="Preview" style="width: 100px;">
-                        <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title">
+    <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title" value="${fileNameWithoutExt}">
                         <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
                         <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
                     </div>
                 `);
                 metadata.push({
-                    file,
-                    title: "",
+                    imageData: e.target.result.split(',')[1], // Save Base64-encoded image data
+title: fileNameWithoutExt, // Default title is filename without extension
                     dimensions: "",
-                    sold: false,
-                    imageData: e.target.result // Store base64 image data
+                    sold: false
                 });
             };
             reader.readAsDataURL(file);
@@ -90,15 +90,22 @@
             const reader = new FileReader();
             reader.onload = function (e) {
                 const fileId = metadata.length;
+const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename without extension
                 previewContainer.append(`
                     <div>
                         <img src="${e.target.result}" alt="Preview" style="width: 100px;">
-                        <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title">
+    <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title" value="${fileNameWithoutExt}">
                         <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
                         <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
                     </div>
                 `);
-                metadata.push({ file, title: "", dimensions: "", sold: false, imageData: e.target.result });
+
+metadata.push({
+imageData: e.target.result.split(',')[1], // Save Base64-encoded image data
+title: fileNameWithoutExt, // Default title is filename without extension
+dimensions: "",
+sold: false
+});
             };
             reader.readAsDataURL(file);
         });
@@ -122,27 +129,27 @@
             metadata[id].sold = $(this).is(':checked');
         });
 
-        // Create a new unique ID for the batch
-        const id = generateID();
-
-        // Create JSON data structure
-        const jsonData = {
-            newImages: metadata.map((meta, index) => ({
+        // Prepare the JSON payload
+        const payload = {
+        images: metadata.map(meta => {
+        const uniqueID = generateUniqueID();
+        return {
             title: meta.title,
-            filename: `${meta.title}_${meta.dimensions}_${meta.sold}_${id}.jpg`,
+            filename: `${meta.title.replace(/[^a-zA-Z0-9]/g, '_')}_${uniqueID}.jpg`, // Add unique ID to the filename
             dimensions: meta.dimensions,
             sold: meta.sold,
-                order: index + 1,  // Assuming "order" starts from 1
-                imageData: meta.imageData
-            }))
+            order: "", // Add order if necessary
+            imageData: meta.imageData // Base64 image data
+        };
+            })
         };
 
-        // Send data via AJAX
+        // Send the JSON payload via AJAX
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify(jsonData),  // Send as JSON
+            data: JSON.stringify(payload),
             success: function () {
                 alert('Gallery and metadata saved successfully!');
                 location.reload();

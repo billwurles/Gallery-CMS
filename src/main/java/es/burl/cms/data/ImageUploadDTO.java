@@ -3,10 +3,11 @@ package es.burl.cms.data;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.List;
 
-
+@ToString
 @Getter
 public class ImageUploadDTO {
 
@@ -17,7 +18,17 @@ public class ImageUploadDTO {
 		this.images = images;
 	}
 
-	public record ImageData(String title, String filename, String dimensions, boolean sold, int order, String imageData) {
+	@Getter
+	@ToString
+	public static class ImageData {
+
+		private final String title;
+		private final String filename;
+		private final String dimensions;
+		private final boolean sold;
+		private final int order;
+		private final String imageData;
+
 		@JsonCreator
 		public ImageData(@JsonProperty("title") String title,
 						 @JsonProperty("filename") String filename,

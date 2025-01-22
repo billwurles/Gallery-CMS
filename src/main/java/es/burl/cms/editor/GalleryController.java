@@ -96,6 +96,7 @@ public class GalleryController {
 		}
 	}
 
+	//TODO: pass in nextInt in order, prepopulate Title with original filename
 	@PostMapping("/upload")
 	public String uploadGallery(@PathVariable("pageUrl") String pageUrl,
                             	@RequestBody ImageUploadDTO imageUploadDTO, // Handle JSON payload
@@ -105,23 +106,27 @@ public class GalleryController {
 			return "404"; // Return a 404 page if the page is not found
 		}
 
+		log.debug("Got imageDTO: {}", imageUploadDTO.toString());
+
     	// Iterate over the images and metadata
+		int order = page.getGallery().getGallery().size();
 		for (ImageUploadDTO.ImageData newImage : imageUploadDTO.getImages()) {
-			String imageData = newImage.imageData();
-			byte[] imageBytes = Base64.getDecoder().decode(imageData.split(",")[1]); // Decode base64 image
+			String imageData = newImage.getImageData();
+			byte[] imageBytes = Base64.getDecoder().decode(imageData); // Decode base64 image
 
 			// Construct the file path and save the image
-			Path uploadPath = Paths.get(galleryRoot, pageUrl, newImage.filename());
+			Path uploadPath = Paths.get(galleryRoot, pageUrl, newImage.getFilename());
 			try {
 				Files.createDirectories(uploadPath.getParent());
 				Files.write(uploadPath, imageBytes);  // Save the image file
 
 				// Create a Painting object and update gallery
-				Painting painting = new Painting(newImage.title(), newImage.filename(), newImage.dimensions(),
-						newImage.sold(), newImage.order());
+				Painting painting = new Painting(newImage.getTitle(), newImage.getFilename(), newImage.getDimensions(),
+						newImage.isSold(), order++);
+				log.debug("Creating new Painting object: {}", painting.toString());
 						page.addPaintingToGallery(painting);
 			} catch (IOException e) {
-				log.error("Failed to save image: {}", newImage.filename(), e);
+				log.error("Failed to save image: {}", newImage.getFilename(), e);
 			}
 		}
 
