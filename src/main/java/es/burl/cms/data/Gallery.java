@@ -1,5 +1,6 @@
 package es.burl.cms.data;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -8,35 +9,37 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
+@JsonAutoDetect(
+		fieldVisibility = JsonAutoDetect.Visibility.ANY,
+		getterVisibility = JsonAutoDetect.Visibility.NONE,
+		isGetterVisibility = JsonAutoDetect.Visibility.NONE)
 public class Gallery {
 
 	@JsonProperty("gallery")
-	private final List<Painting> gallery;
+	private final Map<String, Painting> gallery;
+
+	//TODO: A boolean flag of whether or not to display titles / other metadata
 
 	@JsonCreator
 	public Gallery(@JsonProperty("gallery") Map<String, Painting> gallery){
-		this.gallery = new ArrayList<>(gallery.values());
+		this.gallery = gallery;
 	}
 
-	public Gallery(List<Painting> paintings){
-		this.gallery = paintings;
+	public Painting getPainting(String filename){
+		return gallery.get(filename);
 	}
 
 	protected void addPainting(Painting painting) {
-		gallery.add(painting);
+		gallery.put(painting.getFilename(), painting);
 	}
 
 	public List<Painting> getGalleryInOrder(){
-		return gallery.stream()
+		return gallery.values().stream()
 				.sorted(Comparator.comparingInt(Painting::getOrder))
 				.toList();
 	}
 
 	public boolean isEmpty(){
 		return gallery.isEmpty();
-	}
-
-	public static Gallery Empty(){
-		return new Gallery(Collections.EMPTY_LIST);
 	}
 }

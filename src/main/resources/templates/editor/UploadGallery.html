@@ -2,18 +2,38 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title th:text="|Gallery Upload - ${page.title}|"></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body>
 <nav class="navbar">
-    <h1 th:text="|Gallery Upload for ${page.title}|"></h1>
+    <div class="navbar-container container">
+        <input type="checkbox" name="" id=""/>
+        <div class="hamburger-lines">
+            <span class="line line1"></span>
+            <span class="line line2"></span>
+            <span class="line line3"></span>
+        </div>
+        <ul class="menu-items">
+            <li th:each="item : ${menuItems}" class="links">
+                <a href="#" th:href="@{${item.url}}"
+                   th:text="${item.name}"
+                   th:classappend="${item.url == '/${page}' ? 'active' : ''}">
+                </a>
+            </li>
+        </ul>
+        <h1 class="logo">
+            <a href="/" th:text="|Gallery Upload for ${page.title}|"></a>
+        </h1>
+    </div>
 </nav>
 
 <div>
     <h2 th:text="${message}"></h2>
 
     <!-- Drag-and-Drop Zone -->
-    <div id="drag-and-drop-zone" style="border: 2px dashed #ccc; padding: 20px; text-align: center;">
+    <div id="drag-and-drop-zone">
         <p>Drag and drop images here</p>
         <input type="file" id="file-input" multiple style="display: none;">
         <button type="button" id="file-input-trigger">Select Files</button>
@@ -55,6 +75,7 @@ const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename w
                         <img src="${e.target.result}" alt="Preview" style="width: 100px;">
     <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title" value="${fileNameWithoutExt}">
                         <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
+                        <input type="text" placeholder="Medium" data-id="${fileId}" class="metadata-medium">
                         <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
                     </div>
                 `);
@@ -62,6 +83,7 @@ const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename w
                     imageData: e.target.result.split(',')[1], // Save Base64-encoded image data
 title: fileNameWithoutExt, // Default title is filename without extension
                     dimensions: "",
+                    medium: "",
                     sold: false
                 });
             };
@@ -96,6 +118,7 @@ const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename w
                         <img src="${e.target.result}" alt="Preview" style="width: 100px;">
     <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title" value="${fileNameWithoutExt}">
                         <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
+                        <input type="text" placeholder="Medium" data-id="${fileId}" class="metadata-medium">
                         <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
                     </div>
                 `);
@@ -104,6 +127,7 @@ metadata.push({
 imageData: e.target.result.split(',')[1], // Save Base64-encoded image data
 title: fileNameWithoutExt, // Default title is filename without extension
 dimensions: "",
+medium: "",
 sold: false
 });
             };
@@ -115,7 +139,7 @@ sold: false
     $('#metadata-form').on('submit', function (e) {
         e.preventDefault();
 
-        // Collect metadata (title, dimensions, sold)
+        // Collect metadata (title, dimensions, medium, sold)
         $('.metadata-title').each(function () {
             const id = $(this).data('id');
             metadata[id].title = $(this).val();
@@ -123,6 +147,10 @@ sold: false
         $('.metadata-dimensions').each(function () {
             const id = $(this).data('id');
             metadata[id].dimensions = $(this).val();
+        });
+        $('.metadata-medium').each(function () {
+            const id = $(this).data('id');
+            metadata[id].medium = $(this).val();
         });
         $('.metadata-sold').each(function () {
             const id = $(this).data('id');
@@ -137,6 +165,7 @@ sold: false
             title: meta.title,
             filename: `${meta.title.replace(/[^a-zA-Z0-9]/g, '_')}_${uniqueID}.jpg`, // Add unique ID to the filename
             dimensions: meta.dimensions,
+            medium: meta.medium,
             sold: meta.sold,
             order: "", // Add order if necessary
             imageData: meta.imageData // Base64 image data
@@ -163,4 +192,5 @@ sold: false
 
 
 </body>
+
 </html>

@@ -1,4 +1,4 @@
-package es.burl.cms.editor;
+package es.burl.cms.controllers.editor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import es.burl.cms.data.Gallery;
@@ -11,6 +11,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -29,10 +31,32 @@ public class PageController {
 	public String newPage(Model model){
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("message", "Creating new page");
-		model.addAttribute("page", new Page("","",-10,"",true, Gallery.Empty()));
+		model.addAttribute("newPage", true);
+		model.addAttribute("page", new Page("","",-10,"",true, new Gallery(new HashMap<>())));
 		return "editor/EditPage";
 	}
 
+	//TODO: Have a live flag (maybe instead of showInMenu) so that DIY pages aren't live
+
+	@PostMapping("/save") //TODO: How to handle gallery before page is saved
+	public String saveNewPage(@RequestParam String title,
+							  @RequestParam String url,
+							  @RequestParam String content,
+							  @RequestParam boolean showInMenu,
+							  Model model) {
+		// Save the page content (title, url, content, showInMenu)
+		site.addNewPage(title, url, content, showInMenu, new Gallery(new HashMap<>()));
+
+		// Pass the saved content back to the view
+		Page page = site.getPage(url);
+		model.addAttribute("message", "Content saved successfully!");
+		model.addAttribute("page", page); // Pass the saved content back to the view
+		model.addAttribute("hasGallery", page.hasGallery());
+		model.addAttribute("menuItems", site.getMenuItems());
+		return "redirect:/page/"+url;
+	}
+
+	//TODO: When you change page URL, you will need to update the folder structure of gallery
 	@GetMapping("/{pageUrl}") // TODO: make it work with trailing slash
 	public String editPage(@PathVariable("pageUrl") String pageUrl, Model model){
 		model.addAttribute("menuItems", site.getMenuItems());

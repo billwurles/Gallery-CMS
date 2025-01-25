@@ -3,13 +3,11 @@
 <head>
     <title th:text="|Editor Home - ${name}|"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <!-- jQuery -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <!-- jQuery, UI & UI CSS-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
-    <!-- jQuery UI -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
-
-    <!-- jQuery UI CSS for styling -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
 
 </head>
@@ -24,10 +22,7 @@
         </div>
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
-                <a href="#" th:href="@{${item.url}}"
-                   th:text="${item.name}">
-                   th:classappend="${item.url == '/${page}' ? 'active' : ''}">
-                </a>
+                    <a href="#" th:href="@{${item.url}}" th:text="${item.name}" th:classappend="${item.url == '/${page}' ? 'active' : ''}"></a>
             </li>
         </ul>
         <h1 class="logo">
@@ -36,7 +31,8 @@
     </div>
 </nav>
 
-<div>
+<!-- Main Content -->
+<div class="content">
     <h1 th:text="|${name}|"></h1>
     <p>This is where you edit your site, select a page <a href="/page">or create a new one</a></p>
 
@@ -51,53 +47,43 @@
 <!--        <li>Item 4</li>-->
 <!--    </ul>-->
 
-    <form action="/rearrange" method="post">
-        <ul id="sortable">
-            <li th:each="page : ${pages}" th:data-id="${page.menuOrder}" th:text="${page.title}"></li>
-        </ul>
-        <div id="hiddenInputs"></div>
-        <button type="submit">Save Order</button>
-    </form>
+    <ul id="sortable">
+        <li th:each="page : ${pages}"
+        th:data-id="${page.order}"
+        th:data-url="${page.url}"
+        th:text="${page.title}">
+        </li>
+    </ul>
 
     <script>
         $(document).ready(function () {
-            $("#sortable").sortable(); // Enable sortable functionality
-
-            // Update hidden inputs before form submission
-            $("form").on("submit", function () {
-                const hiddenInputs = $("#hiddenInputs");
-                hiddenInputs.empty(); // Clear existing hidden inputs
-
-                // Generate a hidden input for each ID in the new order
-                $("#sortable li").each(function () {
-                    const id = $(this).data("id");
-                    hiddenInputs.append(
-                        `<input type="hidden" name="order" value="${id}" />`
-                    );
+    $("#sortable").sortable({
+        update: function(event, ui) {
+            // Generate the new order in 'order: url' format
+            let order = {};
+            $("#sortable li").each(function(index) {
+                let pageUrl = $(this).data("url");  // Assuming the page URL is stored in 'data-url'
+                order[index] = pageUrl;  // Store the index as the key (order) and page URL as the value
                 });
+
+                // Send the order as a JSON request via AJAX
+                $.ajax({
+                    url: '/rearrange', // URL to handle the request
+                    type: 'POST',
+                contentType: 'application/json', // Set content type to JSON
+                data: JSON.stringify(order), // Send the new order as JSON
+                    success: function(response) {
+                        alert("Page order saved successfully!");
+                    window.location.reload();  // Optionally reload page to reflect changes
+                    },
+                    error: function(xhr, status, error) {
+                        alert("An error occurred while saving the order.");
+                    }
+                });
+        }
             });
         });
     </script>
-
-<!--    <script>-->
-<!--        $(document).ready(function() {-->
-<!--            // Make sure jQuery UI's sortable is correctly initialized-->
-<!--            $("#sortable").sortable({-->
-<!--                update: function(event, ui) {-->
-<!--                    var newOrder = [];-->
-<!--                    $("#sortable li").each(function() {-->
-<!--                        newOrder.push($(this).data("id"));-->
-<!--                    });-->
-<!--        -->
-<!--                    // Update hidden inputs or process new order as needed-->
-<!--                    $('input[name="order"]').each(function(index) {-->
-<!--                        $(this).val(newOrder[index]);-->
-<!--                    });-->
-<!--                }-->
-<!--            });-->
-<!--            $("#sortable").disableSelection();  // Optional: prevents text selection while dragging-->
-<!--        });-->
-<!--    </script>-->
 </div>
 
 </body>

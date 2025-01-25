@@ -25,6 +25,7 @@ public class ImageUploadDTO {
 		private final String title;
 		private final String filename;
 		private final String dimensions;
+		private final String medium;
 		private final boolean sold;
 		private final int order;
 		private final String imageData;
@@ -33,12 +34,14 @@ public class ImageUploadDTO {
 		public ImageData(@JsonProperty("title") String title,
 						 @JsonProperty("filename") String filename,
 						 @JsonProperty("dimensions") String dimensions,
+						 @JsonProperty("medium") String medium,
 						 @JsonProperty("sold") boolean sold,
 						 @JsonProperty("order") int order,
 						 @JsonProperty("imageData") String imageData) {
 			this.title = title;
 			this.filename = filename;
 			this.dimensions = dimensions;
+			this.medium = medium;
 			this.sold = sold;
 			this.order = order;
 			this.imageData = imageData;

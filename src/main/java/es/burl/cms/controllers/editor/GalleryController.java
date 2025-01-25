@@ -1,4 +1,4 @@
-package es.burl.cms.editor;
+package es.burl.cms.controllers.editor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import es.burl.cms.data.*;
@@ -32,7 +32,7 @@ public class GalleryController {
 	private final String galleryRoot;
 
 	@Autowired
-	public GalleryController(Site site, @Qualifier("galleryRoot") String galleryRoot) {
+	public GalleryController(Site site, String galleryRoot) {
 		this.site = site;
 		this.galleryRoot = galleryRoot;
 	}
@@ -83,6 +83,8 @@ public class GalleryController {
     	}
 	}
 
+	//TODO: Be able to delete images from gallery / delete entire gallery
+
 	@GetMapping("/upload")
 	public String getUploadPage(@PathVariable("pageUrl") String pageUrl, Model model) {
 		Page page = site.getPage(pageUrl);
@@ -96,7 +98,7 @@ public class GalleryController {
 		}
 	}
 
-	//TODO: pass in nextInt in order, prepopulate Title with original filename
+	//TODO: pass in nextInt in order
 	@PostMapping("/upload")
 	public String uploadGallery(@PathVariable("pageUrl") String pageUrl,
                             	@RequestBody ImageUploadDTO imageUploadDTO, // Handle JSON payload
@@ -122,9 +124,10 @@ public class GalleryController {
 
 				// Create a Painting object and update gallery
 				Painting painting = new Painting(newImage.getTitle(), newImage.getFilename(), newImage.getDimensions(),
-						newImage.isSold(), order++);
+				newImage.getMedium(), newImage.isSold(), order++);
 				log.debug("Creating new Painting object: {}", painting.toString());
-						page.addPaintingToGallery(painting);
+				page.addPaintingToGallery(painting);
+
 			} catch (IOException e) {
 				log.error("Failed to save image: {}", newImage.getFilename(), e);
 			}
@@ -134,7 +137,8 @@ public class GalleryController {
 		model.addAttribute("page", page);
 		model.addAttribute("message", "Gallery uploaded and metadata saved successfully!");
 
-		return "editor/EditGallery";
+//		return "redirect: /page/"+pageUrl+"/gallery";
+		return "editor/EditGallery"; //TODO: automatic redirect back to gallery
 	}
 
 	@GetMapping("/image/{filename}")
