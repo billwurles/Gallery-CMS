@@ -1,8 +1,6 @@
 package es.burl.cms.controllers.editor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import es.burl.cms.data.Gallery;
-import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 @Slf4j
 @RequestMapping("/page")
@@ -27,23 +24,19 @@ public class PageController {
 		this.site = site;
 	}
 
-	@GetMapping(value = { "", "/" })
-	public String newPage(Model model){
+	@GetMapping(value = {"", "/"})
+	public String newPage(Model model) {
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("message", "Creating new page");
 		model.addAttribute("newPage", true);
-		model.addAttribute("page", new Page("","",-10,"",true, new Gallery(new HashMap<>())));
+		model.addAttribute("page", new Page("", "", -10, "", true, new Gallery(new HashMap<>()), new ArrayList<>()));
 		return "editor/EditPage";
 	}
 
 	//TODO: Have a live flag (maybe instead of showInMenu) so that DIY pages aren't live
 
 	@PostMapping("/save") //TODO: How to handle gallery before page is saved
-	public String saveNewPage(@RequestParam String title,
-							  @RequestParam String url,
-							  @RequestParam String content,
-							  @RequestParam boolean showInMenu,
-							  Model model) {
+	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
 		site.addNewPage(title, url, content, showInMenu, new Gallery(new HashMap<>()));
 
@@ -53,18 +46,18 @@ public class PageController {
 		model.addAttribute("page", page); // Pass the saved content back to the view
 		model.addAttribute("hasGallery", page.hasGallery());
 		model.addAttribute("menuItems", site.getMenuItems());
-		return "redirect:/page/"+url;
+		return "redirect:/page/" + url;
 	}
 
 	//TODO: When you change page URL, you will need to update the folder structure of gallery
 	@GetMapping("/{pageUrl}") // TODO: make it work with trailing slash
-	public String editPage(@PathVariable("pageUrl") String pageUrl, Model model){
+	public String editPage(@PathVariable("pageUrl") String pageUrl, Model model) {
 		model.addAttribute("menuItems", site.getMenuItems());
 		Page page = site.getPage(pageUrl);
 		log.debug("Editing page: {}", page.toString());
 
 		if (page != null) {
-			model.addAttribute("message", "Editing page "+page.getTitle());
+			model.addAttribute("message", "Editing page " + page.getTitle());
 			model.addAttribute("page", page);  // Pass the page to the model
 			model.addAttribute("hasGallery", page.hasGallery());
 			return "editor/EditPage";
@@ -75,12 +68,7 @@ public class PageController {
 
 	//TODO: maybe spin off rich content editing to it's own page
 	@PostMapping("/{pageUrl}/save")
-	public String saveContent(@PathVariable("pageUrl") String originalPageUrl,
-							  @RequestParam String title,
-							  @RequestParam String url,
-							  @RequestParam String content,
-							  @RequestParam boolean showInMenu,
-							  Model model) {
+	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
 
 		site.addNewPage(title, url, content, showInMenu, site.getPageGallery(originalPageUrl));

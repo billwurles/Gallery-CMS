@@ -6,10 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -26,7 +28,7 @@ public class EditorController {
 
 
 	@GetMapping("/")
-	public String getHomePage(Model model){
+	public String getHomePage(Model model) {
 		model.addAttribute("page", "home");
 		model.addAttribute("name", site.getName());
 		model.addAttribute("menuItems", site.getMenuItems());
@@ -35,11 +37,11 @@ public class EditorController {
 	}
 
 	@GetMapping("save")
-	public String saveSiteToJSON(Model model){
+	public String saveSiteToJSON(Model model) {
 		try {
 			new JsonBackup(backupPath).backup(site);
 			model.addAttribute("message", "Site saved successfully");
-		} catch(RuntimeException e){
+		} catch (RuntimeException e) {
 			model.addAttribute("message", "Error saving site");
 		}
 		model.addAttribute("page", "home");

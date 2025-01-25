@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class ContentManagerApp {
 
-	public static void main(String[] args){
+	public static void main(String[] args) {
 		log.debug("Application is starting up, get ready");
 		SpringApplication.run(ContentManagerApp.class, args);
 	}

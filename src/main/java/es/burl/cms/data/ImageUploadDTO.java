@@ -14,7 +14,7 @@ public class ImageUploadDTO {
 	private final List<ImageData> images;
 
 	@JsonCreator
-	public ImageUploadDTO(@JsonProperty("images") List<ImageData> images){
+	public ImageUploadDTO(@JsonProperty("images") List<ImageData> images) {
 		this.images = images;
 	}
 
@@ -31,13 +31,7 @@ public class ImageUploadDTO {
 		private final String imageData;
 
 		@JsonCreator
-		public ImageData(@JsonProperty("title") String title,
-						 @JsonProperty("filename") String filename,
-						 @JsonProperty("dimensions") String dimensions,
-						 @JsonProperty("medium") String medium,
-						 @JsonProperty("sold") boolean sold,
-						 @JsonProperty("order") int order,
-						 @JsonProperty("imageData") String imageData) {
+		public ImageData(@JsonProperty("title") String title, @JsonProperty("filename") String filename, @JsonProperty("dimensions") String dimensions, @JsonProperty("medium") String medium, @JsonProperty("sold") boolean sold, @JsonProperty("order") int order, @JsonProperty("imageData") String imageData) {
 			this.title = title;
 			this.filename = filename;
 			this.dimensions = dimensions;
@@ -46,6 +40,6 @@ public class ImageUploadDTO {
 			this.order = order;
 			this.imageData = imageData;
 		}
-		}
+	}
 }
 

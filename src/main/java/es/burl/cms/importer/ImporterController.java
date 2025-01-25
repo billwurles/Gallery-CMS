@@ -1,7 +1,6 @@
 package es.burl.cms.importer;
 
 import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +18,7 @@ public class ImporterController {
 	private static final String EXTRACT_DIR = new File("extracted/").getAbsolutePath() + "/";
 
 	@GetMapping("/import")
-	public String getImportPage(Model model){
+	public String getImportPage(Model model) {
 		System.out.println("Working Directory = " + System.getProperty("user.dir"));
 		System.out.println("Uploading files to: " + new File(UPLOAD_DIR).getAbsolutePath());
 		return "EditorUpload";
@@ -52,7 +51,6 @@ public class ImporterController {
 			// Extract the ZIP file
 			String extractedPath = EXTRACT_DIR + uploadedFile.getName().replace(".zip", "");
 			new ZipFile(uploadedFile).extractAll(extractedPath);
-
 
 
 			model.addAttribute("message", "File uploaded and extracted successfully!");

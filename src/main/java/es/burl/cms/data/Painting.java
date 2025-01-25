@@ -16,13 +16,7 @@ public class Painting {
 	private final int order;
 
 	@JsonCreator
-	public Painting(
-			@JsonProperty("title") String title,
-			@JsonProperty("filename") String filename,
-			@JsonProperty("dimensions") String dimensions,
-			@JsonProperty("medium") String medium,
-			@JsonProperty("sold") boolean sold,
-			@JsonProperty("order") int order) {
+	public Painting(@JsonProperty("title") String title, @JsonProperty("filename") String filename, @JsonProperty("dimensions") String dimensions, @JsonProperty("medium") String medium, @JsonProperty("sold") boolean sold, @JsonProperty("order") int order) {
 		this.title = title;
 		this.filename = filename;
 		this.dimensions = dimensions;
@@ -31,7 +25,7 @@ public class Painting {
 		this.order = order;
 	}
 
-	public String toString(){
+	public String toString() {
 		return title;
 	}
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import es.burl.cms.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -37,14 +36,14 @@ public class GalleryController {
 		this.galleryRoot = galleryRoot;
 	}
 
-	@GetMapping(value = { "", "/" })
-	public String editGallery(@PathVariable("pageUrl") String pageUrl, Model model){
+	@GetMapping(value = {"", "/"})
+	public String editGallery(@PathVariable("pageUrl") String pageUrl, Model model) {
 		model.addAttribute("menuItems", site.getMenuItems());
 		Page page = site.getPage(pageUrl);
 		log.debug("Editing gallery for page: {}", page.toString());
 
 		if (page != null) {
-			model.addAttribute("message", "Editing gallery "+page.getTitle());
+			model.addAttribute("message", "Editing gallery " + page.getTitle());
 			model.addAttribute("page", page);  // Pass the page to the model
 			model.addAttribute("galleryRoot", galleryRoot);
 			model.addAttribute("hasGallery", page.getGallery() != null);
@@ -55,9 +54,7 @@ public class GalleryController {
 	}
 
 	@PostMapping("/save")
-	public ResponseEntity<Map<String, String>> saveGallery(
-								@PathVariable("pageUrl") String pageUrl,
-							  	@RequestBody Gallery gallery) {
+	public ResponseEntity<Map<String, String>> saveGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody Gallery gallery) {
 		// Get the page object
 		Page page = site.getPage(pageUrl);
 
@@ -74,13 +71,13 @@ public class GalleryController {
 			// Success message
 			response.put("status", "success");
 			response.put("message", "Content saved successfully!");
-        	return ResponseEntity.ok(response);
+			return ResponseEntity.ok(response);
 		} else {
 			// Failure message
 			response.put("status", "failure");
 			response.put("message", "Error: Page or gallery data is missing.");
-        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    	}
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+		}
 	}
 
 	//TODO: Be able to delete images from gallery / delete entire gallery
@@ -100,8 +97,7 @@ public class GalleryController {
 
 	//TODO: pass in nextInt in order
 	@PostMapping("/upload")
-	public String uploadGallery(@PathVariable("pageUrl") String pageUrl,
-                            	@RequestBody ImageUploadDTO imageUploadDTO, // Handle JSON payload
+	public String uploadGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody ImageUploadDTO imageUploadDTO, // Handle JSON payload
 								Model model) throws JsonProcessingException {
 		Page page = site.getPage(pageUrl);
 		if (page == null) {
@@ -110,7 +106,7 @@ public class GalleryController {
 
 		log.debug("Got imageDTO: {}", imageUploadDTO.toString());
 
-    	// Iterate over the images and metadata
+		// Iterate over the images and metadata
 		int order = page.getGallery().getGallery().size();
 		for (ImageUploadDTO.ImageData newImage : imageUploadDTO.getImages()) {
 			String imageData = newImage.getImageData();
@@ -123,9 +119,8 @@ public class GalleryController {
 				Files.write(uploadPath, imageBytes);  // Save the image file
 
 				// Create a Painting object and update gallery
-				Painting painting = new Painting(newImage.getTitle(), newImage.getFilename(), newImage.getDimensions(),
-				newImage.getMedium(), newImage.isSold(), order++);
-				log.debug("Creating new Painting object: {}", painting.toString());
+				Painting painting = new Painting(newImage.getTitle(), newImage.getFilename(), newImage.getDimensions(), newImage.getMedium(), newImage.isSold(), order++);
+				log.debug("Creating new Painting object: {}", painting);
 				page.addPaintingToGallery(painting);
 
 			} catch (IOException e) {
@@ -137,15 +132,13 @@ public class GalleryController {
 		model.addAttribute("page", page);
 		model.addAttribute("message", "Gallery uploaded and metadata saved successfully!");
 
-//		return "redirect: /page/"+pageUrl+"/gallery";
+		//		return "redirect: /page/"+pageUrl+"/gallery";
 		return "editor/EditGallery"; //TODO: automatic redirect back to gallery
 	}
 
 	@GetMapping("/image/{filename}")
-	public ResponseEntity<Resource> getImage(
-			@PathVariable String pageUrl,
-			@PathVariable String filename) {
-		log.debug("getting image {}",filename);
+	public ResponseEntity<Resource> getImage(@PathVariable String pageUrl, @PathVariable String filename) {
+		log.debug("getting image {}", filename);
 		try {
 			// Construct the path to the image
 			Path imagePath = Paths.get(galleryRoot, pageUrl, filename);
@@ -153,16 +146,13 @@ public class GalleryController {
 
 			if (resource.exists() && resource.isReadable()) {
 				// Return the image as a downloadable resource
-				return ResponseEntity.ok()
-						.header(HttpHeaders.CONTENT_TYPE, "image/jpeg") // Adjust for other types if needed
+				return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "image/jpeg") // Adjust for other types if needed
 						.body(resource);
 			} else {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(null);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 			}
 		} catch (MalformedURLException e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(null);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 		}
 	}
 }
