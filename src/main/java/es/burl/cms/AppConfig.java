@@ -89,7 +89,7 @@ public class AppConfig {
 		);
 
 		Map<String, Exhibition> exhibitionList = new HashMap<>();
-		for (int i = 0; i < 500; i++){
+		for (int i = 0; i < 100; i++){
 //			String id = UUID.randomUUID().toString();
 			exhibitionList.put(String.valueOf(i), Exhibition.builder()
 							.id(String.valueOf(i))
