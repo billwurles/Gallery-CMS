@@ -27,14 +27,6 @@ public class Gallery {
 	public static class Builder {
 		private Map<String, Painting> gallery = new HashMap<>();
 	}
-//	public Gallery(Builder builder){
-//		this.gallery = builder.gallery;
-//	}
-//
-//	@JsonCreator
-//	public Gallery(@JsonProperty("gallery") Map<String, Painting> gallery) {
-//		this.gallery = gallery;
-//	}
 
 	public Painting getPainting(String filename) {
 		return gallery.get(filename);

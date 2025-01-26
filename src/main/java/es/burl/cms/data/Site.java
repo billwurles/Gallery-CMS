@@ -23,28 +23,25 @@ public class Site {
 	@Getter
 	private final String name;
 	private final Map<String, Page> pages;
-	private final List<Exhibition> exhibitions;
+	private final Map<String, Exhibition> exhibitions;
 
-	@JsonPOJOBuilder(withPrefix = "") // Configure Jackson to handle the builder
-	public static class PaintingBuilder {
-		// Set default values here
+	@JsonPOJOBuilder(withPrefix = "")
+	public static class Builder {
 		private String name = "Untitled Site";
 		private Map<String, Page> pages = new HashMap<>();
-		private List<Exhibition> exhibitions = new ArrayList<>();
+		private Map<String, Exhibition> exhibitions = new HashMap<>();
 	}
-
-//	@JsonCreator
-//	public Site(@JsonProperty("name") String name, @JsonProperty("pages") HashMap<String, Page> pages) {
-//		this.name = name;
-//		this.pages = pages;
-//	}
 
 	public Page getPage(String url) {
 		return pages.get(url);
 	}
 
 	public List<MenuItem> getMenuItems() {
-		return pages.values().stream().filter(Page::isShowInMenu).sorted(Comparator.comparingInt(Page::getOrder)).map(page -> new MenuItem(page.getTitle(), "/page/" + page.getUrl())).collect(Collectors.toList());
+		return pages.values().stream()
+				.filter(Page::isShowInMenu)
+				.sorted(Comparator.comparingInt(Page::getOrder))
+				.map(page -> new MenuItem(page.getTitle(), "/page/" + page.getUrl()))
+				.collect(Collectors.toList());
 	}
 
 	public List<Page> getPagesInOrder() {
@@ -77,19 +74,25 @@ public class Site {
 	}
 
 	public void addExhibition(Exhibition exhibition) {
-		this.exhibitions.add(exhibition);
+		this.exhibitions.put(exhibition.getId(), exhibition);
 	}
 
-	public List<Exhibition> getExhibitions() {
-		exhibitions.sort(Comparator.comparing(Exhibition::getDate));
-		return exhibitions;
+	public Exhibition getExhibition(String id){
+		return exhibitions.get(id);
+	}
+
+	public List<Exhibition> getExhibitionsInDateOrder() {
+		return exhibitions.values()
+				.stream()
+				.sorted(Comparator.comparing(Exhibition::getDate).reversed())
+				.collect(Collectors.toList());
 	}
 
 	public List<Exhibition> getExhibitionsPage(int page, int postsPerPage) {
-		exhibitions.sort(Comparator.comparing(Exhibition::getDate));
+		List<Exhibition> sortedExhibitions = getExhibitionsInDateOrder();
 		int to = page * postsPerPage;
 		int from = to - postsPerPage;
-		if (to > exhibitions.size()) to = exhibitions.size();
-		return exhibitions.subList(from, to);
+		if (to > sortedExhibitions.size()) to = sortedExhibitions.size();
+		return sortedExhibitions.subList(from, to);
 	}
 }

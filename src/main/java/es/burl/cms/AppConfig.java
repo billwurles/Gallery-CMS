@@ -1,10 +1,7 @@
 package es.burl.cms;
 
 import es.burl.cms.backup.JsonBackup;
-import es.burl.cms.data.Gallery;
-import es.burl.cms.data.Page;
-import es.burl.cms.data.Painting;
-import es.burl.cms.data.Site;
+import es.burl.cms.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,9 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
 
 @Slf4j
 @Configuration
@@ -76,7 +72,7 @@ public class AppConfig {
 					.order(i)
 					.content(loremIpsum)
 					.showInMenu(true)
-					.gallery(Gallery.builder().build())
+//					.gallery(Gallery.builder().build())
 					.build()
 			);
 		}
@@ -84,7 +80,7 @@ public class AppConfig {
 				.title("The Sea")
 				.url("the-sea")
 				.order(3)
-				.content(loremIpsum)
+//				.content(loremIpsum)
 				.showInMenu(true)
 				.gallery(Gallery.builder()
 						.gallery(getImageFiles(galleryDir))
@@ -92,10 +88,26 @@ public class AppConfig {
 				.build()
 		);
 
-		return Site.builder()
+		Map<String, Exhibition> exhibitionList = new HashMap<>();
+		for (int i = 0; i < 500; i++){
+//			String id = UUID.randomUUID().toString();
+			exhibitionList.put(String.valueOf(i), Exhibition.builder()
+							.id(String.valueOf(i))
+							.title("Exhibition "+i)
+							.date(Date.from(Instant.now().minusSeconds(i * 1000000L)))
+							.content(loremIpsum)
+							.build()
+			);
+		}
+
+		Site site = Site.builder()
 				.name("Editor CMS")
 				.pages(pages)
+				.exhibitions(exhibitionList)
 				.build();
+		log.debug("Got site: {}", site);
+
+		return site;
 	}
 
 	public static Map<String, Painting> getImageFiles(String galleryDir) {
@@ -135,8 +147,8 @@ public class AppConfig {
 				// Add the Painting object to the list
 				sold = !sold;
 				imageFiles.put(fileNameWithoutExt, Painting.builder()
-								.filename(fileNameWithoutExt)
-								.title(file.getName())
+								.filename(file.getName())
+								.title(fileNameWithoutExt)
 								.dimensions("10x10")
 								.medium("oil on canvas")
 								.sold(sold)
@@ -145,7 +157,7 @@ public class AppConfig {
 				);
 			}
 		}
-
+//		log.debug("Got paintings: {}", imageFiles);
 		return imageFiles;
 	}
 

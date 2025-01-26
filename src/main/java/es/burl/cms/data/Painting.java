@@ -29,27 +29,4 @@ public class Painting {
 		private boolean sold = false;
 		private int order = 100;
 	}
-
-//	private Painting(Builder builder) {
-//		this.title = builder.title;
-//		this.filename = builder.filename;
-//		this.dimensions = builder.dimensions;
-//		this.medium = builder.medium;
-//		this.sold = builder.sold;
-//		this.order = builder.order;
-//	}
-
-//	@JsonCreator
-//	public Painting(@JsonProperty("title") String title, @JsonProperty("filename") String filename, @JsonProperty("dimensions") String dimensions, @JsonProperty("medium") String medium, @JsonProperty("sold") boolean sold, @JsonProperty("order") int order) {
-//		this.title = title;
-//		this.filename = filename;
-//		this.dimensions = dimensions;
-//		this.medium = medium;
-//		this.sold = sold;
-//		this.order = order;
-//	}
-
-	public String toString() {
-		return title;
-	}
 }

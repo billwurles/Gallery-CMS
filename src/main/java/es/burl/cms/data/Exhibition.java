@@ -11,6 +11,7 @@ import lombok.Getter;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 @Data
 @Getter
@@ -20,21 +21,15 @@ import java.util.Date;
 public class Exhibition {
 
 	private final String title;
+	private final String id;
 	private final Date date;
 	private final String content;
-
 
 	@JsonPOJOBuilder(withPrefix = "") // Removes "set" prefix from builder methods
 	public static class Builder {
 		private String title = "New Exhibition";
+		private String id = UUID.randomUUID().toString();
 		private Date date = Date.from(Instant.now());
 		private String content = "";
 	}
-
-//	@JsonCreator
-//	public Exhibition(@JsonProperty("title") String title, @JsonProperty("title") Date date, @JsonProperty("title") String content) {
-//		this.title = title;
-//		this.date = date;
-//		this.content = content;
-//	}
 }

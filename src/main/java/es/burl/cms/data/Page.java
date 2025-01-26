@@ -36,7 +36,6 @@ public class Page {
 		private String content = "";
 		private boolean showInMenu = false;
 		private Gallery gallery = new Gallery.Builder().build();
-		private List<Exhibition> exhibitions = new ArrayList<>();
 
 		public Builder fromPage(Page page){
 			this.title = page.title;

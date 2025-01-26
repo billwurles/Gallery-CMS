@@ -151,7 +151,7 @@ public class GalleryController {
 
 	@GetMapping("/image/{filename}")
 	public ResponseEntity<Resource> getImage(@PathVariable String pageUrl, @PathVariable String filename) {
-		log.debug("getting image {}", filename);
+//		log.debug("getting image {}", filename);
 		try {
 			// Construct the path to the image
 			Path imagePath = Paths.get(galleryRoot, pageUrl, filename);
@@ -162,9 +162,11 @@ public class GalleryController {
 				return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "image/jpeg") // Adjust for other types if needed
 						.body(resource);
 			} else {
+				log.error("Could not find image {} in directory - {}", pageUrl+"/"+filename, imagePath.toString());
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 			}
 		} catch (MalformedURLException e) {
+			log.error("Error constructing URI path {}", pageUrl+"/"+filename);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 		}
 	}
