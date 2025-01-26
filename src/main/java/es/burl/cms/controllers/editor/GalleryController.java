@@ -66,7 +66,12 @@ public class GalleryController {
 			page.setGallery(gallery);
 
 			// Save the updated page with the new gallery
-			site.addNewPage(page.getTitle(), pageUrl, page.getContent(), page.isShowInMenu(), gallery);
+
+			site.addNewPage(Page.builder()
+					.fromPage(page)
+					.gallery(gallery)
+					.build()
+			);
 
 			// Success message
 			response.put("status", "success");
@@ -119,7 +124,15 @@ public class GalleryController {
 				Files.write(uploadPath, imageBytes);  // Save the image file
 
 				// Create a Painting object and update gallery
-				Painting painting = new Painting(newImage.getTitle(), newImage.getFilename(), newImage.getDimensions(), newImage.getMedium(), newImage.isSold(), order++);
+				Painting painting = Painting.builder()
+						.title(newImage.getTitle())
+						.filename(newImage.getFilename())
+						.dimensions(newImage.getDimensions())
+						.medium(newImage.getMedium())
+						.sold(newImage.isSold())
+						.order(order++)
+						.build();
+
 				log.debug("Creating new Painting object: {}", painting);
 				page.addPaintingToGallery(painting);
 

@@ -55,7 +55,7 @@ public class AppConfig {
 		return backupPath;
 	}
 
-	public static String loremIpsum = """
+	public static final String loremIpsum = """
 			<h2>What is Lorem Ipsum?</h2>
 			<p><strong>Lorem Ipsum</strong> is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
 			<h2>Why do we use it?</h2>
@@ -70,11 +70,32 @@ public class AppConfig {
 		HashMap<String, Page> pages = new HashMap<>();
 		for (int i = 0; i < 3; i++) {
 			String url = "pageurl" + i;
-			pages.put(url, new Page("pageTitle" + i, url, i, loremIpsum, true, new Gallery(new HashMap<>()), new ArrayList<>()));
+			pages.put(url, Page.builder()
+					.title("pageTitle" + i)
+					.url(url)
+					.order(i)
+					.content(loremIpsum)
+					.showInMenu(true)
+					.gallery(Gallery.builder().build())
+					.build()
+			);
 		}
-		pages.put("the-sea", new Page("The Sea", "the-sea", 3, "", true, new Gallery(getImageFiles(galleryDir)), new ArrayList<>()));
-		//		pages.put("otherulr", new Page("pagetitlenoshow","otherulr",-1,"more content",false, null));
-		return new Site("Editor CMS", pages);
+		pages.put("the-sea", Page.builder()
+				.title("The Sea")
+				.url("the-sea")
+				.order(3)
+				.content(loremIpsum)
+				.showInMenu(true)
+				.gallery(Gallery.builder()
+						.gallery(getImageFiles(galleryDir))
+						.build())
+				.build()
+		);
+
+		return Site.builder()
+				.name("Editor CMS")
+				.pages(pages)
+				.build();
 	}
 
 	public static Map<String, Painting> getImageFiles(String galleryDir) {
@@ -113,7 +134,15 @@ public class AppConfig {
 
 				// Add the Painting object to the list
 				sold = !sold;
-				imageFiles.put(fileNameWithoutExt, new Painting(fileNameWithoutExt, file.getName(), "10x10", "oil on canvas", sold, i++));
+				imageFiles.put(fileNameWithoutExt, Painting.builder()
+								.filename(fileNameWithoutExt)
+								.title(file.getName())
+								.dimensions("10x10")
+								.medium("oil on canvas")
+								.sold(sold)
+								.order(i++)
+								.build()
+				);
 			}
 		}
 

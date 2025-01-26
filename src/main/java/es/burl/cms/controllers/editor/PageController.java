@@ -29,7 +29,7 @@ public class PageController {
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("message", "Creating new page");
 		model.addAttribute("newPage", true);
-		model.addAttribute("page", new Page("", "", -10, "", true, new Gallery(new HashMap<>()), new ArrayList<>()));
+		model.addAttribute("page", Page.builder().build());
 		return "editor/EditPage";
 	}
 
@@ -38,7 +38,14 @@ public class PageController {
 	@PostMapping("/save") //TODO: How to handle gallery before page is saved
 	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
-		site.addNewPage(title, url, content, showInMenu, new Gallery(new HashMap<>()));
+
+		site.addNewPage(Page.builder()
+				.title(title)
+				.url(url)
+				.content(content)
+				.showInMenu(showInMenu)
+				.build()
+		);
 
 		// Pass the saved content back to the view
 		Page page = site.getPage(url);
@@ -71,7 +78,14 @@ public class PageController {
 	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
 
-		site.addNewPage(title, url, content, showInMenu, site.getPageGallery(originalPageUrl));
+		site.addNewPage(Page.builder()
+				.title(title)
+				.url(url)
+				.content(content)
+				.showInMenu(showInMenu)
+				.gallery(site.getPageGallery(originalPageUrl))
+				.build()
+		);
 
 		if (!originalPageUrl.equals(url)) {
 			site.removePage(originalPageUrl);

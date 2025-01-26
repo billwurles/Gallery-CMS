@@ -3,16 +3,19 @@ package es.burl.cms.data;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Data
 @Getter
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE)
+@Builder(builderClassName = "Builder", toBuilder = true)
+@JsonDeserialize(builder = Gallery.Builder.class)
 public class Gallery {
 
 	@JsonProperty("gallery")
@@ -20,10 +23,18 @@ public class Gallery {
 
 	//TODO: A boolean flag of whether or not to display titles / other metadata
 
-	@JsonCreator
-	public Gallery(@JsonProperty("gallery") Map<String, Painting> gallery) {
-		this.gallery = gallery;
+	@JsonPOJOBuilder(withPrefix = "") // Removes "set" prefix from builder methods
+	public static class Builder {
+		private Map<String, Painting> gallery = new HashMap<>();
 	}
+//	public Gallery(Builder builder){
+//		this.gallery = builder.gallery;
+//	}
+//
+//	@JsonCreator
+//	public Gallery(@JsonProperty("gallery") Map<String, Painting> gallery) {
+//		this.gallery = gallery;
+//	}
 
 	public Painting getPainting(String filename) {
 		return gallery.get(filename);
