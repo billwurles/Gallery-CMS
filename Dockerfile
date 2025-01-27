@@ -5,7 +5,6 @@ WORKDIR /app
 # Copy Maven configuration and project files
 COPY pom.xml .
 COPY src ./src
-COPY appdata ./appdata
 
 # Build the Spring Boot application
 RUN mvn clean package -DskipTests
