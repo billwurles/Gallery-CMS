@@ -31,4 +31,4 @@ VOLUME /shared/appdata/html_root
 EXPOSE 80 8080
 
 # Start NGINX and Spring Boot
-CMD service nginx start && java -jar /app/app.jar
+CMD ["sh", "-c", "service nginx start && java -jar /app/app.jar"]
