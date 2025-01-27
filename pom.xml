@@ -10,7 +10,7 @@
     </parent>
     <groupId>uk.co.arabellaharcourtcooze</groupId>
     <artifactId>cms</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>ContentManager</name>
     <description>Allow import of old website from iWeb, add CMS to generate new site</description>
     <url/>
