@@ -5,3 +5,5 @@
 /src/main/resources/static/images/
 /target/
 /.idea/
+/src/main/resources/templates/site_old/
+/src/main/resources/templates/VueJS-ToConvert/
