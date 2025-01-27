@@ -3,6 +3,7 @@ package es.burl.cms;
 import es.burl.cms.backup.JsonBackup;
 import es.burl.cms.data.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,10 +21,16 @@ public class AppConfig {
 	private Site site;
 
 	@Value("${gallery.root}")
-	private String galleryRoot;
+	private Path galleryRoot;
+
+	@Value("${html.root}")
+	private Path htmlRoot;
 
 	@Value("${backup.path}")
 	private Path backupPath;
+
+	@Value("${posts.per.page}")
+	private int postsPerPage;
 
 	@Bean
 	public Site getSite() {
@@ -42,13 +49,27 @@ public class AppConfig {
 	}
 
 	@Bean
-	public String getGalleryRoot() {
+	@Qualifier("getGalleryRoot")
+	public Path getGalleryRoot() {
 		return galleryRoot;
 	}
 
 	@Bean
+	@Qualifier("getBackupPath")
 	public Path getBackupPath() {
 		return backupPath;
+	}
+
+	@Bean
+	@Qualifier("getHtmlRoot")
+	public Path getHtmlRoot() {
+		return htmlRoot;
+	}
+
+	@Bean
+	@Qualifier("getPostsPerPage")
+	public int getPostsPerPage() {
+		return postsPerPage;
 	}
 
 	public static final String loremIpsum = """
@@ -62,7 +83,7 @@ public class AppConfig {
 			<p>The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.</p>
 			""";
 
-	public static Site getFakeSite(String galleryDir) { //TODO: make a test class
+	public static Site getFakeSite(Path galleryDir) { //TODO: make a test class
 		HashMap<String, Page> pages = new HashMap<>();
 		for (int i = 0; i < 3; i++) {
 			String url = "pageurl" + i;
@@ -72,7 +93,6 @@ public class AppConfig {
 					.order(i)
 					.content(loremIpsum)
 					.showInMenu(true)
-//					.gallery(Gallery.builder().build())
 					.build()
 			);
 		}
@@ -101,16 +121,18 @@ public class AppConfig {
 		}
 
 		Site site = Site.builder()
-				.name("Editor CMS")
+				.name("Arabella Harcourt-Cooze")
 				.pages(pages)
-				.exhibitions(exhibitionList)
+				.exhibitionRepo(ExhibitionRepo.builder()
+						.exhibitions(exhibitionList)
+						.build())
 				.build();
 		log.debug("Got site: {}", site);
 
 		return site;
 	}
 
-	public static Map<String, Painting> getImageFiles(String galleryDir) {
+	public static Map<String, Painting> getImageFiles(Path galleryDir) {
 		// Locate the folder in the static/images directory
 		//		File imageDir = null;
 		//		try {
@@ -118,17 +140,18 @@ public class AppConfig {
 		//		} catch (IOException e) {
 		//			e.printStackTrace();
 		//		}
-		// Locate the folder in the uploadDir folder instead of resources
-		File imageDir = new File(galleryDir, "the-sea");
 
 		// Check if the directory exists, create it if necessary
-		if (!imageDir.exists()) {
-			log.debug("Directory {} does not exist, creating", imageDir);
-			if (!imageDir.mkdirs()) {
-				// Handle error if directory cannot be created
-				log.error("Failed to create directory: " + imageDir.getAbsolutePath());
-			}
-		}
+//		if (!imageDir.exists()) {
+//			log.debug("Directory {} does not exist, creating", imageDir);
+//			if (!imageDir.mkdirs()) {
+//				// Handle error if directory cannot be created
+//				log.error("Failed to create directory: " + imageDir.getAbsolutePath());
+//			}
+//		}
+
+		// Locate the folder in the uploadDir folder instead of resources
+		File imageDir = galleryDir.resolve("the-sea").toFile();
 
 		// List to hold ImageFile objects
 		Map<String, Painting> imageFiles = new HashMap<>();
@@ -146,7 +169,7 @@ public class AppConfig {
 
 				// Add the Painting object to the list
 				sold = !sold;
-				imageFiles.put(fileNameWithoutExt, Painting.builder()
+				imageFiles.put(file.getName(), Painting.builder()
 								.filename(file.getName())
 								.title(fileNameWithoutExt)
 								.dimensions("10x10")

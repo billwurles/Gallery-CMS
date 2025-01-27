@@ -1,6 +1,5 @@
 package es.burl.cms.controllers.editor;
 
-import es.burl.cms.data.Gallery;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
 import lombok.extern.slf4j.Slf4j;
@@ -8,9 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 @Slf4j
 @RequestMapping("/page")

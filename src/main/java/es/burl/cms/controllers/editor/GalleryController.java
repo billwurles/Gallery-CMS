@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import es.burl.cms.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -28,10 +29,12 @@ import java.util.Map;
 public class GalleryController {
 
 	private final Site site;
-	private final String galleryRoot;
+	private final Path galleryRoot;
 
 	@Autowired
-	public GalleryController(Site site, String galleryRoot) {
+	public GalleryController(Site site,
+							 @Qualifier("getGalleryRoot") Path galleryRoot
+	) {
 		this.site = site;
 		this.galleryRoot = galleryRoot;
 	}
@@ -118,7 +121,7 @@ public class GalleryController {
 			byte[] imageBytes = Base64.getDecoder().decode(imageData); // Decode base64 image
 
 			// Construct the file path and save the image
-			Path uploadPath = Paths.get(galleryRoot, pageUrl, newImage.getFilename());
+			Path uploadPath = galleryRoot.resolve(pageUrl).resolve(newImage.getFilename());
 			try {
 				Files.createDirectories(uploadPath.getParent());
 				Files.write(uploadPath, imageBytes);  // Save the image file
@@ -154,7 +157,7 @@ public class GalleryController {
 //		log.debug("getting image {}", filename);
 		try {
 			// Construct the path to the image
-			Path imagePath = Paths.get(galleryRoot, pageUrl, filename);
+			Path imagePath = galleryRoot.resolve(pageUrl).resolve(filename);
 			Resource resource = new UrlResource(imagePath.toUri());
 
 			if (resource.exists() && resource.isReadable()) {

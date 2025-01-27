@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<nav class="navbar" th:fragment="navbar(menuItems, currentPage, siteName)">
+    <div class="navbar-container container">
+        <!-- Hamburger Menu for Mobile -->
+        <input type="checkbox" id="toggle-menu" />
+        <div class="hamburger-lines">
+            <span class="line line1"></span>
+            <span class="line line2"></span>
+            <span class="line line3"></span>
+        </div>
+        <!-- Navigation Menu -->
+        <ul class="menu-items">
+            <li th:each="item : ${menuItems}" class="links">
+                <a th:href="@{${item.url}}"
+                   th:text="${item.name}"
+                   th:classappend="${currentPage == item.url ? 'active' : ''}">
+                </a>
+            </li>
+        </ul>
+
+        <!-- Logo -->
+        <h1 class="logo">
+            <a href="/" th:text="${siteName}"></a>
+        </h1>
+    </div>
+</nav>
+</html>

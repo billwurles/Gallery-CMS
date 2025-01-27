@@ -22,8 +22,8 @@ public class Painting {
 
 	@JsonPOJOBuilder(withPrefix = "") // Removes "set" prefix from builder methods
 	public static class Builder {
-		private String title = "title";
-		private String filename = "file.no";
+		private String title = "";
+		private String filename = "";
 		private String dimensions = "";
 		private String medium = "";
 		private boolean sold = false;

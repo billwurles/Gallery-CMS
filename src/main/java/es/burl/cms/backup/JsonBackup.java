@@ -28,7 +28,7 @@ public class JsonBackup implements BackupSite {
             // Serialize Site object to JSON
             String jsonSite = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(site);
 			try {
-				log.debug("Backing up site to: {} ", site);
+//				log.debug("Backing up site to: {} ", site);
 				Files.createDirectories(backupPath.getParent());
 				Files.writeString(backupPath, jsonSite);
 

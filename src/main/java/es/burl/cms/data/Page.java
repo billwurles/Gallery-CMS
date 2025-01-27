@@ -1,17 +1,12 @@
 package es.burl.cms.data;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 @Getter
 @Data
@@ -25,6 +20,7 @@ public class Page {
 	@Setter
 	private int order;
 	private final String content;
+	private final Painting insetImage;
 	private final boolean showInMenu; // = true;
 	private Gallery gallery;
 
@@ -32,8 +28,9 @@ public class Page {
 	public static class Builder {
 		private String title = "New Page";
 		private String url = "url";
-		private int order = 100;
-		private String content = "";
+		private int order = Integer.MAX_VALUE;
+		private String content = null;
+		private Painting insetImage = null;
 		private boolean showInMenu = false;
 		private Gallery gallery = new Gallery.Builder().build();
 
@@ -42,28 +39,30 @@ public class Page {
 			this.url = page.url;
 			this.order = page.order;
 			this.content = page.content;
+			this.insetImage = page.insetImage;
 			this.showInMenu = page.showInMenu;
 			this.gallery = page.gallery;
 			return this;
 		}
 	}
 
-//	public Page(@JsonProperty("title") String title, @JsonProperty("url") String url, @JsonProperty("order") int order, @JsonProperty("content") String content, @JsonProperty("showInMenu") boolean showInMenu, @JsonProperty("gallery") Gallery gallery, @JsonProperty("exhibitions") List<Exhibition> exhibitions) {
-//		this.title = title;
-//		this.url = url;
-//		this.order = order;
-//		this.content = content;
-//		this.showInMenu = showInMenu;
-//		this.gallery = gallery;
-//		exhibitions.sort(Comparator.comparing(Exhibition::getDate));
-//		this.exhibitions = exhibitions;
-//	}
+	public MenuItem getMenuItem(){
+		return new MenuItem(order, title, url);
+	}
 
 	public void addPaintingToGallery(Painting painting) {
 		gallery.addPainting(painting);
 	}
 
+	public boolean hasContent() {
+		return this.content == null || this.content.replaceAll("\\s+", "").isEmpty();
+	}
+
+	public boolean hasInsetImage() {
+		return this.insetImage == null || !this.insetImage.getFilename().isEmpty();
+	}
+
 	public boolean hasGallery() {
-		return this.gallery.isEmpty();
+		return this.gallery == null || this.gallery.isEmpty();
 	}
 }

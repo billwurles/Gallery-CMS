@@ -22,7 +22,7 @@
         </div>
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
-                    <a href="#" th:href="@{${item.url}}" th:text="${item.name}" th:classappend="${item.url == '/${page}' ? 'active' : ''}"></a>
+                    <a href="#" th:href="@{'/page/' + ${item.url}}" th:text="${item.name}" th:classappend="${item.url == '/${page}' ? 'active' : ''}"></a>
             </li>
         </ul>
         <h1 class="logo">

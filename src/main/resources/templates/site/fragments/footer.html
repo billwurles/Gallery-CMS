@@ -1,7 +1,11 @@
-<footer>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer th:fragment="footer(currentYear)">
     <hr />
     <p>
-        Copyright (c) 2023 Arabella Harcourt-Cooze, all rights reserved bla bla
-        bla
+        Copyright (c) <span th:text="${currentYear}">2025</span> Arabella Harcourt-Cooze, all rights reserved
     </p>
 </footer>
+</body>
+</html>
