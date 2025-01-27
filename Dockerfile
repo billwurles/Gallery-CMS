@@ -1,5 +1,5 @@
 # Stage 1: Build the Spring Boot application
-FROM maven:3.8.6-openjdk-17-slim AS builder
+FROM maven:3.8.3-openjdk-17-slim AS builder
 WORKDIR /app
 
 # Copy Maven configuration and project files
