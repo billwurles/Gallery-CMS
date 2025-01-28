@@ -18,8 +18,8 @@
         <div class="content">
             <img class="inset-image"
                  th:if="${page.hasInsetImage}"
-                 th:src="@{'images/inset/' + ${painting.filename}}"
-                 th:alt="${painting.title}"
+                 th:src="@{'images/inset/' + ${page.insetImage.filename}}"
+                 th:alt="${page.insetImage.title}"
             />
             <div class="content-text"
                  th:if="${page.hasContent}"
@@ -27,7 +27,7 @@
             </div>
 
             <div th:if="${page.hasGallery}"
-                 th:replace="~{site/fragments/gallery :: gallery(paintings=${page.gallery.getGalleryInOrder()}, url=${page.url})}">
+                 th:replace="~{site/fragments/gallery :: gallery(paintings=${page.gallery.getGalleryInOrder()}, url=${page.menuItem.url})}">
             </div>
         </div>
     </section>

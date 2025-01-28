@@ -12,8 +12,8 @@
         <!-- Navigation Menu -->
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
-                <a th:href="@{${item.url}}"
-                   th:text="${item.name}"
+                <a th:href="@{'/'+${item.url}}"
+                   th:text="${item.title}"
                    th:classappend="${currentPage == item.url ? 'active' : ''}">
                 </a>
             </li>

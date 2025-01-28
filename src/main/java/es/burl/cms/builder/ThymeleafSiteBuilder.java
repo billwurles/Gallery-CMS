@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -47,17 +48,28 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 
 		copyCSS();
 
-		generateHomepage(site);
-
 		for(Page page : site.getPages().values()){
-			Path pagePath = htmlRoot.resolve(page.getUrl());
+			log.debug("Generating page {} -inset:{}",page.getMenuItem().getUrl(), page.getInsetImage());
+			Path pagePath = htmlRoot.resolve(page.getMenuItem().getUrl());
+			if(page.getMenuItem().getUrl().equals("home")) pagePath = htmlRoot;
+			Files.createDirectories(pagePath);
 			copyPageGallery(page, pagePath);
 			generatePageHTML(site, page, pagePath);
 		}
 
-		for(int page = 1; page <= site.getExhibitionRepo().getExhibitions().size() / postsPerPage; page++){
-			generateExhibitionsPage(site, page, site.getExhibitionRepo().getExhibitionsPage(page, postsPerPage));
+		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
+		Path exhibitionPath = htmlRoot.resolve(site.getExhibitionRepo().getExhibitionOrder().getUrl());
+
+		for(int exhibitionPage = 1; exhibitionPage <= totalPages; exhibitionPage++){
+			log.debug("Generating exhibition page {}",exhibitionPage);
+			Path exhibitionPagePath = exhibitionPath;
+			if(exhibitionPage > 1) {
+				exhibitionPagePath = exhibitionPath.resolve("page-"+exhibitionPage);
+			}
+			Files.createDirectories(exhibitionPagePath);
+			generateExhibitionsPage(site, exhibitionPage, totalPages, site.getExhibitionRepo().getExhibitionsPage(exhibitionPage, postsPerPage), exhibitionPagePath);
 		}
+
 		for(Exhibition exhibition : site.getExhibitionRepo().getExhibitionsInDateOrder()){
 			generateFullExhibitionPage(site, exhibition);
 		}
@@ -72,20 +84,22 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		Files.copy(templateCSS.toPath(), stylePath.resolve("style.css"), StandardCopyOption.REPLACE_EXISTING);
 	}
 
-	private void generateHomepage(Site site) throws IOException {
-		generatePageHTML(site, site.getPage("home"), htmlRoot);
-	}
+//	private void generateHomepage(Site site) throws IOException {
+//		generatePageHTML(site, site.getPage("home"), htmlRoot);
+//	}
 
 	private void generatePageHTML(Site site, Page page, Path pagePath) throws IOException {
-		Context context = getBaseContext(site.getName(), site.getMenuItems(), page.getTitle(), page.getUrl());
+		Context context = getBaseContext(site.getName(), site.getMenuItems(), page.getMenuItem().getTitle(), page.getMenuItem().getUrl());
 		context.setVariable("page", page);
 		renderTemplateToFile("site/page", context, pagePath.resolve("index.html"));
 	}
 
-	private void generateExhibitionsPage(Site site, int page, List<Exhibition> exhibitions){
+	private void generateExhibitionsPage(Site site, int page, int totalPages, List<Exhibition> exhibitions, Path exhibitionPath) throws IOException {
 		Context context = getBaseContext(site.getName(), site.getMenuItems(), page == 1 ? "Exhibitions" : "Exhibitions - Page "+page, "exhibitions");
 		context.setVariable("page", page);
+		context.setVariable("totalPages", totalPages);
 		context.setVariable("exhibitions", exhibitions);
+		renderTemplateToFile("site/exhibitions", context, exhibitionPath.resolve("index.html"));
 	}
 
 	private void generateFullExhibitionPage(Site site, Exhibition exhibition){
@@ -96,17 +110,19 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	private void copyPageGallery(Page page, Path pagePath) throws IOException {
 		// Construct the page path and image directory path, create dirs if they don't exist
 		Path imageDir = pagePath.resolve("images");
-		File cmsImageDir = galleryRoot.resolve(page.getUrl()).toFile();
+		File cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl()).toFile();
 		Files.createDirectories(imageDir);
 
 		//Copy all the images from a gallery
-		for(File file : cmsImageDir.listFiles()) {
-			log.debug("Found file {}",file.getName());
-			Painting painting = page.getGallery().getPainting(file.getName());
-			if (painting != null) {
-				log.debug("Copying file {}",file.getName());
-				Path imagePath = imageDir.resolve(painting.getFilename());
-				Files.copy(file.toPath(), imagePath, StandardCopyOption.REPLACE_EXISTING);
+		if(page.hasGallery()){
+			for(File file : Objects.requireNonNull(cmsImageDir.listFiles())) {
+				log.debug("Found file {}",file.getName());
+				Painting painting = page.getGallery().getPainting(file.getName());
+				if (painting != null) {
+					log.debug("Copying file {}",file.getName());
+					Path imagePath = imageDir.resolve(painting.getFilename());
+					Files.copy(file.toPath(), imagePath, StandardCopyOption.REPLACE_EXISTING);
+				}
 			}
 		}
 	}

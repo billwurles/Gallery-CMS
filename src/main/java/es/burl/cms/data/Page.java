@@ -15,29 +15,30 @@ import lombok.Setter;
 @JsonDeserialize(builder = Page.Builder.class)
 public class Page {
 
-	private final String title;
-	private final String url;
-	@Setter
-	private int order;
+//	private final String title;
+//	private final String url;
+	private final MenuItem menuItem;
 	private final String content;
-	private final Painting insetImage;
-	private final boolean showInMenu; // = true;
+	private final Painting insetImage; //TODO: allow modification / upload of inset image
+	private final boolean showInMenu;
 	private Gallery gallery;
 
 	@JsonPOJOBuilder(withPrefix = "") // Removes "set" prefix from builder methods
 	public static class Builder {
-		private String title = "New Page";
-		private String url = "url";
-		private int order = Integer.MAX_VALUE;
+//		private String title = "New Page";
+//		private String url = "url";
+//		private int order = Integer.MAX_VALUE;
+		private MenuItem menuItem = MenuItem.builder().build();
 		private String content = null;
 		private Painting insetImage = null;
 		private boolean showInMenu = false;
 		private Gallery gallery = new Gallery.Builder().build();
 
 		public Builder fromPage(Page page){
-			this.title = page.title;
-			this.url = page.url;
-			this.order = page.order;
+//			this.title = page.title;
+//			this.url = page.url;
+//			this.order = page.order;
+			this.menuItem = page.menuItem;
 			this.content = page.content;
 			this.insetImage = page.insetImage;
 			this.showInMenu = page.showInMenu;
@@ -47,7 +48,7 @@ public class Page {
 	}
 
 	public MenuItem getMenuItem(){
-		return new MenuItem(order, title, url);
+		return menuItem;
 	}
 
 	public void addPaintingToGallery(Painting painting) {
@@ -55,14 +56,20 @@ public class Page {
 	}
 
 	public boolean hasContent() {
-		return this.content == null || this.content.replaceAll("\\s+", "").isEmpty();
+		if(this.content != null){
+			return !this.content.replaceAll("\\s+", "").isEmpty();
+		} else return false;
 	}
 
 	public boolean hasInsetImage() {
-		return this.insetImage == null || !this.insetImage.getFilename().isEmpty();
+		if(this.insetImage != null){
+			return !this.insetImage.getFilename().isEmpty();
+		} else return false;
 	}
 
 	public boolean hasGallery() {
-		return this.gallery == null || this.gallery.isEmpty();
+		if(this.gallery != null){
+			return !this.gallery.isEmpty();
+		} else return false;
 	}
 }

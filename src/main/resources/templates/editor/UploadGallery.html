@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="|Gallery Upload - ${page.title}|"></title>
+    <title th:text="|Gallery Upload - ${page.menuItem.title}|"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -18,13 +18,13 @@
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
                 <a href="#" th:href="@{'/page/' + ${item.url}}"
-                   th:text="${item.name}"
-                   th:classappend="${item.url == '/${page}' ? 'active' : ''}">
+                   th:text="${item.title}"
+                   th:classappend="${item.url == '/${page.menuItem.url}' ? 'active' : ''}">
                 </a>
             </li>
         </ul>
         <h1 class="logo">
-            <a href="/" th:text="|Gallery Upload for ${page.title}|"></a>
+            <a href="/" th:text="|Gallery Upload for ${page.menuItem.title}|"></a>
         </h1>
     </div>
 </nav>
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Preview and Metadata Form -->
-    <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{/page/{pageUrl}/gallery/upload(pageUrl=${page.url})}">
+    <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{/page/{pageUrl}/gallery/upload(pageUrl=${page.menuItem.url})}">
         <div id="preview-container"></div>
         <input type="hidden" name="metadata" id="metadata">
         <button type="submit">Save All</button>

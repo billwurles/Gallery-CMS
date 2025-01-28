@@ -22,7 +22,7 @@
         </div>
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
-                    <a href="#" th:href="@{'/page/' + ${item.url}}" th:text="${item.name}" th:classappend="${item.url == '/${page}' ? 'active' : ''}"></a>
+                    <a href="#" th:href="@{'/page/' + ${item.url}}" th:text="${item.title}" th:classappend="${item.url == '/${page}' ? 'active' : ''}"></a>
             </li>
         </ul>
         <h1 class="logo">
@@ -38,20 +38,11 @@
 
     <h1>Rearrange Pages</h1>
 
-
-
-<!--    <ul id="sortable">-->
-<!--        <li>Item 1</li>-->
-<!--        <li>Item 2</li>-->
-<!--        <li>Item 3</li>-->
-<!--        <li>Item 4</li>-->
-<!--    </ul>-->
-
     <ul id="sortable">
-        <li th:each="page : ${pages}"
-        th:data-id="${page.order}"
-        th:data-url="${page.url}"
-        th:text="${page.title}">
+        <li th:each="item : ${menuItems}"
+        th:data-id="${item.order}"
+        th:data-url="${item.url}"
+        th:text="${item.title}">
         </li>
     </ul>
 

@@ -43,7 +43,7 @@ public class EditorController {
 		model.addAttribute("page", "home");
 		model.addAttribute("name", site.getName());
 		model.addAttribute("menuItems", site.getMenuItems());
-		model.addAttribute("pages", site.getPagesInOrder());
+//		model.addAttribute("pages", site.getPagesInOrder());
 		return "editor/EditorHome";
 	}
 
@@ -81,7 +81,7 @@ public class EditorController {
 			@RequestParam(name = "page", defaultValue = "1") int page, // Query parameter "page"
 			Model model) {
 		int postsPerPage = 5;
-		int totalPages = (int) Math.ceil((double) site.getExhibitionRepo().getExhibitions().size() / postsPerPage);
+		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
 		List<Exhibition> exhibitions = site.getExhibitionRepo().getExhibitionsPage(page, postsPerPage);
 
 		model.addAttribute("exhibitions", exhibitions);

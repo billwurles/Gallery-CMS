@@ -18,6 +18,7 @@
         <div th:fragment="gallery(paintings, url)">
             <section th:if="${paintings}" class="grid">
                 <div th:each="painting : ${paintings}" th:key="${painting.filename}" class="painting">
+
                     <!-- Image and caption display -->
                     <div th:data-filename="${painting.filename}" th:onclick="|showModal(this.dataset.filename)|" style="cursor: pointer;">
                         <img th:src="@{'images/' + ${painting.filename}}"

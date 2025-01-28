@@ -85,21 +85,25 @@ public class AppConfig {
 
 	public static Site getFakeSite(Path galleryDir) { //TODO: make a test class
 		HashMap<String, Page> pages = new HashMap<>();
-		for (int i = 0; i < 3; i++) {
+		for (int i = 1; i < 4; i++) {
 			String url = "pageurl" + i;
 			pages.put(url, Page.builder()
-					.title("pageTitle" + i)
-					.url(url)
-					.order(i)
+					.menuItem(MenuItem.builder()
+							.title("pageTitle" + i)
+							.url(url)
+							.order(i+1)
+							.build())
 					.content(loremIpsum)
 					.showInMenu(true)
 					.build()
 			);
 		}
 		pages.put("the-sea", Page.builder()
-				.title("The Sea")
-				.url("the-sea")
-				.order(3)
+				.menuItem(MenuItem.builder()
+						.title("The Sea")
+						.url("the-sea")
+						.order(5)
+						.build())
 //				.content(loremIpsum)
 				.showInMenu(true)
 				.gallery(Gallery.builder()
@@ -119,6 +123,16 @@ public class AppConfig {
 							.build()
 			);
 		}
+
+		pages.put("home", Page.builder()
+						.menuItem(MenuItem.builder()
+								.title("Home")
+								.url("home")
+								.build())
+						.content(loremIpsum)
+						.insetImage(pages.get("the-sea").getGallery().getGalleryInOrder().get(0))
+						.build()
+		);
 
 		Site site = Site.builder()
 				.name("Arabella Harcourt-Cooze")

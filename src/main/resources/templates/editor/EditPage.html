@@ -76,7 +76,7 @@
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
                 <a href="#" th:href="@{'/page/' + ${item.url}}"
-                   th:text="${item.name}">
+                   th:text="${item.title}">
                     th:classappend="${item.url == '/${page}' ? 'active' : ''}">
                 </a>
             </li>
@@ -94,12 +94,12 @@
     </div>
 
     <!-- Gallery section -->
-    <a th:href="@{/page/{url}/gallery(url=${page.url})}">
+    <a th:href="@{/page/{url}/gallery(url=${page.menuItem.url})}">
         <h2>Edit Gallery</h2>
     </a>
 
     <h1>Site Content:</h1>
-    <form th:action="${newPage} ? @{/page/save} : @{/page/{url}/save(url=${page.url})}"
+    <form th:action="${newPage} ? @{/page/save} : @{/page/{url}/save(url=${page.menuItem.url})}"
           th:object="${page}"
           method="post">
         <!-- Save Button -->
@@ -107,11 +107,11 @@
 
         <!-- Page title and URL -->
         <label for="title">Title:</label>
-        <input id="title" type="text" th:field="*{title}" placeholder="Enter the title" required />
+        <input id="title" type="text" th:field="*{menuItem.title}" placeholder="Enter the title" required />
         <br>
 
         <label for="url">URL:</label>
-        <input id="url" type="text" th:field="*{url}" placeholder="Enter the URL" required />
+        <input id="url" type="text" th:field="*{menuItem.url}" placeholder="Enter the URL" required />
         <br>
 
         <label for="showInMenu">Show page in Navigation menu:</label>

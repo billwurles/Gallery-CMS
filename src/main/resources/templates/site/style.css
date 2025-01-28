@@ -363,7 +363,70 @@ nav a.active-nav-link {
 }
 
 
-/* Gallery ---------------------- */
+/* Exhibitions ---------------------- */
+.exhibition-content body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+.exhibition-content {
+    max-width: 800px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.exhibition-post hr {
+    border: 0;
+    height: 1px;
+    background: #ccc;
+    margin: 20px 0;
+}
+
+.pagination {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.pagination ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination ul li {
+    margin: 0 5px;
+}
+
+.pagination ul li a, .pagination ul li span {
+    text-decoration: none;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    color: #007bff;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.pagination ul li.active span {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+.pagination ul li.disabled span, .pagination ul li.disabled a {
+    color: #ccc;
+    pointer-events: none;
+}
+
+.pagination ul li a:hover {
+    background-color: #ddd;
+}
 
 /* Footer ---------------------- */
 footer {

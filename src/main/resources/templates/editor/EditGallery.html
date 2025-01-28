@@ -26,7 +26,7 @@
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
                 <a href="#" th:href="@{'/page/' + ${item.url}}"
-                   th:text="${item.name}"
+                   th:text="${item.title}"
                    th:classappend="${item.url == '/${page}' ? 'active' : ''}">
                 </a>
             </li>
@@ -42,11 +42,11 @@
     <div th:if="${message}" th:style="'color: ' + (${status} == 'success' ? 'green' : 'red')">
         <p id="messageContainer" th:text="${message}"></p>
     </div>
-    <a th:href="@{/page/{url}/gallery/upload(url=${page.url})}">Upload Images to Gallery</a>
+    <a th:href="@{/page/{url}/gallery/upload(url=${page.menuItem.url})}">Upload Images to Gallery</a>
     <h1>Gallery Content:</h1>
     <p>Drag paintings to rearrange</p>
 
-    <form id="galleryForm" th:action="@{/page/{url}/gallery/save(url=${page.url})}" method="post">
+    <form id="galleryForm" th:action="@{/page/{url}/gallery/save(url=${page.menuItem.url})}" method="post">
         <!-- Save Button -->
         <button type="submit">Save Changes</button>
 
@@ -55,7 +55,7 @@
         <div th:if="${hasGallery}">
             <ul id="image-list">
     <li th:each="painting : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}" th:data-order="${painting.order}">
-                    <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.url},filename=${painting.filename})}"
+                    <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.menuItem.url},filename=${painting.filename})}"
                          th:alt="${painting.title}" />
                     <div>
                         <label th:for="'title-' + ${painting.order}">Title:</label>

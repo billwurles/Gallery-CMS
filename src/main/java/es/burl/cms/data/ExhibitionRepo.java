@@ -35,6 +35,10 @@ public class ExhibitionRepo {
 		return exhibitions.get(id);
 	}
 
+	public int getTotalPages(int postsPerPage){ //TODO: Hold postsperpage in this object, allow editing in the controller
+		return (int) Math.ceil((double) exhibitions.size() / postsPerPage);
+	}
+
 	public List<Exhibition> getExhibitionsInDateOrder() {
 		return exhibitions.values()
 				.stream()

@@ -47,7 +47,7 @@ public class Site {
 	public List<Page> getPagesInOrder() {
 		return pages.values()
 				.stream()
-				.sorted(Comparator.comparingInt(Page::getOrder))
+				.sorted(Comparator.comparingInt(page -> page.getMenuItem().getOrder()))
 				.collect(Collectors.toList());
 	}
 
@@ -58,15 +58,23 @@ public class Site {
 				exhibitionRepo.getExhibitionOrder().setOrder(pageId);
 			} else {
 				Page page = pages.get(entry.getValue());
-				log.debug("Modifying order {} for {}", pageId, page.getTitle());
-				page.setOrder(pageId);
+				log.debug("Modifying order {} for {}", pageId, page.getMenuItem().getTitle());
+				page.getMenuItem().setOrder(pageId);
 			}
 		}
 	}
 
+	public int getNextPageOrder() {
+		return 1 + getMenuItems().stream()
+				.filter(menuItem -> menuItem.getOrder() != Integer.MAX_VALUE)
+				.max(Comparator.comparingInt(MenuItem::getOrder))
+				.map(MenuItem::getOrder)
+				.orElse(0);
+	}
+
 	public void addNewPage(Page page) {
-		log.debug("Saving page to site: {}, {}, {}, {}", page.getTitle(), page.getUrl(), page.getContent(), page.isShowInMenu());
-		pages.put(page.getUrl(), page);
+		log.debug("Saving page to site: {}, {}, {}, {}", page.getMenuItem().getTitle(), page.getMenuItem().getUrl(), page.getContent(), page.isShowInMenu());
+		pages.put(page.getMenuItem().getUrl(), page);
 	}
 
 	public void removePage(String url) {

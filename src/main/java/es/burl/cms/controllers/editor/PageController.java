@@ -1,5 +1,6 @@
 package es.burl.cms.controllers.editor;
 
+import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
 import lombok.extern.slf4j.Slf4j;
@@ -36,11 +37,14 @@ public class PageController {
 		// Save the page content (title, url, content, showInMenu)
 
 		site.addNewPage(Page.builder()
-				.title(title)
-				.url(url)
-				.content(content)
-				.showInMenu(showInMenu)
-				.build()
+						.menuItem(MenuItem.builder()
+							.title(title)
+							.url(url)
+							.order(site.getNextPageOrder())
+							.build())
+						.content(content)
+						.showInMenu(showInMenu)
+						.build()
 		);
 
 		// Pass the saved content back to the view
@@ -60,7 +64,7 @@ public class PageController {
 		log.debug("Editing page: {}", page.toString());
 
 		if (page != null) {
-			model.addAttribute("message", "Editing page " + page.getTitle());
+			model.addAttribute("message", "Editing page " + page.getMenuItem().getTitle());
 			model.addAttribute("page", page);  // Pass the page to the model
 			model.addAttribute("hasGallery", page.hasGallery());
 			return "editor/EditPage";
@@ -74,13 +78,16 @@ public class PageController {
 	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
 
+		Page originalPage = site.getPage(originalPageUrl);
 		site.addNewPage(Page.builder()
-				.title(title)
-				.url(url)
-				.content(content)
-				.showInMenu(showInMenu)
-				.gallery(site.getPageGallery(originalPageUrl))
-				.build()
+						.fromPage(originalPage)
+						.menuItem(MenuItem.builder()
+								.title(title)
+								.url(url)
+								.build())
+						.content(content)
+						.showInMenu(showInMenu)
+						.build()
 		);
 
 		if (!originalPageUrl.equals(url)) {

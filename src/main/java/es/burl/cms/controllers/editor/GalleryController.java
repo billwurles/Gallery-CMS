@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +45,7 @@ public class GalleryController {
 		log.debug("Editing gallery for page: {}", page.toString());
 
 		if (page != null) {
-			model.addAttribute("message", "Editing gallery " + page.getTitle());
+			model.addAttribute("message", "Editing gallery " + page.getMenuItem().getTitle());
 			model.addAttribute("page", page);  // Pass the page to the model
 			model.addAttribute("galleryRoot", galleryRoot);
 			model.addAttribute("hasGallery", page.getGallery() != null);
@@ -96,7 +95,7 @@ public class GalleryController {
 		if (page != null) {
 			model.addAttribute("menuItems", site.getMenuItems());
 			model.addAttribute("page", page);
-			model.addAttribute("message", "Upload and Edit Metadata for " + page.getTitle());
+			model.addAttribute("message", "Upload and Edit Metadata for " + page.getMenuItem().getTitle());
 			return "editor/UploadGallery";
 		} else {
 			return "404"; // Return a 404 page if the page is not found
