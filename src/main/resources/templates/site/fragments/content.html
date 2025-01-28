@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+    <div class="page" th:fragment="content(page)">
+        <section>
+            <div class="content">
+                <img class="inset-image"
+                     th:if="${page.hasInsetImage}"
+                     th:src="@{'images/inset/' + ${page.insetImage.filename}}"
+                     th:alt="${page.insetImage.title}"
+                />
+                <div class="content-text"
+                     th:if="${page.hasContent}"
+                     th:utext="${page.content}">
+                </div>
+            </div>
+
+            <div th:if="${page.hasGallery}"
+                 th:replace="~{site/fragments/gallery :: gallery(paintings=${page.gallery.getGalleryInOrder()}, url=${page.menuItem.url})}">
+            </div>
+        </section>
+    </div>
+</html>

@@ -85,23 +85,23 @@ public class AppConfig {
 
 	public static Site getFakeSite(Path galleryDir) { //TODO: make a test class
 		HashMap<String, Page> pages = new HashMap<>();
-		for (int i = 1; i < 4; i++) {
-			String url = "pageurl" + i;
-			pages.put(url, Page.builder()
-					.menuItem(MenuItem.builder()
-							.title("pageTitle" + i)
-							.url(url)
-							.order(i+1)
-							.build())
-					.content(loremIpsum)
-					.showInMenu(true)
-					.build()
-			);
-		}
-		pages.put("the-sea", Page.builder()
+//		for (int i = 1; i < 4; i++) {
+//			String url = "pageurl" + i;
+//			pages.put(url, Page.builder()
+//					.menuItem(MenuItem.builder()
+//							.title("pageTitle" + i)
+//							.url(url)
+//							.order(i+1)
+//							.build())
+//					.content(loremIpsum)
+//					.showInMenu(true)
+//					.build()
+//			);
+//		}
+		pages.put("flowers", Page.builder()
 				.menuItem(MenuItem.builder()
-						.title("The Sea")
-						.url("the-sea")
+						.title("Flowers")
+						.url("flowers")
 						.order(5)
 						.build())
 //				.content(loremIpsum)
@@ -111,26 +111,39 @@ public class AppConfig {
 						.build())
 				.build()
 		);
+//		pages.put("new-ting", Page.builder()
+//				.menuItem(MenuItem.builder()
+//						.title("Big Up")
+//						.url("new-ting")
+//						.order(6)
+//						.build())
+//						.content(loremIpsum)
+//				.showInMenu(true)
+//				.gallery(Gallery.builder()
+//						.gallery(getImageFiles(galleryDir))
+//						.build())
+//				.build()
+//		);
 
-		Map<String, Exhibition> exhibitionList = new HashMap<>();
-		for (int i = 0; i < 100; i++){
-//			String id = UUID.randomUUID().toString();
-			exhibitionList.put(String.valueOf(i), Exhibition.builder()
-							.id(String.valueOf(i))
-							.title("Exhibition "+i)
-							.date(Date.from(Instant.now().minusSeconds(i * 1000000L)))
-							.content(loremIpsum)
-							.build()
-			);
-		}
+//		Map<String, Exhibition> exhibitionList = new HashMap<>();
+//		for (int i = 0; i < 30; i++){
+////			String id = UUID.randomUUID().toString();
+//			exhibitionList.put(String.valueOf(i), Exhibition.builder()
+//							.id(String.valueOf(i))
+//							.title("Exhibition "+i)
+//							.date(Date.from(Instant.now().minusSeconds(i * 1000000L)))
+//							.content(loremIpsum)
+//							.build()
+//			);
+//		}
 
 		pages.put("home", Page.builder()
 						.menuItem(MenuItem.builder()
 								.title("Home")
 								.url("home")
 								.build())
-						.content(loremIpsum)
-						.insetImage(pages.get("the-sea").getGallery().getGalleryInOrder().get(0))
+//						.content(loremIpsum)
+//						.insetImage(pages.get("the-sea").getGallery().getGalleryInOrder().get(0))
 						.build()
 		);
 
@@ -138,7 +151,7 @@ public class AppConfig {
 				.name("Arabella Harcourt-Cooze")
 				.pages(pages)
 				.exhibitionRepo(ExhibitionRepo.builder()
-						.exhibitions(exhibitionList)
+//						.exhibitions(exhibitionList)
 						.build())
 				.build();
 		log.debug("Got site: {}", site);
@@ -147,30 +160,13 @@ public class AppConfig {
 	}
 
 	public static Map<String, Painting> getImageFiles(Path galleryDir) {
-		// Locate the folder in the static/images directory
-		//		File imageDir = null;
-		//		try {
-		//			imageDir = new ClassPathResource("static/images/extracted-ahc-images/thesea").getFile();
-		//		} catch (IOException e) {
-		//			e.printStackTrace();
-		//		}
-
-		// Check if the directory exists, create it if necessary
-//		if (!imageDir.exists()) {
-//			log.debug("Directory {} does not exist, creating", imageDir);
-//			if (!imageDir.mkdirs()) {
-//				// Handle error if directory cannot be created
-//				log.error("Failed to create directory: " + imageDir.getAbsolutePath());
-//			}
-//		}
-
 		// Locate the folder in the uploadDir folder instead of resources
-		File imageDir = galleryDir.resolve("the-sea").toFile();
+		File imageDir = galleryDir.resolve("flowers").toFile();
 
 		// List to hold ImageFile objects
 		Map<String, Painting> imageFiles = new HashMap<>();
 
-		boolean sold = true;
+		boolean sold = false;
 		// Traverse the directory
 		int i = 0;
 		for (File file : imageDir.listFiles()) {
@@ -182,12 +178,12 @@ public class AppConfig {
 				String fileNameWithoutExt = file.getName().replace(".jpg", "");
 
 				// Add the Painting object to the list
-				sold = !sold;
+//				sold = !sold;
 				imageFiles.put(file.getName(), Painting.builder()
 								.filename(file.getName())
 								.title(fileNameWithoutExt)
-								.dimensions("10x10")
-								.medium("oil on canvas")
+//								.dimensions("10x10")
+								.medium("Oil on Canvas")
 								.sold(sold)
 								.order(i++)
 								.build()

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${title} + ' - ' + ${siteName}"></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link href="/include/style.css" rel="stylesheet">
+    <script th:if="${pageType.equals('page') and page != null and page.hasGallery}" src="/include/script.js"></script></head>
+    <script th:if="${pageType.equals('error') and errorCode != null}" src="/include/error.js"></script></head>
+<body>
+    <div id="app">
+        <nav
+                th:replace="~{site/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${currentPage}, siteName=${siteName})}">
+        </nav>
+
+        <section th:switch="${pageType}">
+            <section th:case="'page'">
+                <div th:if="${page != null}"
+                     th:replace="~{site/fragments/content :: content(page=${page})}">
+                </div>
+            </section>
+
+            <section th:case="'exhibitions'">
+                <div th:if="${exhibitions != null}"
+                     th:replace="~{site/fragments/exhibitions :: exhibitions(exhibitions=${exhibitions}, exhibitionPage=${exhibitionPage}, totalPages=${totalPages})}">
+                </div>
+            </section>
+
+            <section th:case="'error'">
+                <div th:if="${errorCode != null}"
+                     th:replace="~{site/fragments/error :: error(code=${errorCode}, shortText=${shortText}, message=${message})}">
+                </div>
+            </section>
+        </section>
+
+
+        <footer
+                th:replace="~{site/fragments/footer :: footer(currentYear=${currentYear})}">
+        </footer>
+    </div>
+
+</body>
+</html>

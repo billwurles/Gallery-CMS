@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+    <div class="error" th:fragment="error(code, shortText, message)">
+        <h1 th:text="${code} + ' ' +${shortText}"></h1>
+        <br>
+        <h3><span class="uri">URL</span></h3>
+        <br>
+        <p th:utext="${message}">
+            <!--TODO: stick a nice photo in here-->
+        </p>
+    </div>
+</html>

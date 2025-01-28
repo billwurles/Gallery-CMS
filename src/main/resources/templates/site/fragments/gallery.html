@@ -1,40 +1,29 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
     <head>
-    <script>
-        // JavaScript to handle showing and hiding the modal
-        function showModal(paintingFilename) {
-            // Show modal
-            document.querySelector(`#modal-${paintingFilename}`).style.display = 'block';
-        }
-
-        function closeModal(paintingFilename) {
-            // Close modal
-            document.querySelector(`#modal-${paintingFilename}`).style.display = 'none';
-        }
-    </script>
     </head>
     <body>
         <div th:fragment="gallery(paintings, url)">
             <section th:if="${paintings}" class="grid">
-                <div th:each="painting : ${paintings}" th:key="${painting.filename}" class="painting">
-
+                <div th:each="painting, iterStat : ${paintings}" th:key="${iterStat.index}" class="painting">
                     <!-- Image and caption display -->
-                    <div th:data-filename="${painting.filename}" th:onclick="|showModal(this.dataset.filename)|" style="cursor: pointer;">
+                        <div th:data-id="${iterStat.index}" th:onclick="|showModal(this.dataset.id)|" style="cursor: pointer;">
                         <img th:src="@{'images/' + ${painting.filename}}"
                              th:alt="${painting.title}" />
                         <p class="caption" th:text="${painting.title}"></p>
                     </div>
 
-                    <!-- Modal fragment, only rendered when painting.show is true -->
-                    <div th:id="'modal-' + ${painting.filename}" class="painting-modal" style="display: none;">
-                        <button th:onclick="|closeModal(this.dataset.filename)|">Close</button>
-                        <img th:src="@{'images/' + ${painting.filename}}"
-                             th:alt="${painting.title}" />
-                        <p th:text="${painting.title}"></p>
-                        <p th:text="${painting.dimensions}"></p>
-                        <p th:text="${painting.medium}"></p>
-                        <p th:text="${painting.sold ? 'Sold' : 'Available'}"></p>
+                    <!-- Modal fragment -->
+                    <div th:id="|modal-${iterStat.index}|" class="painting-modal" style="display: none;">
+                        <div class="modal-content">
+                            <button th:onclick="|closeModal(${iterStat.index})|">Close</button>
+                            <img th:src="@{'images/' + ${painting.filename}}"
+                                 th:alt="${painting.title}" />
+                            <p th:text="${painting.title}"></p>
+                            <p th:text="${painting.dimensions}"></p>
+                            <p th:text="${painting.medium}"></p>
+                            <p th:text="${painting.sold ? 'Sold' : 'Available'}"></p>
+                        </div>
                     </div>
                 </div>
             </section>

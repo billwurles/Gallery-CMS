@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import static com.fasterxml.jackson.databind.util.ClassUtil.name;
+
 @Slf4j
 @RequestMapping("/page")
 @Controller
@@ -36,6 +38,8 @@ public class PageController {
 	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
 
+		log.debug("Saving new page: {}"+title);
+
 		site.addNewPage(Page.builder()
 						.menuItem(MenuItem.builder()
 							.title(title)
@@ -59,9 +63,9 @@ public class PageController {
 	//TODO: When you change page URL, you will need to update the folder structure of gallery
 	@GetMapping("/{pageUrl}") // TODO: make it work with trailing slash
 	public String editPage(@PathVariable("pageUrl") String pageUrl, Model model) {
+		log.debug("Editing page: {}", pageUrl);
 		model.addAttribute("menuItems", site.getMenuItems());
 		Page page = site.getPage(pageUrl);
-		log.debug("Editing page: {}", page.toString());
 
 		if (page != null) {
 			model.addAttribute("message", "Editing page " + page.getMenuItem().getTitle());
@@ -69,7 +73,7 @@ public class PageController {
 			model.addAttribute("hasGallery", page.hasGallery());
 			return "editor/EditPage";
 		} else {
-			return "404";  // Return a "404.html" page if page not found
+			return "404";  // Return a "error.html" page if page not found
 		}
 	}
 
@@ -77,6 +81,7 @@ public class PageController {
 	@PostMapping("/{pageUrl}/save")
 	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
+		log.debug("Saving edited page: "+originalPageUrl);
 
 		Page originalPage = site.getPage(originalPageUrl);
 		site.addNewPage(Page.builder()

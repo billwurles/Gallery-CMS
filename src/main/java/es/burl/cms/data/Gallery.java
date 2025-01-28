@@ -32,7 +32,7 @@ public class Gallery {
 		return gallery.get(filename);
 	}
 
-	protected void addPainting(Painting painting) {
+	public void addPainting(Painting painting) {
 		gallery.put(painting.getFilename(), painting);
 	}
 

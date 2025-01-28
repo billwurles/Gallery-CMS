@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+    <div th:fragment="exhibitions(exhibitions, exhibitionPage, totalPages)">
+        <section>
+            <div class="page">
+                <h1>Exhibitions</h1>
+
+                <!-- Loop through the list of exhibitions -->
+                <div th:each="exhibition : ${exhibitions}" class="exhibition-post">
+                    <h2>
+                        <!-- Link to the exhibition details -->
+                        <a th:href="@{/exhibitions/{id}(id=${exhibition.id})}" th:text="${exhibition.title}"></a>
+                    </h2>
+                    <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'MMMM dd, yyyy')}"></p>
+                    <div class="exhibition-content" th:utext="${exhibition.content}"></div>
+                    <hr>
+                </div>
+
+                <div class="pagination">
+                    <!-- Previous Button -->
+                    <a th:href="${exhibitionPage - 1 == 1 ? '/exhibitions' : '/exhibitions/page-' + (exhibitionPage - 1)}"
+                       th:classappend="${exhibitionPage == 1 ? 'disabled' : ''}">
+                        « Previous
+                    </a>
+
+                    <!-- Page Numbers -->
+                    <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                        <!-- Display first few pages, current page, last few pages -->
+                        <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= exhibitionPage - 2 and i <= exhibitionPage + 2)}"
+                            th:href="${i == 1 ? '/exhibitions' : '/exhibitions/page-' + i}"
+                            th:text="${i}"
+                            th:classappend="${i == exhibitionPage ? 'active' : ''}"></a>
+
+                        <!-- Display '...' for skipped pages -->
+                        <span th:if="${(i == 5 and exhibitionPage > 5) or (i == totalPages - 4 and exhibitionPage < totalPages - 4)}">...</span>
+                    </span>
+
+                    <!-- Next Button -->
+                    <a th:href="@{'/exhibitions/page-' + ${exhibitionPage + 1}}" th:classappend="${exhibitionPage == totalPages ? 'disabled' : ''}">
+                        Next »
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+</html>

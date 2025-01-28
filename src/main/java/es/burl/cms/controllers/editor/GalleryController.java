@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -51,9 +52,11 @@ public class GalleryController {
 			model.addAttribute("hasGallery", page.getGallery() != null);
 			return "editor/EditGallery";
 		} else {
-			return "404";  // Return a "404.html" page if page not found
+			return "404";  // Return a "error.html" page if page not found
 		}
 	}
+
+	//TODO: allow boolean flags per gallery of whether or not to display title etc info
 
 	@PostMapping("/save")
 	public ResponseEntity<Map<String, String>> saveGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody Gallery gallery) {
@@ -63,15 +66,30 @@ public class GalleryController {
 		// Prepare a response map
 		Map<String, String> response = new HashMap<>();
 
+		Gallery newGallery = Gallery.builder().build(); //TODO: stop it being ajax so that the data is updated in the view
 		if (page != null && gallery != null) {
-			// Replace the old gallery with the new one
-			page.setGallery(gallery);
+			for(Painting painting : gallery.getGalleryInOrder()){
+				Painting old = page.getGallery().getPainting(painting.getFilename());
+//				if(old != null && !painting.getTitle().equals(old.getTitle())){
+					String filename = Painting.generateSafeFilename(painting.getTitle(), painting.getFilename());
+					painting = Painting.builder()
+							.fromPainting(painting)
+							.filename(filename)
+							.build();
 
+					// Construct the file path and save the image
+					Path uploadPath = galleryRoot.resolve(pageUrl);
+					File image = uploadPath.resolve(old.getFilename()).toFile();
+					File newName = new File(image.getParent(), filename);
+					image.renameTo(newName);
+//				}
+				newGallery.addPainting(painting);
+			}
 			// Save the updated page with the new gallery
 
 			site.addNewPage(Page.builder()
 					.fromPage(page)
-					.gallery(gallery)
+					.gallery(newGallery)
 					.build()
 			);
 
@@ -119,8 +137,9 @@ public class GalleryController {
 			String imageData = newImage.getImageData();
 			byte[] imageBytes = Base64.getDecoder().decode(imageData); // Decode base64 image
 
+			String filename = Painting.generateSafeFilename(newImage.getTitle(), newImage.getFilename());
 			// Construct the file path and save the image
-			Path uploadPath = galleryRoot.resolve(pageUrl).resolve(newImage.getFilename());
+			Path uploadPath = galleryRoot.resolve(pageUrl).resolve(filename);
 			try {
 				Files.createDirectories(uploadPath.getParent());
 				Files.write(uploadPath, imageBytes);  // Save the image file
@@ -128,7 +147,7 @@ public class GalleryController {
 				// Create a Painting object and update gallery
 				Painting painting = Painting.builder()
 						.title(newImage.getTitle())
-						.filename(newImage.getFilename())
+						.filename(filename)
 						.dimensions(newImage.getDimensions())
 						.medium(newImage.getMedium())
 						.sold(newImage.isSold())

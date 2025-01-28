@@ -8,8 +8,35 @@
   margin: 0;
 }
 
-.html {
-  font-size: 62.5%;
+html, body {
+  height: 100%; /* Full height of the viewport */
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  box-sizing: border-box
+}
+
+#app {
+      font-family: Avenir, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      /* text-align: center; */
+      color: #2c3e50;
+  display: flex;
+  flex-direction: column; /* Stack content vertically */
+  min-height: 100vh; /* Ensure it takes up at least the full viewport height */
+  flex: 1;
+}
+
+.page {
+  /*margin: 3% 5%;*/
+}
+
+.page h1 {
+    /* position: relative; */
+    text-align: left;
+    font-size: 24pt;
+    margin-left: 18%;
+    /* float: left; */
 }
 
 .navbar input[type="checkbox"],
@@ -24,8 +51,6 @@
 }
 
 .navbar {
-  /* box-shadow: 0px 5px 10px 0px #aaa; */
-  /* position: fixed; */
   width: 100%;
   background: #fff;
   color: #000;
@@ -47,8 +72,10 @@
   align-items: center;
 }
 .logo {
-  order: 1;
-  font-size: 1.2rem;
+    order: 1;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
 }
 
 .menu-items li {
@@ -66,15 +93,15 @@
   /* transition: color 0.3s ease-in-out; */
 }
 
-.navbar a.router-link-exact-active {
-  color: #42b983;
+.navbar a.active {
+  color: #318760;
 }
 
 .navbar a:hover {
   color: #117964;
 }
 
-@media (max-width: 778px) {
+@media (max-width: 990px) {
   .navbar {
     opacity: 0.95;
   }
@@ -229,44 +256,153 @@ nav a.active-nav-link {
     font-weight: bold;
 } */
 
+/* Content ----------------------- */
+
+.inset-image {
+  float: right;
+  width: 30%;
+  padding: 2%;
+  max-width: 100%;
+}
+.content-text {
+  text-align: justify;
+  width: 90%;
+  margin: 0 auto;
+}
+.content {
+  margin: 3% 5%;
+}
+.content h1 {
+  position: relative;
+  text-align: left;
+  font-size: 24pt;
+  margin-left: 15%;
+  float: left;
+}
+.content-details {
+  display: inline;
+  /* margin:  */
+  justify-content: left;
+  flex-wrap: wrap;
+  margin: 0 15%;
+  justify-content: space-between;
+}
 
 /* Gallery ---------------------- */
 
 .grid {
-  display: flex;
-  /* margin:  */
+  display: grid;
+  gap: 10px; /* Space between grid items */
+  margin: 0 8%; /* Center the grid */
+  padding: 10px; /* Add padding for better spacing */
+  grid-template-columns: repeat(auto-fit, minmax(350px, 24%)); /* Adjust column size dynamically */
   justify-content: center;
-  flex-wrap: wrap;
-  /* margin: 0 6%; */
-  /* justify-content: space-between; */
 }
+
+/* Fix for last row alignment */
+.grid::after {
+  content: '';
+  flex: auto; /* Fill remaining space to balance last row */
+}
+
 .painting {
+  flex: 1 1 calc(25% - 10px); /* Each image takes 25% width minus gap */
+  box-sizing: border-box;
+  position: relative;
+  margin-right: 5%;
   display: flex;
-  min-width: 0;
-  max-width: 25%;
-  margin: 5px;
-  /* transition: 0.8s ease; */
-  padding-bottom: 30px;
+  flex-direction: column; /* Stack image and caption */
+  justify-content: center; /* Center-align content horizontally */
+  align-items: center; /* Center-align content vertically */
+  overflow: visible;
+  position: relative;
 }
-.painting p {
-  /* position: absolute; */
-  display: block;
-  color: #33404e;
-  /* transform: translate(0%, 120%); */
-  margin-bottom: 0;
-  align-self: flex-end;
-}
+
 .painting img {
-  box-shadow: 5px 5px 10px 2px #838383;
-  /* width: 450px; */
-  max-height: 250px;
-  max-width: 350px;
+  width: 100%; /* Consistent width */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: cover; /* Ensure proper cropping if necessary */
+  vertical-align: middle; /* Center-align images */
+  box-shadow: 5px 5px 10px 2px #9c9c9c;
+  border: 2px solid #9c9c9c;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.painting p {
+  text-align: center;
+    margin: 10px 0 0; /* Add 10px margin above the text */
+    font-size: 1rem; /* Optional: Adjust font size */
+}
+
+/* Prevent scaling issues for last row */
+.grid > .painting:nth-child(n) {
+  flex: 1 1 25%;
+}
+
+/* Modal Styles */
+.painting-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  background-color: rgba(0, 0, 0, 0.8); /* Dim background */
+  z-index: 1050;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
 }
 
+.painting-modal .modal-content {
+  position: relative;
+  display: inline-block;
+  max-width: 90%; /* Limit the size of the image to fit screen */
+  max-height: 80%; /* Prevent overflow vertically */
+  object-fit: contain; /* Maintain aspect ratio */
+  border-radius: 10px;
+}
 
+.painting-modal img {
+  margin-top: 75px; /* Push the image down */
+  width: 100%; /* Match container width */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: contain; /* Prevent distortion */
+  border-radius: 10px; /* Keep rounded corners inside shadow */
+  display: block; /* Prevent inline gaps */
+}
+
+.painting-modal p {
+  color: white;
+  text-align: center;
+  font-size: 1.3rem;
+  margin: 10px 0;
+  text-shadow: 4px 4px 3px black;
+}
+
+.painting-modal button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.3); /* Optional: add background */
+  padding: 5px 10px;
+  border-radius: 5px; /* Rounded corners */
+  font-size: 1.5rem;
+  color: white;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  text-shadow: 4px 4px 3px black;
+}
+
+/* Close button hover effect */
+.painting-modal button:hover {
+  color: #ff4d4d;
+}
 
 
 /* .modal img {
@@ -374,11 +510,10 @@ nav a.active-nav-link {
 }
 
 .exhibition-content {
-    max-width: 800px;
+    max-width: 90%;
     margin: 20px auto;
     background: #fff;
     padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .exhibition-post hr {
@@ -386,6 +521,10 @@ nav a.active-nav-link {
     height: 1px;
     background: #ccc;
     margin: 20px 0;
+}
+
+.exhibition-post h2 a {
+    text-decoration: none;
 }
 
 .pagination {
@@ -428,13 +567,27 @@ nav a.active-nav-link {
     background-color: #ddd;
 }
 
+/* Error ---------------------- */
+
+.error {
+  margin: 10% 15%;
+}
+.uri {
+  font-weight: bold;
+}
+
+
 /* Footer ---------------------- */
 footer {
     /* position: fixed;
-    bottom: 0; */
-    margin: 25px;
+    bottom: 0;
+    margin: 25px; */
     text-align: center;
-}
-footer p {
     padding: 20px;
+    margin-top: auto;
+}
+
+footer p {
+  margin: 0;
+  font-size: 0.8em;
 }
