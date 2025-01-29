@@ -121,6 +121,7 @@ public class GalleryController {
 	}
 
 	//TODO: pass in nextInt in order
+	//TODO: check unique filenames
 	@PostMapping("/upload")
 	public String uploadGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody ImageUploadDTO imageUploadDTO, // Handle JSON payload
 								Model model) throws JsonProcessingException {

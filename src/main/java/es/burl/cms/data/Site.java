@@ -39,7 +39,7 @@ public class Site {
 		Stream<MenuItem> menuStream = pages.values().stream()
 				.filter(Page::isShowInMenu)
 				.map(Page::getMenuItem);
-		return Stream.concat(menuStream, Stream.of(exhibitionRepo.getExhibitionOrder()))
+		return Stream.concat(menuStream, Stream.of(exhibitionRepo.getMenuItem()))
 				.sorted(Comparator.comparingInt(MenuItem::getOrder))
 				.collect(Collectors.toList());
 	}
@@ -54,8 +54,8 @@ public class Site {
 	public void updatePageOrder(Map<Integer, String> order) {
 		for (Map.Entry<Integer, String> entry : order.entrySet()) {
 			int pageId = entry.getKey();
-			if(entry.getValue().equals(exhibitionRepo.getExhibitionOrder().getUrl())){
-				exhibitionRepo.getExhibitionOrder().setOrder(pageId);
+			if(entry.getValue().equals(exhibitionRepo.getMenuItem().getUrl())){
+				exhibitionRepo.getMenuItem().setOrder(pageId);
 			} else {
 				Page page = pages.get(entry.getValue());
 				log.debug("Modifying order {} for {}", pageId, page.getMenuItem().getTitle());

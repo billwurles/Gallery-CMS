@@ -6,51 +6,44 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<nav class="navbar">
-    <div class="navbar-container container">
-        <h1 class="logo">
-            <a href="/">Exhibition Blog</a>
-        </h1>
-        <ul class="menu-items">
-            <li><a href="/" class="active">Home</a></li>
-            <li><a href="/about">About</a></li>
-            <li><a href="/contact">Contact</a></li>
-        </ul>
-    </div>
+
+<nav
+        th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${exhibitions.menuItem.url}, siteName='Exhibitions')}">
 </nav>
 
 <div class="content">
     <h1>Exhibitions</h1>
+    <h2><a href="/exhibitions/new">Create new exhibition post</a></h2>
 
     <!-- Loop through the list of exhibitions -->
-    <div th:each="exhibition : ${exhibitions}" class="exhibition-post">
-        <h2>
+    <div th:each="exhibition : ${exhibitionsPage}" class="exhibition-post">
+        <h1>
             <!-- Link to the exhibition details -->
             <a th:href="@{/exhibitions/{id}(id=${exhibition.id})}" th:text="${exhibition.title}"></a>
-        </h2>
-        <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'MMMM dd, yyyy')}"></p>
+        </h1>
+        <p class="exhibition-date" th:text="${#temporals.format(exhibition.date, 'HH:mm - dd/MM/yyyy')}"></p>
         <div class="exhibition-content" th:utext="${exhibition.content}"></div>
         <hr>
     </div>
 
-    <div class="pagination">
+    <div class="pagination" th:if="${totalPages > 1}">
         <!-- Previous Button -->
-    <a th:href="@{'?page=' + ${page - 1}}" th:classappend="${page == 1 ? 'disabled' : ''}">« Previous</a>
+        <a th:href="@{'?page=' + ${page - 1}}" th:classappend="${page == 1 ? 'disabled' : ''}">« Previous</a>
 
-        <!-- Page Numbers -->
-        <span th:each="i : ${#numbers.sequence(1, totalPages)}">
-        <!-- Display first few pages, current page, last few pages -->
-            <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= page - 2 and i <= page + 2)}"
-           th:href="@{'?page=' + ${i}}"
-               th:text="${i}"
-               th:classappend="${i == page ? 'active' : ''}"></a>
+            <!-- Page Numbers -->
+            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+            <!-- Display first few pages, current page, last few pages -->
+                <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= page - 2 and i <= page + 2)}"
+               th:href="@{'?page=' + ${i}}"
+                   th:text="${i}"
+                   th:classappend="${i == page ? 'active' : ''}"></a>
 
-                <!-- Display '...' for skipped pages -->
-            <span th:if="${(i == 5 and page > 5) or (i == totalPages - 4 and page < totalPages - 4)}">...</span>
-        </span>
+                    <!-- Display '...' for skipped pages -->
+                <span th:if="${(i == 5 and page > 5) or (i == totalPages - 4 and page < totalPages - 4)}">...</span>
+            </span>
 
-        <!-- Next Button -->
-    <a th:href="@{'?page=' + ${page + 1}}" th:classappend="${page == totalPages ? 'disabled' : ''}">Next »</a>
+            <!-- Next Button -->
+        <a th:href="@{'?page=' + ${page + 1}}" th:classappend="${page == totalPages ? 'disabled' : ''}">Next »</a>
     </div>
 
 
@@ -64,28 +57,6 @@
         padding: 0;
         background-color: #f9f9f9;
         color: #333;
-    }
-
-    .navbar {
-        background: #333;
-        color: #fff;
-        padding: 10px 0;
-    }
-
-    .navbar-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 20px;
-    }
-
-    .navbar a {
-        color: #fff;
-        text-decoration: none;
-        margin: 0 10px;
-        font-size: 1.2rem;
     }
 
     .content {

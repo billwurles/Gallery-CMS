@@ -33,6 +33,7 @@ public class PageController {
 	}
 
 	//TODO: Have a live flag (maybe instead of showInMenu) so that DIY pages aren't live
+	//TODO: check unique page names - also can't use home - make default home?
 
 	@PostMapping("/save") //TODO: How to handle gallery before page is saved
 	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {

@@ -75,47 +75,4 @@ public class EditorController {
 
 		return "redirect:/"; // Redirect to the home after saving
 	}
-
-	@GetMapping("/exhibitions")
-	public String getExhibitions(
-			@RequestParam(name = "page", defaultValue = "1") int page, // Query parameter "page"
-			Model model) {
-		int postsPerPage = 5;
-		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
-		List<Exhibition> exhibitions = site.getExhibitionRepo().getExhibitionsPage(page, postsPerPage);
-
-		model.addAttribute("exhibitions", exhibitions);
-		model.addAttribute("page", page);
-		model.addAttribute("totalPages", totalPages);
-		model.addAttribute("menuItems", site.getMenuItems());
-
-		return "editor/ViewExhibitions";
-	}
-
-	@GetMapping("/exhibitions/{id}")
-	public String editExhibition(@PathVariable("id") String id, Model model){
-		model.addAttribute("name", site.getName());
-		model.addAttribute("menuItems", site.getMenuItems());
-		model.addAttribute("exhibition", site.getExhibitionRepo().get(id));
-		return "editor/EditExhibition";
-	}
-
-	// Save method to handle POST requests
-	@PostMapping("/exhibitions/{id}/save")
-	public ResponseEntity<?> saveExhibition(@PathVariable("id") String id, @RequestBody Exhibition exhibition) {
-		try {
-			// Log the incoming exhibition object (for debugging)
-			System.out.println("Received Exhibition: " + exhibition);
-
-			site.getExhibitionRepo().add(exhibition);
-
-			// Return success response
-			return ResponseEntity.ok(exhibition); // Return the saved exhibition
-		} catch (Exception e) {
-			// Handle errors (e.g., log them and send an error response)
-			System.err.println("Error saving exhibition: " + e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Error saving exhibition: " + e.getMessage());
-		}
-	}
 }

@@ -19,12 +19,12 @@ import java.util.stream.Collectors;
 public class ExhibitionRepo {
 
 	private final Map<String, Exhibition> exhibitions;
-	private final MenuItem exhibitionOrder;
+	private final MenuItem menuItem;
 
 	@JsonPOJOBuilder(withPrefix = "")
 	public static class Builder {
 		private Map<String, Exhibition> exhibitions = new HashMap<>();
-		private MenuItem exhibitionOrder = new MenuItem(1, "Exhibitions", "exhibitions");
+		private MenuItem menuItem = new MenuItem(1, "Exhibitions", "exhibitions");
 	}
 
 	public void add(Exhibition exhibition){

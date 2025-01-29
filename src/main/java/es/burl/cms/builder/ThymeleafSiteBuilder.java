@@ -4,7 +4,6 @@ import es.burl.cms.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.web.server.ErrorPage;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.context.*;
@@ -60,7 +59,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		}
 
 		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
-		Path exhibitionPath = htmlRoot.resolve(site.getExhibitionRepo().getExhibitionOrder().getUrl());
+		Path exhibitionPath = htmlRoot.resolve(site.getExhibitionRepo().getMenuItem().getUrl());
 
 		for(int exhibitionPage = 1; exhibitionPage <= totalPages; exhibitionPage++){
 			log.debug("Generating exhibition page {}",exhibitionPage);
