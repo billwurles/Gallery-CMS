@@ -3,6 +3,8 @@ package es.burl.cms.backup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.burl.cms.data.Site;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.util.Date;
 
 @Slf4j
 @Data
@@ -20,6 +24,8 @@ public class JsonBackup implements BackupSite {
 	private final Path backupPath;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
+//			.registerModule(new JavaTimeModule())
+//			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // Allow unknown properties
 
 	@Override
@@ -27,6 +33,8 @@ public class JsonBackup implements BackupSite {
 		try {
             // Serialize Site object to JSON
             String jsonSite = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(site);
+
+			Date date = Date.from(Instant.now());
 			try {
 //				log.debug("Backing up site to: {} ", site);
 				Files.createDirectories(backupPath.getParent());

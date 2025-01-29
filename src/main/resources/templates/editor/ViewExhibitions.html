@@ -19,9 +19,9 @@
     <div th:each="exhibition : ${exhibitionsPage}" class="exhibition-post">
         <h1>
             <!-- Link to the exhibition details -->
-            <a th:href="@{/exhibitions/{id}(id=${exhibition.id})}" th:text="${exhibition.title}"></a>
+            <a th:href="@{/exhibitions/{url}(url=${exhibition.url})}" th:text="${exhibition.title}"></a>
         </h1>
-        <p class="exhibition-date" th:text="${#temporals.format(exhibition.date, 'HH:mm - dd/MM/yyyy')}"></p>
+        <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'dd/MM/yyyy')}"></p>
         <div class="exhibition-content" th:utext="${exhibition.content}"></div>
         <hr>
     </div>

@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Data
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
-@Builder(builderClassName = "Builder", toBuilder = true)
+@Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = Site.Builder.class)
 public class Site {
 

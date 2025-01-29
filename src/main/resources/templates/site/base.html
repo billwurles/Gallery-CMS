@@ -25,6 +25,12 @@
                 </div>
             </section>
 
+            <section th:case="'exhibition'">
+                <div th:if="${exhibition != null}"
+                     th:replace="~{site/fragments/exhibition :: exhibition(exhibition=${exhibition})}">
+                </div>
+            </section>
+
             <section th:case="'error'">
                 <div th:if="${errorCode != null}"
                      th:replace="~{site/fragments/error :: error(code=${errorCode}, shortText=${shortText}, message=${message})}">

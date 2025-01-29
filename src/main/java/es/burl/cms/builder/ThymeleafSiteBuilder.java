@@ -59,20 +59,22 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		}
 
 		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
-		Path exhibitionPath = htmlRoot.resolve(site.getExhibitionRepo().getMenuItem().getUrl());
+		Path exhibitionsPath = htmlRoot.resolve(site.getExhibitionRepo().getMenuItem().getUrl());
 
 		for(int exhibitionPage = 1; exhibitionPage <= totalPages; exhibitionPage++){
 			log.debug("Generating exhibition page {}",exhibitionPage);
-			Path exhibitionPagePath = exhibitionPath;
+			Path exhibitionPagePath = exhibitionsPath;
 			if(exhibitionPage > 1) {
-				exhibitionPagePath = exhibitionPath.resolve("page-"+exhibitionPage);
+				exhibitionPagePath = exhibitionsPath.resolve("page-"+exhibitionPage);
 			}
 			Files.createDirectories(exhibitionPagePath);
 			generateExhibitionsPage(site, exhibitionPage, totalPages, site.getExhibitionRepo().getExhibitionsPage(exhibitionPage, postsPerPage), exhibitionPagePath);
 		}
 
 		for(Exhibition exhibition : site.getExhibitionRepo().getExhibitionsInDateOrder()){
-			generateFullExhibitionPage(site, exhibition);
+			Path exhibitionPath = exhibitionsPath.resolve(exhibition.getUrl());
+			Files.createDirectories(exhibitionPath);
+			generateFullExhibitionPage(site, exhibition, exhibitionPath);
 		}
 
 	}
@@ -106,19 +108,19 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		renderTemplateToFile("site/base", context, pagePath.resolve("index.html"));
 	}
 
-	private void generateExhibitionsPage(Site site, int exhibitionPage, int totalPages, List<Exhibition> exhibitions, Path exhibitionPath) throws IOException {
+	private void generateExhibitionsPage(Site site, int exhibitionPage, int totalPages, List<Exhibition> exhibitions, Path exhibitionsPath) throws IOException {
 		Context context = getBaseContext(site.getName(), "exhibitions", site.getMenuItems(),
-				exhibitionPage == 1 ? "Exhibitions" : "Exhibitions - Page "+exhibitionPage,
-				"exhibitions");
+				exhibitionPage == 1 ? "Exhibitions" : "Exhibitions - Page "+exhibitionPage, "exhibitions");
 		context.setVariable("exhibitionPage", exhibitionPage);
 		context.setVariable("totalPages", totalPages);
 		context.setVariable("exhibitions", exhibitions);
-		renderTemplateToFile("site/base", context, exhibitionPath.resolve("index.html"));
+		renderTemplateToFile("site/base", context, exhibitionsPath.resolve("index.html"));
 	}
 
-	private void generateFullExhibitionPage(Site site, Exhibition exhibition){
-		Context context = getBaseContext(site.getName(), "exhibition", site.getMenuItems(), "Exhibition - "+exhibition.getTitle(), "exhibitions");
+	private void generateFullExhibitionPage(Site site, Exhibition exhibition, Path exhibitionPath) throws IOException {
+		Context context = getBaseContext(site.getName(), "exhibition", site.getMenuItems(), exhibition.getTitle(), "exhibitions");
 		context.setVariable("exhibition", exhibition);
+		renderTemplateToFile("site/base", context, exhibitionPath.resolve("index.html"));
 	}
 
 	private void copyPageGallery(Page page, Path pagePath) throws IOException {

@@ -28,7 +28,7 @@ public class ExhibitionRepo {
 	}
 
 	public void add(Exhibition exhibition){
-		exhibitions.put(exhibition.getId(), exhibition);
+		exhibitions.put(exhibition.getUrl(), exhibition);
 	}
 
 	public Exhibition get(String id){

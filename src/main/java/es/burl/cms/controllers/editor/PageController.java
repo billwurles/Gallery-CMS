@@ -1,5 +1,6 @@
 package es.burl.cms.controllers.editor;
 
+//import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
@@ -85,9 +86,11 @@ public class PageController {
 		log.debug("Saving edited page: "+originalPageUrl);
 
 		Page originalPage = site.getPage(originalPageUrl);
-		site.addNewPage(Page.builder()
-						.fromPage(originalPage)
-						.menuItem(MenuItem.builder()
+//		originalPage.setTitle();
+//		originalPage.setContent(content);
+
+		site.addNewPage(originalPage.toBuilder()
+						.menuItem(originalPage.getMenuItem().toBuilder()
 								.title(title)
 								.url(url)
 								.build())

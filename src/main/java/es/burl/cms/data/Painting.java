@@ -30,16 +30,6 @@ public class Painting {
 		private String medium = "";
 		private boolean sold = false;
 		private int order = 100;
-
-		public Builder fromPainting(Painting painting){
-			this.title = painting.title;
-			this.filename = painting.filename;
-			this.dimensions = painting.dimensions;
-			this.medium = painting.medium;
-			this.sold = painting.sold;
-			this.order = painting.order;
-			return this;
-		}
 	}
 
 	public static String generateSafeFilename(String titleToGenerateFrom, String oldFilenameWithExtension) {

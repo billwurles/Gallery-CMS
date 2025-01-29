@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<div class="page" th:fragment="exhibition(exhibition)">
+    <section>
+        <div class="content">
+            <h1 th:text="${exhibition.title}"></h1>
+            <h3 th:text="${#dates.format(exhibition.date, 'dd/MM/yyyy')}"></h3>
+
+            <div class="content-text"
+                 th:utext="${exhibition.content}">
+            </div>
+        </div>
+    </section>
+</div>
+</html>

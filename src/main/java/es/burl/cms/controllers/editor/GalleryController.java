@@ -72,8 +72,7 @@ public class GalleryController {
 				Painting old = page.getGallery().getPainting(painting.getFilename());
 //				if(old != null && !painting.getTitle().equals(old.getTitle())){
 					String filename = Painting.generateSafeFilename(painting.getTitle(), painting.getFilename());
-					painting = Painting.builder()
-							.fromPainting(painting)
+					painting = painting.toBuilder()
 							.filename(filename)
 							.build();
 
@@ -85,13 +84,9 @@ public class GalleryController {
 //				}
 				newGallery.addPainting(painting);
 			}
-			// Save the updated page with the new gallery
 
-			site.addNewPage(Page.builder()
-					.fromPage(page)
-					.gallery(newGallery)
-					.build()
-			);
+			// Save the updated page with the new gallery
+			page.setGallery(newGallery);
 
 			// Success message
 			response.put("status", "success");
