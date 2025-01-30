@@ -18,6 +18,6 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./:/app  # Mount the same folder for Spring Boot to write to
+      - ./appdata/:/appdata/  # Mount the same folder for Spring Boot to write to
     environment:
       - SPRING_PROFILES_ACTIVE=prod
