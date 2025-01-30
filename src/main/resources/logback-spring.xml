@@ -12,9 +12,21 @@
     </encoder>
 </appender>
 
+<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Customize log output format -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</pattern>        </encoder>
+    </appender>
+
 <!-- Root logger: Default logging level -->
 <root level="INFO">
     <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="STDOUT"/>
+</root>
+
+<root level="DEBUG">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="STDOUT"/>
 </root>
 
 <!-- Log level for common Spring packages -->

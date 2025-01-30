@@ -36,6 +36,8 @@ public class AppConfig {
 
 	@Bean
 	public Site getSite() {
+		log.debug("Debug Logs Enabled");
+		log.info("CMS Application Starting up - getting Site object");
 		if (site == null) {
 			if (Files.exists(backupPath)) {
 				try {
@@ -44,6 +46,7 @@ public class AppConfig {
 					log.error("Unable to get Site from JSON backup", e);
 				}
 			} else {
+				log.debug("No backup available, building fake site");
 				site = getFakeSite(galleryRoot);
 			}
 		}
