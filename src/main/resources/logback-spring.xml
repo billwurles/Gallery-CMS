@@ -30,7 +30,7 @@
 </root>
 
 <!-- Log level for common Spring packages -->
-<logger namqe="org.springframework.web" level="ERROR"/>
+<logger name="org.springframework.web" level="ERROR"/>
 <logger name="org.springframework" level="INFO"/>
 
 <!-- Enable debug level logging for certain packages -->
