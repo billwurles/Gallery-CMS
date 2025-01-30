@@ -30,6 +30,7 @@
 </root>
 
 <!-- Log level for common Spring packages -->
+<logger name="org.apache" level="ERROR"/>
 <logger name="org.springframework.web" level="ERROR"/>
 <logger name="org.springframework" level="INFO"/>
 
