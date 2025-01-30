@@ -9,7 +9,7 @@ services:
       - ./appdata/html_root:/usr/share/nginx/html  # Bind mount the local folder for Nginx
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - springboot
+      - ahc_cms
 
   ahc_cms:
     build:
