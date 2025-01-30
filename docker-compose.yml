@@ -11,7 +11,7 @@ services:
     depends_on:
       - springboot
 
-  springboot:
+  ahc_cms:
     build:
       context: .  # Build from the root of your project (Gallery_CMS)
       dockerfile: Dockerfile  # Use the Dockerfile in the root directory
