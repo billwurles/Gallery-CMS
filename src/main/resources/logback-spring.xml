@@ -21,7 +21,7 @@
 <!-- Root logger: Default logging level -->
 <root level="INFO">
     <appender-ref ref="CONSOLE"/>
-    <appender-ref ref="STDOUT"/>
+<!--    <appender-ref ref="STDOUT"/>-->
 </root>
 
 <root level="DEBUG">
@@ -30,7 +30,7 @@
 </root>
 
 <!-- Log level for common Spring packages -->
-<logger name="org.springframework.web" level="ERROR"/>
+<logger namqe="org.springframework.web" level="ERROR"/>
 <logger name="org.springframework" level="INFO"/>
 
 <!-- Enable debug level logging for certain packages -->
