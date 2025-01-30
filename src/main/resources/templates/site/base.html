@@ -4,8 +4,9 @@
     <title th:text="${title} + ' - ' + ${siteName}"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link href="/include/style.css" rel="stylesheet">
-    <script th:if="${pageType.equals('page') and page != null and page.hasGallery}" src="/include/script.js"></script></head>
-    <script th:if="${pageType.equals('error') and errorCode != null}" src="/include/error.js"></script></head>
+    <script th:if="${pageType.equals('page') and page != null and page.hasGallery}" src="/include/gallery.js"></script></head>
+    <script th:if="${pageType.equals('error') and errorCode != null}" src="/include/error.js"></script>
+</head>
 <body>
     <div id="app">
         <nav

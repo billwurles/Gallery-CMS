@@ -32,6 +32,8 @@ public class AppConfig {
 	@Value("${posts.per.page}")
 	private int postsPerPage;
 
+	private static final String homepageUniqueKey = "$$@-UniqueHomeKey-@$$";
+
 	@Bean
 	public Site getSite() {
 		if (site == null) {
@@ -70,6 +72,12 @@ public class AppConfig {
 	@Qualifier("getPostsPerPage")
 	public int getPostsPerPage() {
 		return postsPerPage;
+	}
+
+	@Bean
+	@Qualifier("getHomeKey")
+	public String getHomeKey() {
+		return homepageUniqueKey;
 	}
 
 	public static final String loremIpsum = """
@@ -137,10 +145,10 @@ public class AppConfig {
 //			);
 //		}
 
-		pages.put("home", Page.builder()
+		pages.put(homepageUniqueKey, Page.builder()
 						.menuItem(MenuItem.builder()
 								.title("Home")
-								.url("home")
+								.url(homepageUniqueKey)
 								.build())
 //						.content(loremIpsum)
 //						.insetImage(pages.get("the-sea").getGallery().getGalleryInOrder().get(0))

@@ -2,6 +2,7 @@ package es.burl.cms.controllers.editor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import es.burl.cms.data.*;
+import es.burl.cms.helper.Filesystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,8 +34,7 @@ public class GalleryController {
 
 	@Autowired
 	public GalleryController(Site site,
-							 @Qualifier("getGalleryRoot") Path galleryRoot
-	) {
+							 @Qualifier("getGalleryRoot") Path galleryRoot) {
 		this.site = site;
 		this.galleryRoot = galleryRoot;
 	}
@@ -60,34 +60,11 @@ public class GalleryController {
 
 	@PostMapping("/save")
 	public ResponseEntity<Map<String, String>> saveGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody Gallery gallery) {
-		// Get the page object
 		Page page = site.getPage(pageUrl);
 
-		// Prepare a response map
 		Map<String, String> response = new HashMap<>();
 
-		Gallery newGallery = Gallery.builder().build(); //TODO: stop it being ajax so that the data is updated in the view
-		if (page != null && gallery != null) {
-			for(Painting painting : gallery.getGalleryInOrder()){
-				Painting old = page.getGallery().getPainting(painting.getFilename());
-//				if(old != null && !painting.getTitle().equals(old.getTitle())){
-					String filename = Painting.generateSafeFilename(painting.getTitle(), painting.getFilename());
-					painting = painting.toBuilder()
-							.filename(filename)
-							.build();
-
-					// Construct the file path and save the image
-					Path uploadPath = galleryRoot.resolve(pageUrl);
-					File image = uploadPath.resolve(old.getFilename()).toFile();
-					File newName = new File(image.getParent(), filename);
-					image.renameTo(newName);
-//				}
-				newGallery.addPainting(painting);
-			}
-
-			// Save the updated page with the new gallery
-			page.setGallery(newGallery);
-
+		if(page.saveGallery(gallery, galleryRoot)){
 			// Success message
 			response.put("status", "success");
 			response.put("message", "Content saved successfully!");
@@ -98,6 +75,14 @@ public class GalleryController {
 			response.put("message", "Error: Page or gallery data is missing.");
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
+	}
+
+
+	@GetMapping("/delete/{filename}")
+	public String deletePainting(@PathVariable String pageUrl, @PathVariable String filename) {
+		Page page = site.getPage(pageUrl);
+		page.removePainting(filename);
+		return "redirect:/page/"+pageUrl+"/gallery/";
 	}
 
 	//TODO: Be able to delete images from gallery / delete entire gallery
@@ -118,73 +103,27 @@ public class GalleryController {
 	//TODO: pass in nextInt in order
 	//TODO: check unique filenames
 	@PostMapping("/upload")
-	public String uploadGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody ImageUploadDTO imageUploadDTO, // Handle JSON payload
-								Model model) throws JsonProcessingException {
+	public String uploadGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody ImageUploadDTO imageUploadDTO, Model model){
 		Page page = site.getPage(pageUrl);
 		if (page == null) {
-			return "404"; // Return a 404 page if the page is not found
+			return "404";
 		}
-
-		log.debug("Got imageDTO: {}", imageUploadDTO.toString());
-
-		// Iterate over the images and metadata
-		int order = page.getGallery().getGallery().size();
-		for (ImageUploadDTO.ImageData newImage : imageUploadDTO.getImages()) {
-			String imageData = newImage.getImageData();
-			byte[] imageBytes = Base64.getDecoder().decode(imageData); // Decode base64 image
-
-			String filename = Painting.generateSafeFilename(newImage.getTitle(), newImage.getFilename());
-			// Construct the file path and save the image
-			Path uploadPath = galleryRoot.resolve(pageUrl).resolve(filename);
-			try {
-				Files.createDirectories(uploadPath.getParent());
-				Files.write(uploadPath, imageBytes);  // Save the image file
-
-				// Create a Painting object and update gallery
-				Painting painting = Painting.builder()
-						.title(newImage.getTitle())
-						.filename(filename)
-						.dimensions(newImage.getDimensions())
-						.medium(newImage.getMedium())
-						.sold(newImage.isSold())
-						.order(order++)
-						.build();
-
-				log.debug("Creating new Painting object: {}", painting);
-				page.addPaintingToGallery(painting);
-
-			} catch (IOException e) {
-				log.error("Failed to save image: {}", newImage.getFilename(), e);
-			}
-		}
+		boolean ok = Filesystem.uploadNewPaintings(imageUploadDTO, page, galleryRoot);
 
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("page", page);
-		model.addAttribute("message", "Gallery uploaded and metadata saved successfully!");
+		if(ok) {
+			model.addAttribute("message", "Gallery uploaded and metadata saved successfully!");
+		} else {
+			model.addAttribute("message", "An error occurred during gallery upload");
+		}
 
 		//		return "redirect: /page/"+pageUrl+"/gallery";
-		return "editor/EditGallery"; //TODO: automatic redirect back to gallery
+		return "editor/EditGallery"; //TODO: automatic redirect back to gallery - do it in JS
 	}
 
 	@GetMapping("/image/{filename}")
 	public ResponseEntity<Resource> getImage(@PathVariable String pageUrl, @PathVariable String filename) {
-//		log.debug("getting image {}", filename);
-		try {
-			// Construct the path to the image
-			Path imagePath = galleryRoot.resolve(pageUrl).resolve(filename);
-			Resource resource = new UrlResource(imagePath.toUri());
-
-			if (resource.exists() && resource.isReadable()) {
-				// Return the image as a downloadable resource
-				return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "image/jpeg") // Adjust for other types if needed
-						.body(resource);
-			} else {
-				log.error("Could not find image {} in directory - {}", pageUrl+"/"+filename, imagePath.toString());
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-			}
-		} catch (MalformedURLException e) {
-			log.error("Error constructing URI path {}", pageUrl+"/"+filename);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-		}
+		return Filesystem.getImageFromPainting(filename, site.getPage(pageUrl), galleryRoot);
 	}
 }

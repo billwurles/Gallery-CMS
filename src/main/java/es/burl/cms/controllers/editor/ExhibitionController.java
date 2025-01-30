@@ -38,13 +38,13 @@ public class ExhibitionController {
 		return "editor/ViewExhibitions";
 	}
 
-	@GetMapping("/{id}")
-	public String editExhibition(@PathVariable("id") String id, Model model){
+	@GetMapping("/{url}")
+	public String editExhibition(@PathVariable("url") String url, Model model){
 		Exhibition exhibition;
-		if(id.equals("new")){
+		if(url.equals("new")){
 			exhibition = Exhibition.builder().build();
 		} else {
-			exhibition = site.getExhibitionRepo().get(id);
+			exhibition = site.getExhibitionRepo().get(url);
 		}
 		model.addAttribute("name", site.getName());
 		model.addAttribute("menuItems", site.getMenuItems());
@@ -52,17 +52,11 @@ public class ExhibitionController {
 		return "editor/EditExhibition";
 	}
 
-	// Save method to handle POST requests
-	@PostMapping("/{id}/save")
-	public ResponseEntity<?> saveExhibition(@PathVariable("id") String id, @RequestBody Exhibition exhibition) {
+	@PostMapping("/{url}/save")
+	public ResponseEntity<?> saveExhibition(@PathVariable("url") String url, @RequestBody Exhibition exhibition) {
 		try {
-			// Log the incoming exhibition object (for debugging)
-			System.out.println("Received Exhibition: " + exhibition);
-
 			site.getExhibitionRepo().add(exhibition);
-
-			// Return success response
-			return ResponseEntity.ok(exhibition); // Return the saved exhibition
+			return ResponseEntity.ok(exhibition);
 		} catch (Exception e) {
 			// Handle errors (e.g., log them and send an error response)
 			System.err.println("Error saving exhibition: " + e.getMessage());
@@ -70,4 +64,11 @@ public class ExhibitionController {
 					.body("Error saving exhibition: " + e.getMessage());
 		}
 	}
+
+	@GetMapping("/{url}/delete")
+	public String deleteExhibition(@PathVariable("url") String url, Model model){
+		site.removeExhibition(url); //TODO: Thymeleaf handling - include an 'are you sure' dialog
+		return "redirect:/exhibitions";
+	}
+
 }

@@ -82,6 +82,11 @@ public class Site {
 		pages.remove(url);
 	}
 
+	public void removeExhibition(String url) {
+		log.debug("Deleting exhibition from site: {}", exhibitionRepo.getExhibitions().get(url).toString());
+		exhibitionRepo.getExhibitions().remove(url);
+	}
+
 	public Gallery getPageGallery(String url) {
 		return pages.get(url).getGallery();
 	}

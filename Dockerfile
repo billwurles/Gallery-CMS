@@ -1,34 +1,27 @@
-# Stage 1: Build the Spring Boot application
-FROM maven:3.8.3-openjdk-17-slim AS builder
+# Use the Maven image to build the application
+FROM maven:3.8.3-openjdk-17-slim AS build
+
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy Maven configuration and project files
-COPY pom.xml .
+# Copy the Maven project files (pom.xml and the rest of the app)
+COPY pom.xml ./
 COPY src ./src
 
-# Build the Spring Boot application
+# Build the application
 RUN mvn clean package -DskipTests
 
-# Stage 2: Set up runtime environment with NGINX and Spring Boot
+# Now create the runtime image
 FROM openjdk:17-jdk-slim AS runtime
 
-# Install NGINX
-RUN apt-get update && apt-get install -y nginx && apt-get clean
+# Set the working directory for the Spring Boot app
+WORKDIR /app
 
-# Create shared volume for NGINX and Spring Boot
-RUN mkdir -p /shared/appdata/html_root
+# Copy the built JAR from the previous stage into the container
+COPY --from=build /app/target/*.jar app.jar
 
-# Copy NGINX configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Expose the port Spring Boot runs on
+EXPOSE 8080
 
-# Copy built Spring Boot JAR
-COPY --from=builder /app/target/*.jar /app/app.jar
-
-# Set NGINX to serve static content from the shared directory
-VOLUME /shared/appdata/html_root
-
-# Expose ports for NGINX and Spring Boot
-EXPOSE 80 8080
-
-# Start NGINX and Spring Boot
-CMD ["sh", "-c", "service nginx start && java -jar /app/app.jar"]
+# Run the Spring Boot application
+CMD ["java", "-jar", "app.jar"]

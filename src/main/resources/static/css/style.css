@@ -1,0 +1,361 @@
+/* General styling */
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  width: 90%;
+  margin: auto;
+}
+
+/* Navbar */
+.navbar {
+  width: 100%;
+  background: #fff;
+  color: #000;
+  opacity: 0.85;
+  z-index: 100;
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  height: 64px;
+  align-items: center;
+}
+
+.menu-items {
+  order: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.logo {
+  order: 1;
+  font-size: 1.2rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.menu-items li {
+  list-style: none;
+  font-size: 1.2rem;
+  margin-left: 1rem;
+  padding-top: 5px;
+}
+
+.navbar a {
+  color: #2c3e50;
+  text-decoration: none;
+  font-weight: 500;
+  font-weight: bold;
+  /* transition: color 0.3s ease-in-out; */
+}
+
+.navbar a.router-link-exact-active {
+  color: #42b983;
+}
+
+.navbar a:hover {
+  color: #117964;
+}
+
+#toggle-menu {
+    display: none;
+}
+
+/* Mobile Navbar Styling */
+@media (max-width: 778px) {
+  .navbar {
+    opacity: 0.95;
+  }
+
+  .navbar-container input[type="checkbox"],
+  .navbar-container .hamburger-lines {
+    display: block;
+  }
+
+  .navbar-container {
+    display: block;
+    position: relative;
+        height: 64px;
+  }
+
+  .navbar-container input[type="checkbox"] {
+    position: absolute;
+    display: block;
+    height: 32px;
+    width: 30px;
+    top: 20px;
+    left: 20px;
+    z-index: 5;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .navbar-container .hamburger-lines {
+    display: block;
+    height: 28px;
+    width: 35px;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .navbar-container .hamburger-lines .line {
+    display: block;
+    height: 4px;
+    width: 100%;
+    border-radius: 10px;
+    background: #333;
+  }
+
+  .navbar-container .hamburger-lines .line1 {
+    transform-origin: 0% 0%;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .navbar-container .hamburger-lines .line2 {
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .navbar-container .hamburger-lines .line3 {
+    transform-origin: 0% 100%;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .navbar .menu-items {
+    padding-top: 100px;
+    background: #fff;
+    height: 100vh;
+    max-width: 300px;
+    transform: translate(-150%);
+    display: flex;
+    flex-direction: column;
+    margin-left: -40px;
+    padding-left: 40px;
+    transition: transform 0.5s ease-in-out;
+    box-shadow: 5px 0px 10px 0px #aaa;
+    overflow: scroll;
+  }
+
+  .navbar .menu-items li {
+    margin-bottom: 1.8rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+
+  .logo {
+    position: absolute;
+    top: 18px;
+    right: 15px;
+    font-size: 1.5rem;
+  }
+
+  .navbar-container input[type="checkbox"]:checked ~ .menu-items {
+    transform: translateX(0);
+  }
+
+  .navbar-container input[type="checkbox"]:checked ~ .hamburger-lines .line1 {
+    transform: rotate(45deg);
+  }
+
+  .navbar-container input[type="checkbox"]:checked ~ .hamburger-lines .line2 {
+    transform: scaleY(0);
+  }
+
+  .navbar-container input[type="checkbox"]:checked ~ .hamburger-lines .line3 {
+    transform: rotate(-45deg);
+  }
+}
+
+/* Content */
+.content {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    color: #333;
+}
+
+h1 {
+    font-size: 24pt;
+}
+
+h2 {
+    font-size: 20pt;
+    margin-bottom: 15px;
+}
+
+button {
+    padding: 12px 24px;
+    background: #42b983;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 5px;
+  cursor: pointer;
+    transition: background 0.3s;
+    margin-top: 20px;
+}
+
+button:hover {
+    background: #117964;
+}
+
+
+/* Drag and Drop Zone */
+#drag-and-drop-zone {
+    border: 2px dashed #ccc;
+    padding: 40px;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s;
+}
+
+#drag-and-drop-zone p {
+    font-size: 16pt;
+    color: #888;
+}
+
+#drag-and-drop-zone:hover {
+    background-color: #f0f0f0;
+}
+
+/* File input button */
+#file-input-trigger {
+    padding: 12px 24px;
+    background: #42b983;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-top: 10px;
+}
+
+#file-input-trigger:hover {
+    background: #117964;
+}
+
+/* Preview Container */
+#preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+#preview-container div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 150px;
+    margin-bottom: 20px;
+}
+
+#preview-container img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+/* Gallery Section */
+#image-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+#image-list li {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+    width: 180px;
+    text-align: center;
+    background-color: #fff;
+}
+
+#image-list img {
+    max-width: 100%;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+input[type="checkbox"] {
+    margin-top: 10px;
+}
+
+input[type="hidden"] {
+    display: none;
+}
+
+.sortable-placeholder {
+    background-color: #e0e0e0;
+    border: 2px dashed #bbb;
+    height: 100px;
+}
+
+/* Message Styling */
+#messageContainer {
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+#messageContainer.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+#messageContainer.failure {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+a {
+    color: #42b983;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+

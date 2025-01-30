@@ -1,5 +1,5 @@
 
-/* Navigation ---------------------- */
+/* Base layout ---------------------- */
 *,
 *::after,
 *::before {
@@ -27,17 +27,29 @@ html, body {
   flex: 1;
 }
 
+.page .home-title {
+    margin-top: 2%;
+    font-size: 36pt;
+}
+
+.page .home-inset {
+    margin: 0 auto;
+    display: block
+}
+
 .page {
   /*margin: 3% 5%;*/
 }
 
 .page h1 {
     /* position: relative; */
-    text-align: left;
+    text-align: center;
     font-size: 24pt;
-    margin-left: 18%;
+    margin-bottom: 30px;
     /* float: left; */
 }
+
+/* Navigation ---------------------- */
 
 .navbar input[type="checkbox"],
 .navbar .hamburger-lines {
@@ -70,6 +82,7 @@ html, body {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  margin-left: auto;
 }
 .logo {
     order: 1;
@@ -324,7 +337,6 @@ nav a.active-nav-link {
   object-fit: cover; /* Ensure proper cropping if necessary */
   vertical-align: middle; /* Center-align images */
   box-shadow: 5px 5px 10px 2px #9c9c9c;
-  border: 2px solid #9c9c9c;
   border-radius: 3px;
   cursor: pointer;
 }
@@ -363,7 +375,6 @@ nav a.active-nav-link {
   max-width: 90%; /* Limit the size of the image to fit screen */
   max-height: 80%; /* Prevent overflow vertically */
   object-fit: contain; /* Maintain aspect ratio */
-  border-radius: 10px;
 }
 
 .painting-modal img {
@@ -371,8 +382,8 @@ nav a.active-nav-link {
   width: 100%; /* Match container width */
   height: auto; /* Maintain aspect ratio */
   object-fit: contain; /* Prevent distortion */
-  border-radius: 10px; /* Keep rounded corners inside shadow */
   display: block; /* Prevent inline gaps */
+  box-shadow: 0px 0px 30px 10px #222;
 }
 
 .painting-modal p {
@@ -500,20 +511,9 @@ nav a.active-nav-link {
 
 
 /* Exhibitions ---------------------- */
-.exhibition-content body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f9f9f9;
-    color: #333;
-}
 
-.exhibition-content {
-    max-width: 90%;
-    margin: 20px auto;
-    background: #fff;
-    padding: 20px;
+.exhibition-post {
+    margin: 0 10%;
 }
 
 .exhibition-post hr {
@@ -525,6 +525,22 @@ nav a.active-nav-link {
 
 .exhibition-post h2 a {
     text-decoration: none;
+    color: #318760;
+}
+
+.exhibition-single {
+    margin-top: 50px;
+}
+
+.exhibition-content {
+    font-family: Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+}
+
+.exhibition-content {
+    margin: 20px auto;
+    background: #fff;
+    padding: 0 10px;
 }
 
 .pagination {

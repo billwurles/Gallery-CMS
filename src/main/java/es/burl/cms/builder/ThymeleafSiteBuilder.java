@@ -1,6 +1,7 @@
 package es.burl.cms.builder;
 
 import es.burl.cms.data.*;
+import es.burl.cms.helper.Filesystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,15 +30,18 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	Path galleryRoot;
 	SpringTemplateEngine engine;
 	int postsPerPage;
+	String homeKey;
 
 	@Autowired
 	public ThymeleafSiteBuilder(@Qualifier("getHtmlRoot") Path htmlRoot,
 								@Qualifier("getGalleryRoot") Path galleryRoot,
 								@Qualifier("getPostsPerPage") int postsPerPage,
+								@Qualifier("getHomeKey") String homeKey,
 								SpringTemplateEngine springTemplateEngine){
 		this.htmlRoot = htmlRoot;
 		this.galleryRoot = galleryRoot;
 		this.postsPerPage = postsPerPage;
+		this.homeKey = homeKey;
 		this.engine = springTemplateEngine;
 		this.engine.setLinkBuilder(new serverlessLinkBuilder());
 	}
@@ -52,9 +56,12 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		for(Page page : site.getPages().values()){
 			log.debug("Generating page {} -hasGallery:{} -content:{}",page.getMenuItem().getUrl(), page.hasGallery(), page.hasContent());
 			Path pagePath = htmlRoot.resolve(page.getMenuItem().getUrl());
-			if(page.getMenuItem().getUrl().equals("home")) pagePath = htmlRoot;
+
+			if(page.getMenuItem().getUrl().equals(homeKey)) pagePath = htmlRoot; //Home goes to the root, don't use it's funky url
+
 			Files.createDirectories(pagePath);
 			copyPageGallery(page, pagePath);
+			copyPageInset(page, pagePath);
 			generatePageHTML(site, page, pagePath);
 		}
 
@@ -123,6 +130,18 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		renderTemplateToFile("site/base", context, exhibitionPath.resolve("index.html"));
 	}
 
+	private void copyPageInset(Page page, Path pagePath) throws IOException {
+		if(page.hasInsetImage()){
+			Path imageDir = pagePath.resolve("images").resolve("inset");
+			Path cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl()).resolve("images").resolve("inset");
+			Files.createDirectories(imageDir);
+
+			File file = cmsImageDir.resolve(page.getInsetImage().getFilename()).toFile();
+			log.debug("doing inset for {}",page.getMenuItem().getUrl());
+			Filesystem.copyImage(page.getInsetImage().getFilename(), file, imageDir);
+		}
+	}
+
 	private void copyPageGallery(Page page, Path pagePath) throws IOException {
 		if(page.hasGallery()){
 			// Construct the page path and image directory path, create dirs if they don't exist
@@ -136,11 +155,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 			for(File file : Objects.requireNonNull(cmsImageDir.listFiles())) {
 //				log.debug("Found file {}",file.getName());
 				Painting painting = page.getGallery().getPainting(file.getName());
-				if (painting != null) {
-//					log.debug("Copying file {}",file.getName());
-					Path imagePath = imageDir.resolve(painting.getFilename());
-					Files.copy(file.toPath(), imagePath, StandardCopyOption.REPLACE_EXISTING);
-				}
+				Filesystem.copyImage(painting.getFilename(), file, imageDir);
 			}
 		}
 	}

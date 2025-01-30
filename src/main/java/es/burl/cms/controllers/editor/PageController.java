@@ -4,11 +4,15 @@ package es.burl.cms.controllers.editor;
 import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
+import es.burl.cms.helper.Filesystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.file.Path;
 
 import static com.fasterxml.jackson.databind.util.ClassUtil.name;
 
@@ -18,10 +22,16 @@ import static com.fasterxml.jackson.databind.util.ClassUtil.name;
 public class PageController {
 
 	private final Site site;
+	private final String homeKey;
+	private final Path galleryRoot;
 
 	@Autowired
-	public PageController(Site site) {
+	public PageController(Site site,
+				@Qualifier("getGalleryRoot") Path galleryRoot,
+				String homeKey) {
 		this.site = site;
+		this.galleryRoot = galleryRoot;
+		this.homeKey = homeKey;
 	}
 
 	@GetMapping(value = {"", "/"})
@@ -34,23 +44,40 @@ public class PageController {
 	}
 
 	//TODO: Have a live flag (maybe instead of showInMenu) so that DIY pages aren't live
-	//TODO: check unique page names - also can't use home - make default home?
+	//TODO: ensure that home / exhibitions cannot be overwritten (should be ok?)
+	//TODO: stop the user from being able to edit url when page == home
+	//TODO: no editing of page/exhibitions
 
 	@PostMapping("/save") //TODO: How to handle gallery before page is saved
 	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
 
 		log.debug("Saving new page: {}"+title);
+		model.addAttribute("menuItems", site.getMenuItems());
 
-		site.addNewPage(Page.builder()
+		for(MenuItem menuItem : site.getMenuItems()){
+			if(menuItem.getUrl().equals(url)){
+				model.addAttribute("message", "Page url ("+url+") is already in use");
+				model.addAttribute("newPage", true);
+				model.addAttribute("page", Page.builder()
 						.menuItem(MenuItem.builder()
-							.title(title)
-							.url(url)
-							.order(site.getNextPageOrder())
-							.build())
+								.url(url)
+								.title(title).build())
 						.content(content)
 						.showInMenu(showInMenu)
-						.build()
+						.build());
+				return "editor/EditPage";
+			}
+		}
+		site.addNewPage(Page.builder()
+				.menuItem(MenuItem.builder()
+						.title(title)
+						.url(url)
+						.order(site.getNextPageOrder())
+						.build())
+				.content(content)
+				.showInMenu(showInMenu)
+				.build()
 		);
 
 		// Pass the saved content back to the view
@@ -58,11 +85,9 @@ public class PageController {
 		model.addAttribute("message", "Content saved successfully!");
 		model.addAttribute("page", page); // Pass the saved content back to the view
 		model.addAttribute("hasGallery", page.hasGallery());
-		model.addAttribute("menuItems", site.getMenuItems());
 		return "redirect:/page/" + url;
 	}
 
-	//TODO: When you change page URL, you will need to update the folder structure of gallery
 	@GetMapping("/{pageUrl}") // TODO: make it work with trailing slash
 	public String editPage(@PathVariable("pageUrl") String pageUrl, Model model) {
 		log.debug("Editing page: {}", pageUrl);
@@ -79,36 +104,49 @@ public class PageController {
 		}
 	}
 
-	//TODO: maybe spin off rich content editing to it's own page
 	@PostMapping("/{pageUrl}/save")
 	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
 		// Save the page content (title, url, content, showInMenu)
 		log.debug("Saving edited page: "+originalPageUrl);
+		model.addAttribute("menuItems", site.getMenuItems());
 
 		Page originalPage = site.getPage(originalPageUrl);
-//		originalPage.setTitle();
-//		originalPage.setContent(content);
-
-		site.addNewPage(originalPage.toBuilder()
-						.menuItem(originalPage.getMenuItem().toBuilder()
-								.title(title)
-								.url(url)
-								.build())
-						.content(content)
-						.showInMenu(showInMenu)
-						.build()
-		);
+		Page newPage = originalPage.toBuilder()
+				.menuItem(originalPage.getMenuItem().toBuilder()
+						.title(title)
+						.url(url)
+						.build())
+				.content(content)
+				.showInMenu(showInMenu)
+				.build();
 
 		if (!originalPageUrl.equals(url)) {
+			for(MenuItem menuItem : site.getMenuItems()){
+				if(menuItem != originalPage.getMenuItem() && menuItem.getUrl().equals(newPage.getUrl())){
+					model.addAttribute("message", "Page URL " + newPage.getMenuItem().getUrl() +" is already in use");
+					model.addAttribute("page", newPage);
+					model.addAttribute("hasGallery", newPage.hasGallery());
+					return "editor/EditPage";
+				}
+			}
+			Filesystem.copyGalleryImagesToNewUrl(originalPageUrl, newPage.getUrl(), galleryRoot);
 			site.removePage(originalPageUrl);
 		}
+		site.addNewPage(newPage);
 
 		// Pass the saved content back to the view
 		Page page = site.getPage(url);
 		model.addAttribute("message", "Content saved successfully!");
 		model.addAttribute("page", page); // Pass the saved content back to the view
 		model.addAttribute("hasGallery", page.hasGallery());
-		model.addAttribute("menuItems", site.getMenuItems());
 		return "editor/EditPage";
+	}
+
+	//TODO: add thymeleaf button for delete
+	@GetMapping("/{pageUrl}/delete")
+	public String deletePage(@PathVariable("pageUrl") String pageUrl, Model model) {
+		site.removePage(pageUrl);
+		//TODO: also delete gallery from filesystem (or temp backup?)
+		return "redirect:/";
 	}
 }

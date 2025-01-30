@@ -1,9 +1,12 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
     <div class="page" th:fragment="content(page)">
+
+        <h1 th:text="${page.menuItem.title}" th:classappend="${page.menuItem.url == 'home' ? 'home-title' : ''}"></h1>
+
         <section>
             <div class="content">
-                <img class="inset-image"
+                <img th:class="${page.menuItem.url == 'home' ? 'home-inset' : 'inset-image'}"
                      th:if="${page.hasInsetImage}"
                      th:src="@{'images/inset/' + ${page.insetImage.filename}}"
                      th:alt="${page.insetImage.title}"
