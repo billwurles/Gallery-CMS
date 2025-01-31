@@ -2,6 +2,7 @@ package es.burl.cms;
 
 import es.burl.cms.backup.JsonBackup;
 import es.burl.cms.data.*;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,19 +22,30 @@ public class AppConfig {
 
 	private Site site;
 
-	@Value("${gallery.root}")
 	private Path galleryRoot;
 
-	@Value("${html.root}")
 	private Path htmlRoot;
 
-	@Value("${backup.path}")
 	private Path backupPath;
 
 	@Value("${posts.per.page}")
 	private int postsPerPage;
 
 	private static final String homepageUniqueKey = "$$@-UniqueHomeKey-@$$";
+
+	@PostConstruct
+	public void init(@Value("${app.root}") String appRoot,
+			@Value("${gallery.root}") String galleryRoot,
+			@Value("${html.root}") String htmlRoot,
+			@Value("${backup.path}") String backupPath) {
+		String isDocker = System.getenv("IS_DOCKER");
+		if (isDocker != null && isDocker.equals("true")) {
+			appRoot = "/" + appRoot;
+		}
+		this.galleryRoot = Path.of(appRoot, galleryRoot);
+		this.htmlRoot = Path.of(appRoot, htmlRoot);
+		this.backupPath = Path.of(appRoot, backupPath);
+	}
 
 	@Bean
 	public Site getSite() {
