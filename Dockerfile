@@ -18,7 +18,7 @@ FROM openjdk:17-jdk-slim AS runtime
 WORKDIR /appdata
 
 # Copy the built JAR from the previous stage into the container
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /appdata/target/*.jar app.jar
 
 # Expose the port Spring Boot runs on
 EXPOSE 8080
