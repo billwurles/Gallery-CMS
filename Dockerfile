@@ -15,7 +15,7 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17-jdk-slim AS runtime
 
 # Set the working directory for the Spring Boot app
-WORKDIR /appdata
+WORKDIR /app
 
 # Copy the built JAR from the previous stage into the container
 COPY --from=build /app/target/*.jar app.jar
