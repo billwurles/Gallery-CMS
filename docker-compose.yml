@@ -19,6 +19,7 @@ services:
       - "8080:8080"
     volumes:
       - ./appdata/:/appdata/  # Mount the same folder for Spring Boot to write to
+      - ./src/main/resources/templates/site/static:/app/static  # Mount static files to page generation
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - IS_DOCKER=true

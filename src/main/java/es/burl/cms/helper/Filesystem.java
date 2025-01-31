@@ -5,14 +5,14 @@ import es.burl.cms.data.Page;
 import es.burl.cms.data.Painting;
 import lombok.experimental.Helper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -113,7 +113,21 @@ public class Filesystem {
 	}
 
 	public static void copyImage(String filename, File file, Path imageDir) throws IOException {
+		log.debug("Copying image {}", filename);
 		Path imagePath = imageDir.resolve(filename);
 		Files.copy(file.toPath(), imagePath, StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	public static void copyClassPathResource(String filename, String fromDirectory, Path toDirectory) throws IOException {
+		ClassPathResource resource = new ClassPathResource(fromDirectory+filename);
+		InputStream inputStream = resource.getInputStream();
+		File outputFile = toDirectory.resolve(filename).toFile();
+
+		OutputStream outputStream = new FileOutputStream(outputFile);
+		byte[] buffer = new byte[8192];
+		int length;
+		while ((length = inputStream.read(buffer)) > 0) {
+			outputStream.write(buffer, 0, length);
+		}
 	}
 }

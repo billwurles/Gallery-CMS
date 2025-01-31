@@ -11,10 +11,7 @@ import org.thymeleaf.context.*;
 import org.thymeleaf.linkbuilder.StandardLinkBuilder;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -28,6 +25,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 
 	Path htmlRoot;
 	Path galleryRoot;
+	String staticRoot;
 	SpringTemplateEngine engine;
 	int postsPerPage;
 	String homeKey;
@@ -35,11 +33,13 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	@Autowired
 	public ThymeleafSiteBuilder(@Qualifier("getHtmlRoot") Path htmlRoot,
 								@Qualifier("getGalleryRoot") Path galleryRoot,
+								@Qualifier("getStaticRoot") String staticRoot,
 								@Qualifier("getPostsPerPage") int postsPerPage,
 								@Qualifier("getHomeKey") String homeKey,
 								SpringTemplateEngine springTemplateEngine){
 		this.htmlRoot = htmlRoot;
 		this.galleryRoot = galleryRoot;
+		this.staticRoot = staticRoot;
 		this.postsPerPage = postsPerPage;
 		this.homeKey = homeKey;
 		this.engine = springTemplateEngine;
@@ -49,15 +49,17 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	@Override
 	public void buildSite(Site site) throws IOException {
 		//TODO: clear the html_root folder, or backup existing and then make new structure
+		log.info("Generating Site {}", site.getName());
 
 		copyStaticIncludes();
-		generateErrorPage(site,404, "Not Found", "The page does not exist on this server, please return <a href=\"/\">home</a>");
+		generateErrorPage(site, 404, "Not Found", "The page does not exist on this server, please return <a href=\"/\">home</a>");
 
-		for(Page page : site.getPages().values()){
-			log.debug("Generating page {} -hasGallery:{} -content:{}",page.getMenuItem().getUrl(), page.hasGallery(), page.hasContent());
+		for (Page page : site.getPages().values()) {
+			log.debug("Generating page {} -hasGallery:{} -content:{}", page.getMenuItem().getUrl(), page.hasGallery(), page.hasContent());
 			Path pagePath = htmlRoot.resolve(page.getMenuItem().getUrl());
 
-			if(page.getMenuItem().getUrl().equals(homeKey)) pagePath = htmlRoot; //Home goes to the root, don't use it's funky url
+			if (page.getMenuItem().getUrl().equals(homeKey))
+				pagePath = htmlRoot; //Home goes to the root, don't use it's funky url
 
 			Files.createDirectories(pagePath);
 			copyPageGallery(page, pagePath);
@@ -68,39 +70,38 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
 		Path exhibitionsPath = htmlRoot.resolve(site.getExhibitionRepo().getMenuItem().getUrl());
 
-		for(int exhibitionPage = 1; exhibitionPage <= totalPages; exhibitionPage++){
-			log.debug("Generating exhibition page {}",exhibitionPage);
+		for (int exhibitionPage = 1; exhibitionPage <= totalPages; exhibitionPage++) {
+			log.debug("Generating exhibition page {}", exhibitionPage);
 			Path exhibitionPagePath = exhibitionsPath;
-			if(exhibitionPage > 1) {
-				exhibitionPagePath = exhibitionsPath.resolve("page-"+exhibitionPage);
+			if (exhibitionPage > 1) {
+				exhibitionPagePath = exhibitionsPath.resolve("page-" + exhibitionPage);
 			}
 			Files.createDirectories(exhibitionPagePath);
 			generateExhibitionsPage(site, exhibitionPage, totalPages, site.getExhibitionRepo().getExhibitionsPage(exhibitionPage, postsPerPage), exhibitionPagePath);
 		}
 
-		for(Exhibition exhibition : site.getExhibitionRepo().getExhibitionsInDateOrder()){
+		for (Exhibition exhibition : site.getExhibitionRepo().getExhibitionsInDateOrder()) {
 			Path exhibitionPath = exhibitionsPath.resolve(exhibition.getUrl());
 			Files.createDirectories(exhibitionPath);
 			generateFullExhibitionPage(site, exhibition, exhibitionPath);
 		}
 
+		log.info("Site rendering complete");
 	}
 
 	private void copyStaticIncludes() throws IOException {
+		log.debug("Copying static include files");
 		Path includesPath = htmlRoot.resolve("include");
 		Files.createDirectories(includesPath);
 
-		File templateCSS = new ClassPathResource("templates/site/static/style.css").getFile();
-		Files.copy(templateCSS.toPath(), includesPath.resolve("style.css"), StandardCopyOption.REPLACE_EXISTING);
-
-		File galleryJS = new ClassPathResource("templates/site/static/gallery.js").getFile();
-		Files.copy(galleryJS.toPath(), includesPath.resolve("gallery.js"), StandardCopyOption.REPLACE_EXISTING);
-
-		File errorJS = new ClassPathResource("templates/site/static/error.js").getFile();
-		Files.copy(errorJS.toPath(), includesPath.resolve("error.js"), StandardCopyOption.REPLACE_EXISTING);
+		Filesystem.copyClassPathResource("style.css", staticRoot, includesPath);
+		Filesystem.copyClassPathResource("gallery.js", staticRoot, includesPath);
+		Filesystem.copyClassPathResource("error.js", staticRoot, includesPath);
 	}
 
+
 	private void generateErrorPage(Site site, int code, String shortText, String message) throws IOException {
+		log.debug("Generating error page {}", code);
 		Context context = getBaseContext(site.getName(), "error", site.getMenuItems(), "Error "+code, "error");
 		context.setVariable("errorCode", code);
 		context.setVariable("shortText", shortText);
@@ -110,12 +111,14 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 
 
 	private void generatePageHTML(Site site, Page page, Path pagePath) throws IOException {
+		log.debug("Generating HTML for page {}", page.getMenuItem().getUrl());
 		Context context = getBaseContext(site.getName(), "page", site.getMenuItems(), page.getMenuItem().getTitle(), page.getMenuItem().getUrl());
 		context.setVariable("page", page);
 		renderTemplateToFile("site/base", context, pagePath.resolve("index.html"));
 	}
 
 	private void generateExhibitionsPage(Site site, int exhibitionPage, int totalPages, List<Exhibition> exhibitions, Path exhibitionsPath) throws IOException {
+		log.debug("Generating Exhibitions page {} of {}",exhibitionPage, totalPages);
 		Context context = getBaseContext(site.getName(), "exhibitions", site.getMenuItems(),
 				exhibitionPage == 1 ? "Exhibitions" : "Exhibitions - Page "+exhibitionPage, "exhibitions");
 		context.setVariable("exhibitionPage", exhibitionPage);
@@ -125,6 +128,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	}
 
 	private void generateFullExhibitionPage(Site site, Exhibition exhibition, Path exhibitionPath) throws IOException {
+		log.debug("Genearating exhibition {}",exhibition.getTitle());
 		Context context = getBaseContext(site.getName(), "exhibition", site.getMenuItems(), exhibition.getTitle(), "exhibitions");
 		context.setVariable("exhibition", exhibition);
 		renderTemplateToFile("site/base", context, exhibitionPath.resolve("index.html"));
@@ -132,30 +136,32 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 
 	private void copyPageInset(Page page, Path pagePath) throws IOException {
 		if(page.hasInsetImage()){
+			log.debug("Copying inset image for {}",page.getMenuItem().getUrl());
 			Path imageDir = pagePath.resolve("images").resolve("inset");
 			Path cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl()).resolve("images").resolve("inset");
 			Files.createDirectories(imageDir);
 
 			File file = cmsImageDir.resolve(page.getInsetImage().getFilename()).toFile();
-			log.debug("doing inset for {}",page.getMenuItem().getUrl());
 			Filesystem.copyImage(page.getInsetImage().getFilename(), file, imageDir);
 		}
 	}
 
 	private void copyPageGallery(Page page, Path pagePath) throws IOException {
 		if(page.hasGallery()){
+			log.debug("Copying gallery for {}",page.getMenuItem().getUrl());
 			// Construct the page path and image directory path, create dirs if they don't exist
 			Path imageDir = pagePath.resolve("images");
 			File cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl()).toFile();
 			Files.createDirectories(imageDir);
 
-			log.debug("doing gallery for {}",page.getMenuItem().getUrl());
-
 			//Copy all the images from a gallery
 			for(File file : Objects.requireNonNull(cmsImageDir.listFiles())) {
 //				log.debug("Found file {}",file.getName());
 				Painting painting = page.getGallery().getPainting(file.getName());
-				Filesystem.copyImage(painting.getFilename(), file, imageDir);
+				if(painting != null) {
+					log.debug("Copying file: {} from painting {}", file, painting);
+					Filesystem.copyImage(painting.getFilename(), file, imageDir);
+				}
 			}
 		}
 	}

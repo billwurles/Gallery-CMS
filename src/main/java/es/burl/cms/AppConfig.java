@@ -23,16 +23,18 @@ public class AppConfig {
 	private Site site;
 
 	private Path galleryRoot;
-
 	private Path htmlRoot;
-
 	private Path backupPath;
+
+	@Value("${static.root}")
+	private String staticRoot;
 
 	@Value("${posts.per.page}")
 	private int postsPerPage;
 
 	@Value("homepage.unique.key")
 	private String homepageUniqueKey;
+
 
 	@Value("${app.root}") String appRootProperty;
 	@Value("${gallery.root}") String galleryRootProperty;
@@ -86,6 +88,12 @@ public class AppConfig {
 	@Qualifier("getHtmlRoot")
 	public Path getHtmlRoot() {
 		return htmlRoot;
+	}
+
+	@Bean
+	@Qualifier("getStaticRoot")
+	public String getStaticRoot() {
+		return staticRoot;
 	}
 
 	@Bean
@@ -165,10 +173,10 @@ public class AppConfig {
 //			);
 //		}
 
-		pages.put("$$@-UniqueHomeKey-@$$", Page.builder()
+		pages.put("$$@-SiteHome-@$$", Page.builder()
 						.menuItem(MenuItem.builder()
 								.title("Home")
-								.url("$$@-UniqueHomeKey-@$$")
+								.url("$$@-SiteHome-@$$")
 								.build())
 //						.content(loremIpsum)
 //						.insetImage(pages.get("the-sea").getGallery().getGalleryInOrder().get(0))

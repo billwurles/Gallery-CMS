@@ -47,6 +47,8 @@ public class EditorController {
 		return "editor/EditorHome";
 	}
 
+
+	//TODO: BUG: When editing a painting filename, the filename is immediately changed, but if no save occurs a later restart forgets that change - save filename changes until save?
 	@GetMapping("save") //TODO: Give some feedback about success to the user
 	public String saveSiteToJSON(Model model) {
 		try {

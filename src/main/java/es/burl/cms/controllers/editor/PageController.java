@@ -28,7 +28,7 @@ public class PageController {
 	@Autowired
 	public PageController(Site site,
 				@Qualifier("getGalleryRoot") Path galleryRoot,
-				String homeKey) {
+				@Qualifier("getHomeKey") String homeKey) {
 		this.site = site;
 		this.galleryRoot = galleryRoot;
 		this.homeKey = homeKey;
