@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -38,6 +39,15 @@ public class AppConfig {
 	public Site getSite() {
 		log.debug("Debug Logs Enabled");
 		log.info("CMS Application Starting up - getting Site object");
+
+		Path path = Path.of("appdata", "test");
+		try {
+			Files.createDirectory(path);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+
 		if (site == null) {
 			if (Files.exists(backupPath)) {
 				try {
