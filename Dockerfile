@@ -2,7 +2,7 @@
 FROM maven:3.8.3-openjdk-17-slim AS build
 
 # Set the working directory inside the container
-WORKDIR /appdata
+WORKDIR /app
 
 # Copy the Maven project files (pom.xml and the rest of the app)
 COPY pom.xml ./
