@@ -7,7 +7,7 @@ services:
       - "80:80"
     volumes:
       - ./appdata/html_root:/usr/share/nginx/html  # Bind mount the local folder for Nginx
-      - ./appdata/:/appdata/  # Mount the same folder for Spring Boot to write to
+      - ./appdata/:/appdata/  # TODO: delete line testing only
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - ahc_cms

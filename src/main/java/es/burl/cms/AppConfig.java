@@ -59,7 +59,8 @@ public class AppConfig {
 				}
 			} else {
 				log.debug("No backup available, building fake site");
-				site = getFakeSite(galleryRoot);
+				site = Site.builder().build();
+//				site = getFakeSite(galleryRoot);
 			}
 		}
 		return site;
