@@ -15,7 +15,7 @@ echo "Stopping Docker containers..."
 docker-compose down
 
 echo "Pulling latest changes from Git..."
-git pull origin main  # Change "main" to your branch if needed
+git pull origin master
 
 echo "Rebuilding Docker images..."
 docker-compose up --build -d
