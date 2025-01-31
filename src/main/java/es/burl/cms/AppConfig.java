@@ -40,7 +40,7 @@ public class AppConfig {
 		log.debug("Debug Logs Enabled");
 		log.info("CMS Application Starting up - getting Site object");
 
-		Path path = Path.of("appdata", "test");
+		Path path = Path.of("test");
 		try {
 			Files.createDirectory(path);
 		} catch (IOException e) {
