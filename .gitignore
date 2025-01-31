@@ -1,5 +1,5 @@
-/app/cms/
-/app/html_root/
+/appdata/cms/
+/appdata/html_root/
 /extracted/
 /target/
 /.idea/
