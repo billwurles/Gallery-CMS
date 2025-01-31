@@ -147,6 +147,7 @@ public class PageController {
 	public String deletePage(@PathVariable("pageUrl") String pageUrl, Model model) {
 		site.removePage(pageUrl);
 		//TODO: also delete gallery from filesystem (or temp backup?)
+		//TODO: reset menuItems orders to remove blank space
 		return "redirect:/";
 	}
 }

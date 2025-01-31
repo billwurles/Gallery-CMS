@@ -67,7 +67,7 @@ public class ExhibitionController {
 
 	@GetMapping("/{url}/delete")
 	public String deleteExhibition(@PathVariable("url") String url, Model model){
-		site.removeExhibition(url); //TODO: Thymeleaf handling - include an 'are you sure' dialog
+		site.removeExhibition(url);
 		return "redirect:/exhibitions";
 	}
 

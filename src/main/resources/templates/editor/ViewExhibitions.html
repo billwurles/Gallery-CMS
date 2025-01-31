@@ -4,6 +4,7 @@
     <title>Exhibition Blog</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="@{/js/scripts.js}"></script>
 </head>
 <body>
 
@@ -21,6 +22,9 @@
             <!-- Link to the exhibition details -->
             <a th:href="@{/exhibitions/{url}(url=${exhibition.url})}" th:text="${exhibition.title}"></a>
         </h1>
+        <button class="action-button" th:data-url="@{/exhibitions/{url}/delete(url=${exhibition.url})}" onclick="confirmDelete(this)">
+            Delete
+        </button>
         <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'dd/MM/yyyy')}"></p>
         <div class="exhibition-content" th:utext="${exhibition.content}"></div>
         <hr>
@@ -34,7 +38,7 @@
             <span th:each="i : ${#numbers.sequence(1, totalPages)}">
             <!-- Display first few pages, current page, last few pages -->
                 <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= page - 2 and i <= page + 2)}"
-               th:href="@{'?page=' + ${i}}"
+                   th:href="@{'?page=' + ${i}}"
                    th:text="${i}"
                    th:classappend="${i == page ? 'active' : ''}"></a>
 
@@ -48,6 +52,14 @@
 
 
 </div>
+<script>
+    function confirmDelete(button) {
+        let url = button.getAttribute("data-url");
+        if (confirm("Are you sure you want to delete this exhibition?")) {
+            window.location.href = url;
+        }
+    }
+</script>
 
 <style>
     body {

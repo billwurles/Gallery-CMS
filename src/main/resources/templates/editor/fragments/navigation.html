@@ -21,7 +21,10 @@
 
         <!-- Logo -->
         <h1 class="logo">
-            <pre><a href="/save">Publish Site</a>       <a href="/">Return Home</a></pre>
+            <pre>
+        <button class="action-button" th:data-url="@{/save}" onclick="confirmSave(this)">
+            Publish Site
+        </button>       <a href="/">Return Home</a></pre>
         </h1>
     </div>
 </nav>

@@ -47,7 +47,7 @@ public class EditorController {
 		return "editor/EditorHome";
 	}
 
-	@GetMapping("save")
+	@GetMapping("save") //TODO: Give some feedback about success to the user
 	public String saveSiteToJSON(Model model) {
 		try {
 			new JsonBackup(backupPath).backup(site);
@@ -72,7 +72,6 @@ public class EditorController {
 	@PostMapping("/rearrange")
 	public String rearrangePages(@RequestBody Map<Integer, String> order) {
 		site.updatePageOrder(order);
-
 		return "redirect:/"; // Redirect to the home after saving
 	}
 }

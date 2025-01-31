@@ -1,9 +1,10 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="|Editor Home - ${name}|"/>
+    <title th:text="|Exhibition Editor - ${name}|"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="@{/js/scripts.js}"></script>
 
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -53,7 +54,8 @@
             // Function to generate URL from Title
             function generateUrl() {
                 var title = document.getElementById('title').value; // Get the title value
-                var date = document.getElementById('date').value.replace('/', '-').replace(':', '-');
+                var date = document.getElementById('date');
+                date = date.value.replace('/', '-').replace(':', '-');
                 var title = title + '-' + date;
                 var url = title
                     .toLowerCase() // Convert to lowercase
@@ -88,7 +90,7 @@
                     var exhibition = {
                         url: document.getElementById("url").value,
                         title: document.getElementById("title").value,
-                        date: document.getElementById("date").value,
+                        date: document.getElementById("date").value.replace(" ", "T"),
                         content: $('#richTextEditor').summernote('code')
                     };
 
@@ -144,10 +146,12 @@
         <!-- Exhibition date -->
         <label for="date">Date & Time:</label>
         <input id="date" type="text"
-               th:value="${#dates.format(date, 'yyyy-MM-dd HH:mm')}"
-               th:field="*{date}"
+               th:value="*{#dates.format(date, 'yyyy-MM-dd HH:mm')}"
                placeholder="yyyy-MM-dd HH:mm" required />
         <br>
+
+        <!--               th:field="*{date}"-->
+        <p th:text="*{#dates.format(date, 'yyyy-MM-dd HH:mm')}"></p>
 
         <!-- Exhibtion url -->
         <label for="url">URL:</label>

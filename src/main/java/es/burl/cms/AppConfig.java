@@ -54,17 +54,6 @@ public class AppConfig {
 	public Site getSite() {
 		log.debug("Debug Logs Enabled");
 		log.info("CMS Application Starting up - getting Site object");
-
-		Path path = Path.of("test");
-
-		try {
-			log.debug("path is: "+Files.createDirectory(path).toAbsolutePath().toString());
-
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-
 		if (site == null) {
 			if (Files.exists(backupPath)) {
 				try {

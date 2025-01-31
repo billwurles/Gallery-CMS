@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -31,6 +32,7 @@ public class Exhibition {
 		private String url = "new-exhibition";
 //		@JsonDeserialize(using = LocalDateTimeDeserializer.class)
 //		@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+//		@DateTimeFormat(pattern="yyyy-MM-dd HH:mm")
 		private Date date = new Date();
 		private String content = "";
 	}

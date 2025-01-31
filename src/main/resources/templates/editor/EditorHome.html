@@ -4,6 +4,7 @@
     <title th:text="|Editor Home - ${name}|"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/scripts.js}"></script>
 
     <!-- jQuery, UI & UI CSS-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -21,42 +22,53 @@
     <h1 th:text="|${name}|"></h1>
     <p>This is where you edit your site, select a page <a href="/page">or create a new one</a></p>
 
-    <h1>Rearrange Pages</h1>
+    <h1>Rearrange Pagesfff</h1>
 
-    <ul id="sortable">
-        <li th:each="item : ${menuItems}"
+    <ul class="page-list" id="sortable">
+        <li class="page-list item"
+            th:each="item : ${menuItems}"
         th:data-id="${item.order}"
-        th:data-url="${item.url}"
-        th:text="${item.title}">
+        th:data-url="${item.url}">
+            <span th:text="${item.title}"></span>
+            <button class="action-button" th:data-url="@{/page/{url}/delete(url=${item.url})}" onclick="confirmDelete(this)">
+                Delete
+            </button>
         </li>
     </ul>
 
     <script>
-        $(document).ready(function () {
-    $("#sortable").sortable({
-        update: function(event, ui) {
-            // Generate the new order in 'order: url' format
-            let order = {};
-            $("#sortable li").each(function(index) {
-                let pageUrl = $(this).data("url");  // Assuming the page URL is stored in 'data-url'
-                order[index] = pageUrl;  // Store the index as the key (order) and page URL as the value
-                });
-
-                // Send the order as a JSON request via AJAX
-                $.ajax({
-                    url: '/rearrange', // URL to handle the request
-                    type: 'POST',
-                contentType: 'application/json', // Set content type to JSON
-                data: JSON.stringify(order), // Send the new order as JSON
-                    success: function(response) {
-                        alert("Page order saved successfully!");
-                    window.location.reload();  // Optionally reload page to reflect changes
-                    },
-                    error: function(xhr, status, error) {
-                        alert("An error occurred while saving the order.");
-                    }
-                });
+        function confirmDelete(button) {
+            let url = button.getAttribute("data-url");
+            if (confirm("Are you sure you want to delete this page?")) {
+                window.location.href = url;
+            }
         }
+
+        $(document).ready(function () {
+            $("#sortable").sortable({
+                update: function(event, ui) {
+                    // Generate the new order in 'order: url' format
+                    let order = {};
+                    $("#sortable li").each(function(index) {
+                        let pageUrl = $(this).data("url");  // Assuming the page URL is stored in 'data-url'
+                        order[index] = pageUrl;  // Store the index as the key (order) and page URL as the value
+                        });
+
+                        // Send the order as a JSON request via AJAX
+                        $.ajax({
+                            url: '/rearrange', // URL to handle the request
+                            type: 'POST',
+                        contentType: 'application/json', // Set content type to JSON
+                        data: JSON.stringify(order), // Send the new order as JSON
+                            success: function(response) {
+                                alert("Page order saved successfully!");
+                            window.location.reload();  // Optionally reload page to reflect changes
+                            },
+                            error: function(xhr, status, error) {
+                                alert("An error occurred while saving the order.");
+                            }
+                        });
+                }
             });
         });
     </script>

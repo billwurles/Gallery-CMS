@@ -1,9 +1,10 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="|Editor Home - ${name}|"/>
+    <title th:text="|Gallery Editor - ${name}|"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="@{/js/scripts.js}"></script>
 
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -36,7 +37,7 @@
         <h2 th:if="${hasGallery}">Gallery of Paintings:</h2>
         <div th:if="${hasGallery}">
             <ul id="image-list">
-    <li th:each="painting : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}" th:data-order="${painting.order}">
+                <li th:each="painting : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}" th:data-order="${painting.order}">
                     <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.menuItem.url},filename=${painting.filename})}"
                          th:alt="${painting.title}" />
                     <div>
@@ -51,6 +52,13 @@
 
                         <label th:for="'sold-' + ${painting.order}">Sold:</label>
                         <input type="checkbox" th:id="'sold-' + ${painting.order}" th:checked="${painting.sold}" />
+
+                        <label th:for="'delete-' + ${painting.order}">Delete:</label>
+                        <button class="action-button"
+                                th:id="'delete-' + ${painting.order}"
+                                th:data-url="@{/page/{url}/gallery/delete/{filename}(url=${page.url}, filename=${painting.filename})}" onclick="confirmDelete(this)">
+                            Delete
+                        </button>
                     </div>
                 </li>
             </ul>
@@ -61,6 +69,13 @@
 </div>
 
 <script>
+    function confirmDelete(button) {
+        let url = button.getAttribute("data-url");
+        if (confirm("Are you sure you want to delete this painting?")) {
+            window.location.href = url;
+        }
+    }
+
     $(document).ready(function () {
         // Make the image list sortable
         $("#image-list").sortable({

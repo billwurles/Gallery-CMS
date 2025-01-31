@@ -2,26 +2,27 @@
 <configuration>
 
 <!-- Console Appender: Output logs to the console -->
-<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-        <!-- Pattern for console log output -->
-<!--        <pattern>-->
-<!--            %clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%-5level]){blue} %clr(%logger{36}){yellow} - %msg%n-->
-<!--        </pattern>-->
-        <pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-</appender>
+<!--<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">-->
+<!--    <encoder>-->
+<!--        &lt;!&ndash; Pattern for console log output &ndash;&gt;-->
+<!--&lt;!&ndash;        <pattern>&ndash;&gt;-->
+<!--&lt;!&ndash;            %clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%-5level]){blue} %clr(%logger{36}){yellow} - %msg%n&ndash;&gt;-->
+<!--&lt;!&ndash;        </pattern>&ndash;&gt;-->
+<!--        <pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</pattern>-->
+<!--    </encoder>-->
+<!--</appender>-->
 
 <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- Customize log output format -->
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</pattern>        </encoder>
-    </appender>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+</appender>
 
 <!-- Root logger: Default logging level -->
 <root level="INFO">
-    <appender-ref ref="CONSOLE"/>
-<!--    <appender-ref ref="STDOUT"/>-->
+<!--    <appender-ref ref="CONSOLE"/>-->
+    <appender-ref ref="STDOUT"/>
 </root>
 
 <root level="DEBUG">
@@ -31,6 +32,7 @@
 
 <!-- Log level for common Spring packages -->
 <logger name="org.apache" level="ERROR"/>
+<logger name="org.thymeleaf" level="ERROR"/>
 <logger name="org.springframework.web" level="ERROR"/>
 <logger name="org.springframework" level="INFO"/>
 
