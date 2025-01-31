@@ -6,7 +6,7 @@
 
         <section>
             <div class="content"> <!-- TODO: FIT inset image to page, -->
-                <img th:class="${page.menuItem.url == 'home' ? 'home-inset' : 'inset-image'}"
+                <img th:class="${page.menuItem.url == '$$@-SiteHome-@$$' ? 'home-inset' : 'inset-image'}"
                      th:if="${page.hasInsetImage}"
                      th:src="@{'images/inset/' + ${page.insetImage.filename}}"
                      th:alt="${page.insetImage.title}"

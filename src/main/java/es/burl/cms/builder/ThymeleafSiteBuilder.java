@@ -58,9 +58,9 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 			log.debug("Generating page {} -hasGallery:{} -content:{}", page.getMenuItem().getUrl(), page.hasGallery(), page.hasContent());
 			Path pagePath = htmlRoot.resolve(page.getMenuItem().getUrl());
 
-			if (page.getMenuItem().getUrl().equals(homeKey))
+			if (page.getMenuItem().getUrl().equals(homeKey)) {
 				pagePath = htmlRoot; //Home goes to the root, don't use it's funky url
-
+			}
 			Files.createDirectories(pagePath);
 			copyPageGallery(page, pagePath);
 			copyPageInset(page, pagePath);
