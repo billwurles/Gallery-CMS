@@ -31,20 +31,23 @@ public class AppConfig {
 	@Value("${posts.per.page}")
 	private int postsPerPage;
 
-	private static final String homepageUniqueKey = "$$@-UniqueHomeKey-@$$";
+	@Value("homepage.unique.key")
+	private String homepageUniqueKey;
+
+	@Value("${app.root}") String appRootProperty;
+	@Value("${gallery.root}") String galleryRootProperty;
+	@Value("${html.root}") String htmlRootProperty;
+	@Value("${backup.path}") String backupPathProperty;
 
 	@PostConstruct
-	public void init(@Value("${app.root}") String appRoot,
-			@Value("${gallery.root}") String galleryRoot,
-			@Value("${html.root}") String htmlRoot,
-			@Value("${backup.path}") String backupPath) {
+	public void init() {
 		String isDocker = System.getenv("IS_DOCKER");
 		if (isDocker != null && isDocker.equals("true")) {
-			appRoot = "/" + appRoot;
+			appRootProperty = "/" + appRootProperty;
 		}
-		this.galleryRoot = Path.of(appRoot, galleryRoot);
-		this.htmlRoot = Path.of(appRoot, htmlRoot);
-		this.backupPath = Path.of(appRoot, backupPath);
+		this.galleryRoot = Path.of(appRootProperty, galleryRootProperty);
+		this.htmlRoot = Path.of(appRootProperty, htmlRootProperty);
+		this.backupPath = Path.of(appRootProperty, backupPathProperty);
 	}
 
 	@Bean
@@ -173,10 +176,10 @@ public class AppConfig {
 //			);
 //		}
 
-		pages.put(homepageUniqueKey, Page.builder()
+		pages.put("$$@-UniqueHomeKey-@$$", Page.builder()
 						.menuItem(MenuItem.builder()
 								.title("Home")
-								.url(homepageUniqueKey)
+								.url("$$@-UniqueHomeKey-@$$")
 								.build())
 //						.content(loremIpsum)
 //						.insetImage(pages.get("the-sea").getGallery().getGalleryInOrder().get(0))
