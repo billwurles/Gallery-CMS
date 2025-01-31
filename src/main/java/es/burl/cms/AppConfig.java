@@ -41,8 +41,10 @@ public class AppConfig {
 		log.info("CMS Application Starting up - getting Site object");
 
 		Path path = Path.of("test");
+
 		try {
-			Files.createDirectory(path);
+			log.debug("path is: "+Files.createDirectory(path).toAbsolutePath().toString());
+
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
