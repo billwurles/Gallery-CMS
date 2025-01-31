@@ -150,9 +150,6 @@
                placeholder="yyyy-MM-dd HH:mm" required />
         <br>
 
-        <!--               th:field="*{date}"-->
-        <p th:text="*{#dates.format(date, 'yyyy-MM-dd HH:mm')}"></p>
-
         <!-- Exhibtion url -->
         <label for="url">URL:</label>
         <input id="url" type="text" th:field="*{url}">
