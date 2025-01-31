@@ -13,7 +13,7 @@
                         <p class="caption" th:text="${painting.title}"></p>
                     </div>
 
-                    <!-- Modal fragment -->
+                    <!-- Modal fragment TODO: ensure modal works with large pictures -->
                     <div th:id="|modal-${iterStat.index}|" class="painting-modal" style="display: none;">
                         <div class="modal-content">
                             <button th:onclick="|closeModal(${iterStat.index})|">Close</button>
