@@ -22,8 +22,11 @@ public class AppConfig {
 
 	private Site site;
 
+	@Value("${gallery.root}")
 	private Path galleryRoot;
+	@Value("${html.root}")
 	private Path htmlRoot;
+	@Value("${backup.path}")
 	private Path backupPath;
 
 	@Value("${static.root}")
@@ -31,26 +34,6 @@ public class AppConfig {
 
 	@Value("${posts.per.page}")
 	private int postsPerPage;
-
-	@Value("homepage.unique.key")
-	private String homepageUniqueKey;
-
-
-	@Value("${app.root}") String appRootProperty;
-	@Value("${gallery.root}") String galleryRootProperty;
-	@Value("${html.root}") String htmlRootProperty;
-	@Value("${backup.path}") String backupPathProperty;
-
-	@PostConstruct
-	public void init() {
-		String isDocker = System.getenv("IS_DOCKER");
-		if (isDocker != null && isDocker.equals("true")) {
-			appRootProperty = "/" + appRootProperty;
-		}
-		this.galleryRoot = Path.of(appRootProperty, galleryRootProperty);
-		this.htmlRoot = Path.of(appRootProperty, htmlRootProperty);
-		this.backupPath = Path.of(appRootProperty, backupPathProperty);
-	}
 
 	@Bean
 	public Site getSite() {
@@ -102,12 +85,6 @@ public class AppConfig {
 		return postsPerPage;
 	}
 
-	@Bean
-	@Qualifier("getHomeKey")
-	public String getHomeKey() {
-		return homepageUniqueKey;
-	}
-
 	public static final String loremIpsum = """
 			<h2>What is Lorem Ipsum?</h2>
 			<p><strong>Lorem Ipsum</strong> is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
@@ -141,7 +118,6 @@ public class AppConfig {
 						.order(5)
 						.build())
 //				.content(loremIpsum)
-				.showInMenu(true)
 				.gallery(Gallery.builder()
 						.gallery(getImageFiles(galleryDir))
 						.build())
@@ -173,18 +149,19 @@ public class AppConfig {
 //			);
 //		}
 
-		pages.put("$$@-SiteHome-@$$", Page.builder()
-						.menuItem(MenuItem.builder()
-								.title("Home")
-								.url("$$@-SiteHome-@$$")
-								.build())
+		Page home = Page.builder()
+				.menuItem(MenuItem.builder()
+						.title("Home")
+						.url("home")
+						.build())
 //						.content(loremIpsum)
 //						.insetImage(pages.get("the-sea").getGallery().getGalleryInOrder().get(0))
-						.build()
-		);
+				.build();
+
 
 		Site site = Site.builder()
 				.name("Arabella Harcourt-Cooze")
+//				.homeImage(home)
 				.pages(pages)
 				.exhibitionRepo(ExhibitionRepo.builder()
 //						.exhibitions(exhibitionList)

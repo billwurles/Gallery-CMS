@@ -23,27 +23,25 @@ import java.util.Objects;
 @Component
 public class ThymeleafSiteBuilder implements SiteBuilder {
 
+	String baseTemplate = "site/base";
 	Path htmlRoot;
 	Path galleryRoot;
 	String staticRoot;
 	SpringTemplateEngine engine;
 	int postsPerPage;
-	String homeKey;
 
 	@Autowired
 	public ThymeleafSiteBuilder(@Qualifier("getHtmlRoot") Path htmlRoot,
 								@Qualifier("getGalleryRoot") Path galleryRoot,
 								@Qualifier("getStaticRoot") String staticRoot,
 								@Qualifier("getPostsPerPage") int postsPerPage,
-								@Qualifier("getHomeKey") String homeKey,
 								SpringTemplateEngine springTemplateEngine){
 		this.htmlRoot = htmlRoot;
 		this.galleryRoot = galleryRoot;
 		this.staticRoot = staticRoot;
 		this.postsPerPage = postsPerPage;
-		this.homeKey = homeKey;
 		this.engine = springTemplateEngine;
-		this.engine.setLinkBuilder(new serverlessLinkBuilder());
+		this.engine.setLinkBuilder(new ServerlessLinkBuilder());
 	}
 
 	@Override
@@ -52,39 +50,15 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		log.info("Generating Site {}", site.getName());
 
 		copyStaticIncludes();
+
 		generateErrorPage(site, 404, "Not Found", "The page does not exist on this server, please return <a href=\"/\">home</a>");
 
-		for (Page page : site.getPages().values()) {
-			log.debug("Generating page {} -hasGallery:{} -content:{}", page.getMenuItem().getUrl(), page.hasGallery(), page.hasContent());
-			Path pagePath = htmlRoot.resolve(page.getMenuItem().getUrl());
+		generateHomePage(site);
+		generatePages(site);
 
-			if (page.getMenuItem().getUrl().equals(homeKey)) {
-				pagePath = htmlRoot; //Home goes to the root, don't use it's funky url
-			}
-			Files.createDirectories(pagePath);
-			copyPageGallery(page, pagePath);
-			copyPageInset(page, pagePath);
-			generatePageHTML(site, page, pagePath);
-		}
-
-		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
 		Path exhibitionsPath = htmlRoot.resolve(site.getExhibitionRepo().getMenuItem().getUrl());
-
-		for (int exhibitionPage = 1; exhibitionPage <= totalPages; exhibitionPage++) {
-			log.debug("Generating exhibition page {}", exhibitionPage);
-			Path exhibitionPagePath = exhibitionsPath;
-			if (exhibitionPage > 1) {
-				exhibitionPagePath = exhibitionsPath.resolve("page-" + exhibitionPage);
-			}
-			Files.createDirectories(exhibitionPagePath);
-			generateExhibitionsPage(site, exhibitionPage, totalPages, site.getExhibitionRepo().getExhibitionsPage(exhibitionPage, postsPerPage), exhibitionPagePath);
-		}
-
-		for (Exhibition exhibition : site.getExhibitionRepo().getExhibitionsInDateOrder()) {
-			Path exhibitionPath = exhibitionsPath.resolve(exhibition.getUrl());
-			Files.createDirectories(exhibitionPath);
-			generateFullExhibitionPage(site, exhibition, exhibitionPath);
-		}
+		generateExhibitionsPages(site, exhibitionsPath);
+		generateExhibitionsDirectPages(site, exhibitionsPath);
 
 		log.info("Site rendering complete");
 	}
@@ -106,15 +80,49 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		context.setVariable("errorCode", code);
 		context.setVariable("shortText", shortText);
 		context.setVariable("message", message);
-		renderTemplateToFile("site/base", context, htmlRoot.resolve(code+".html"));
+		renderTemplateToFile(baseTemplate, context, htmlRoot, code+".html");
 	}
 
+	private void generateHomePage(Site site) throws IOException {
+		log.debug("Generating Home page");
+		Context context = getBaseContext(site.getName(), "home", site.getMenuItems(), "Home", "home");
+		context.setVariable("homeImage", site.getHomeImage());
 
-	private void generatePageHTML(Site site, Page page, Path pagePath) throws IOException {
-		log.debug("Generating HTML for page {}", page.getMenuItem().getUrl());
-		Context context = getBaseContext(site.getName(), "page", site.getMenuItems(), page.getMenuItem().getTitle(), page.getMenuItem().getUrl());
-		context.setVariable("page", page);
-		renderTemplateToFile("site/base", context, pagePath.resolve("index.html"));
+		log.debug("Copying home image");
+		Files.createDirectories(galleryRoot);
+
+		File file = galleryRoot.resolve(site.getHomeImage().getFilename()).toFile();
+		Filesystem.copyImage(site.getHomeImage().getFilename(), file, htmlRoot);
+
+		renderTemplate(context, htmlRoot);
+	}
+
+	private void generatePages(Site site) throws IOException {
+		for (Page page : site.getPages().values()) {
+			log.debug("Generating page {} -hasGallery:{} -content:{}", page.getMenuItem().getUrl(), page.hasGallery(), page.hasContent());
+			Path pagePath = htmlRoot.resolve(page.getMenuItem().getUrl());
+			Files.createDirectories(pagePath);
+			copyPageGallery(page, pagePath);
+
+			log.debug("Generating HTML for page {}", page.getMenuItem().getUrl());
+			Context context = getBaseContext(site.getName(), "page", site.getMenuItems(), page.getMenuItem().getTitle(), page.getMenuItem().getUrl());
+			context.setVariable("page", page);
+			renderTemplate(context, pagePath);
+		}
+	}
+
+	private void generateExhibitionsPages(Site site, Path exhibitionsPath) throws IOException {
+		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
+
+		for (int exhibitionPage = 1; exhibitionPage <= totalPages; exhibitionPage++) {
+			log.debug("Generating exhibition page {}", exhibitionPage);
+			Path exhibitionPagePath = exhibitionsPath;
+			if (exhibitionPage > 1) {
+				exhibitionPagePath = exhibitionsPath.resolve("page-" + exhibitionPage);
+			}
+			Files.createDirectories(exhibitionPagePath);
+			generateExhibitionsPage(site, exhibitionPage, totalPages, site.getExhibitionRepo().getExhibitionsPage(exhibitionPage, postsPerPage), exhibitionPagePath);
+		}
 	}
 
 	private void generateExhibitionsPage(Site site, int exhibitionPage, int totalPages, List<Exhibition> exhibitions, Path exhibitionsPath) throws IOException {
@@ -124,26 +132,22 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		context.setVariable("exhibitionPage", exhibitionPage);
 		context.setVariable("totalPages", totalPages);
 		context.setVariable("exhibitions", exhibitions);
-		renderTemplateToFile("site/base", context, exhibitionsPath.resolve("index.html"));
+		renderTemplate(context, exhibitionsPath);
+	}
+
+	private void generateExhibitionsDirectPages(Site site, Path exhibitionsPath) throws IOException {
+		for (Exhibition exhibition : site.getExhibitionRepo().getExhibitionsInDateOrder()) {
+			Path exhibitionPath = exhibitionsPath.resolve(exhibition.getUrl());
+			Files.createDirectories(exhibitionPath);
+			generateFullExhibitionPage(site, exhibition, exhibitionPath);
+		}
 	}
 
 	private void generateFullExhibitionPage(Site site, Exhibition exhibition, Path exhibitionPath) throws IOException {
-		log.debug("Genearating exhibition {}",exhibition.getTitle());
+		log.debug("Generating exhibition {}",exhibition.getTitle());
 		Context context = getBaseContext(site.getName(), "exhibition", site.getMenuItems(), exhibition.getTitle(), "exhibitions");
 		context.setVariable("exhibition", exhibition);
-		renderTemplateToFile("site/base", context, exhibitionPath.resolve("index.html"));
-	}
-
-	private void copyPageInset(Page page, Path pagePath) throws IOException {
-		if(page.hasInsetImage()){
-			log.debug("Copying inset image for {}",page.getMenuItem().getUrl());
-			Path imageDir = pagePath.resolve("images").resolve("inset");
-			Path cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl()).resolve("images").resolve("inset");
-			Files.createDirectories(imageDir);
-
-			File file = cmsImageDir.resolve(page.getInsetImage().getFilename()).toFile();
-			Filesystem.copyImage(page.getInsetImage().getFilename(), file, imageDir);
-		}
+		renderTemplate(context, exhibitionPath);
 	}
 
 	private void copyPageGallery(Page page, Path pagePath) throws IOException {
@@ -177,30 +181,18 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		return context;
 	}
 
-	private void renderTemplateToFile(String templateName, Context context, Path filePath) throws IOException {
+	private void renderTemplate(Context context, Path filePath) throws IOException {
+		renderTemplateToFile(baseTemplate, context, filePath, "index.html");
+	}
+
+	private void renderTemplateToFile(String templateName, Context context, Path filePath, String filename) throws IOException {
 		log.debug("Rendering template: {}", filePath.toString());
 		// Render the template to a string
 		String renderedContent = engine.process(templateName, context);
 
 		// Save the rendered content to the specified file
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath.toFile()))) {
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath.resolve(filename).toFile()))) {
 			writer.write(renderedContent);
-		}
-	}
-
-	private class serverlessLinkBuilder extends StandardLinkBuilder {
-
-		@Override
-		protected String computeContextPath(final IExpressionContext context,
-											final String base,
-											final Map<String, Object> parameters) {
-
-			if (context instanceof IWebContext) {
-				return super.computeContextPath(context, base, parameters);
-			}
-
-			return "/"; //assuming css and images are here
-
 		}
 	}
 }

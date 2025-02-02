@@ -36,6 +36,11 @@
         </li>
     </ul>
 
+    <h2>Home image:</h2>
+    <a href="/upload">Upload new home image</a>
+    <img th:src="'/image/' + ${homeImage.filename}"
+         th:alt="${homeImage.title}" />
+
     <script>
         function confirmDelete(button) {
             let url = button.getAttribute("data-url");

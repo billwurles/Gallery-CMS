@@ -21,14 +21,16 @@ public class Site {
 
 	@Getter
 	private final String name;
-	private final ExhibitionRepo exhibitionRepo;
+	private Painting homeImage;
 	private final Map<String, Page> pages;
+	private final ExhibitionRepo exhibitionRepo;
 
 	@JsonPOJOBuilder(withPrefix = "")
 	public static class Builder {
 		private String name = "Untitled Site";
-		private ExhibitionRepo exhibitionRepo = ExhibitionRepo.builder().build();
+		private Painting homeImage = Painting.builder().build();
 		private Map<String, Page> pages = new HashMap<>();
+		private ExhibitionRepo exhibitionRepo = ExhibitionRepo.builder().build();
 	}
 
 	public Page getPage(String url) {
@@ -37,7 +39,6 @@ public class Site {
 
 	public List<MenuItem> getMenuItems() {
 		Stream<MenuItem> menuStream = pages.values().stream()
-				.filter(Page::isShowInMenu)
 				.map(Page::getMenuItem);
 		return Stream.concat(menuStream, Stream.of(exhibitionRepo.getMenuItem()))
 				.sorted(Comparator.comparingInt(MenuItem::getOrder))
@@ -73,7 +74,7 @@ public class Site {
 	}
 
 	public void addNewPage(Page page) {
-		log.debug("Saving page to site: {}, {}, {}, {}", page.getMenuItem().getTitle(), page.getMenuItem().getUrl(), page.getContent(), page.isShowInMenu());
+		log.debug("Saving page to site: {}, {}, {}, {}", page.getMenuItem().getTitle(), page.getMenuItem().getUrl(), page.getContent());
 		pages.put(page.getMenuItem().getUrl(), page);
 	}
 

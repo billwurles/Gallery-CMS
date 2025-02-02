@@ -31,59 +31,57 @@ public class Filesystem {
 		// Iterate over the images and metadata
 		int order = page.getGallery().getGallery().size();
 		for (ImageUploadDTO.ImageData newImage : imageUploadDTO.getImages()) {
-			String imageData = newImage.getImageData();
-			byte[] imageBytes = Base64.getDecoder().decode(imageData); // Decode base64 image
-
-			String filename = Painting.generateSafeFilename(newImage.getTitle(), newImage.getFilename());
-			// Construct the file path and save the image
-			Path uploadPath = galleryRoot.resolve(page.getUrl()).resolve(filename);
-			try {
-				Files.createDirectories(uploadPath.getParent());
-				Files.write(uploadPath, imageBytes);  // Save the image file
-
-				// Create a Painting object and update gallery
-				Painting painting = Painting.builder()
-						.title(newImage.getTitle())
-						.filename(filename)
-						.dimensions(newImage.getDimensions())
-						.medium(newImage.getMedium())
-						.sold(newImage.isSold())
-						.order(order++)
-						.build();
-
-				log.debug("Creating new Painting object: {}", painting);
-				page.addPaintingToGallery(painting);
-
-			} catch (IOException e) {
-				log.error("Failed to save image: {}", newImage.getFilename(), e);
-				return false;
-			}
+			page.addPaintingToGallery(uploadPainting(newImage, order++, page.getUrl(), galleryRoot));
 		}
 		return true;
 	}
 
-	public static ResponseEntity<Resource> getImageFromPainting(String filename, Page page, Path galleryRoot) {
-		String pageUrl = page.getUrl();
+	public static Painting uploadPainting(ImageUploadDTO.ImageData newImage, int order, String url, Path galleryRoot) {
+		String imageData = newImage.getImageData();
+		byte[] imageBytes = Base64.getDecoder().decode(imageData); // Decode base64 image
+
+		String filename = Painting.generateFilename(newImage.getFilename());
+		// Construct the file path and save the image
+
+		Path uploadPath = (url.equals("") ? galleryRoot : galleryRoot.resolve(url)).resolve(filename);
 		try {
+			Files.createDirectories(uploadPath.getParent());
+			Files.write(uploadPath, imageBytes);  // Save the image file
+
+			// Create a Painting object and update gallery
+			Painting painting = Painting.builder().title(newImage.getTitle()).filename(filename).dimensions(newImage.getDimensions()).medium(newImage.getMedium()).sold(newImage.isSold()).order(order).build();
+
+			log.debug("Creating new Painting object: {}", painting);
+			return painting;
+		} catch (IOException e) {
+			log.error("Failed to save image: {}", newImage.getFilename(), e);
+			return null;
+		}
+	}
+
+	public static ResponseEntity<Resource> getImageFromPainting(String filename, String url, Path galleryRoot) {
+		try {
+			log.debug("trying to get image {}", filename);
 			// Construct the path to the image
-			Path imagePath = galleryRoot.resolve(pageUrl).resolve(filename);
+			Path imagePath = galleryRoot.resolve(url).resolve(filename);
 			String mimeType = Files.probeContentType(imagePath);
 			Resource resource = new UrlResource(imagePath.toUri());
 
 			if (resource.exists() && resource.isReadable()) {
+				log.debug("Got image {} - {}",filename, resource.contentLength());
 				// Return the image as a downloadable resource
 				return ResponseEntity.ok()
 						.header(HttpHeaders.CONTENT_TYPE, mimeType != null ? mimeType : "application/octet-stream")
 						.body(resource);
 			} else {
-				log.error("Could not find image {} in directory - {}", pageUrl+"/"+filename, imagePath.toString());
+				log.error("Could not find image {} in directory - {}", url+"/"+filename, imagePath.toString());
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 			}
 		} catch (MalformedURLException e) {
-			log.error("Error constructing URI path {}", pageUrl+"/"+filename);
+			log.error("Error constructing URI path {}", url+"/"+filename);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 		} catch (IOException e) {
-			log.error("Error detecting MIME type {}", pageUrl+"/"+filename);
+			log.error("Error detecting MIME type {}", url+"/"+filename);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 		}
 	}

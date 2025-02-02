@@ -56,7 +56,7 @@
                 var title = document.getElementById('title').value; // Get the title value
                 var date = document.getElementById('date');
                 date = date.value.replace('/', '-').replace(':', '-');
-                var title = title + '-' + date;
+                var title = date + '-' + title;
                 var url = title
                     .toLowerCase() // Convert to lowercase
                     .replace(/[^\w\s-]/g, '') // Remove all non-word characters (except spaces and hyphens)
@@ -152,7 +152,7 @@
 
         <!-- Exhibtion url -->
         <label for="url">URL:</label>
-        <input id="url" type="text" th:field="*{url}">
+        <input id="url" type="text" th:field="*{url}" required readonly>
         <br>
 
         <label for="richTextEditor">Content:</label>

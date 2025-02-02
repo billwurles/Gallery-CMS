@@ -32,16 +32,12 @@ public class Page {
 
 	private final MenuItem menuItem;
 	private final String content;
-	private final Painting insetImage; //TODO: allow modification / upload of inset image
-	private final boolean showInMenu;
 	private Gallery gallery;
 
 	@JsonPOJOBuilder(withPrefix = "")
 	public static class Builder {
 		private MenuItem menuItem = MenuItem.builder().build();
 		private String content = null;
-		private Painting insetImage = null;
-		private boolean showInMenu = false;
 		private Gallery gallery = new Gallery.Builder().build();
 	}
 
@@ -67,12 +63,6 @@ public class Page {
 		} else return false;
 	}
 
-	public boolean hasInsetImage() {
-		if(this.insetImage != null){
-			return !this.insetImage.getFilename().isEmpty();
-		} else return false;
-	}
-
 	public boolean hasGallery() {
 		if(this.gallery != null){
 			return !this.gallery.isEmpty();
@@ -88,7 +78,7 @@ public class Page {
 			for (Painting painting : galleryRequest.getGalleryInOrder()) {
 				Painting old = getGallery().getPainting(painting.getFilename());
 				//				if(old != null && !painting.getTitle().equals(old.getTitle())){
-				String filename = Painting.generateSafeFilename(painting.getTitle(), painting.getFilename());
+				String filename = Painting.generateFilename(painting.getFilename());
 				painting = painting.toBuilder().filename(filename).build();
 
 				// Construct the file path and save the image

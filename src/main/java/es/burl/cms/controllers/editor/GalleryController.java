@@ -92,7 +92,7 @@ public class GalleryController {
 		Page page = site.getPage(pageUrl);
 		if (page != null) {
 			model.addAttribute("menuItems", site.getMenuItems());
-			model.addAttribute("page", page);
+			model.addAttribute("page", page.getUrl());
 			model.addAttribute("message", "Upload and Edit Metadata for " + page.getMenuItem().getTitle());
 			return "editor/UploadGallery";
 		} else {
@@ -103,27 +103,26 @@ public class GalleryController {
 	//TODO: pass in nextInt in order
 	//TODO: check unique filenames
 	@PostMapping("/upload")
-	public String uploadGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody ImageUploadDTO imageUploadDTO, Model model){
+	public ResponseEntity<?> uploadGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody ImageUploadDTO imageUploadDTO, Model model){
 		Page page = site.getPage(pageUrl);
 		if (page == null) {
-			return "404";
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("That page was not found");
 		}
+		if (page.getGallery() == null) page.setGallery(Gallery.builder().build());
 		boolean ok = Filesystem.uploadNewPaintings(imageUploadDTO, page, galleryRoot);
 
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("page", page);
 		if(ok) {
-			model.addAttribute("message", "Gallery uploaded and metadata saved successfully!");
+			return ResponseEntity.ok("Gallery uploaded successfully");
 		} else {
-			model.addAttribute("message", "An error occurred during gallery upload");
+			System.err.println("Error uploading gallery");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during gallery upload");
 		}
-
-		//		return "redirect: /page/"+pageUrl+"/gallery";
-		return "editor/EditGallery"; //TODO: automatic redirect back to gallery - do it in JS
 	}
 
 	@GetMapping("/image/{filename}")
 	public ResponseEntity<Resource> getImage(@PathVariable String pageUrl, @PathVariable String filename) {
-		return Filesystem.getImageFromPainting(filename, site.getPage(pageUrl), galleryRoot);
+		return Filesystem.getImageFromPainting(filename, pageUrl, galleryRoot);
 	}
 }

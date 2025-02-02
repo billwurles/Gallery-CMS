@@ -14,6 +14,12 @@
         </nav>
 
         <section th:switch="${pageType}">
+            <section th:case="'home'">
+                <div th:if="${homeImage != null}"
+                     th:replace="~{site/fragments/home-image :: home-image(title=${siteName}, image=${homeImage})}">
+                </div>
+            </section>
+
             <section th:case="'page'">
                 <div th:if="${page != null}"
                      th:replace="~{site/fragments/content :: content(page=${page})}">

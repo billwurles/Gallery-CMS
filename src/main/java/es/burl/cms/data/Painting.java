@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.text.Normalizer;
+import java.util.UUID;
 
 @Data
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -32,27 +33,8 @@ public class Painting {
 		private int order = 100;
 	}
 
-	public static String generateSafeFilename(String titleToGenerateFrom, String oldFilenameWithExtension) {
-		// Step 1: Normalize the string and remove accents
-		String normalized = Normalizer.normalize(titleToGenerateFrom, Normalizer.Form.NFD).replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
-
-		// Step 2: Replace spaces, colons, and other unsafe characters with hyphens
-		String sanitized = normalized.replaceAll("[^a-zA-Z0-9\\s]", "") // Remove non-alphanumeric except spaces
-				.replaceAll("\\s+", "-")          // Replace spaces with hyphens
-				.toLowerCase();                   // Convert to lowercase
-
-		// Step 3: Ensure the filename is not empty and truncate if necessary
-		if (sanitized.isEmpty()) {
-			sanitized = "default-filename";
-		}
-
-		// Limit filename length to 100 characters for safety
-		if (sanitized.length() > 100) {
-			sanitized = sanitized.substring(0, 100);
-		}
-
-		String extension = oldFilenameWithExtension.substring(oldFilenameWithExtension.lastIndexOf("."));
-
-		return sanitized + extension;
+	public static String generateFilename(String filenameWithExtension){
+		String extension = filenameWithExtension.substring(filenameWithExtension.lastIndexOf("."));
+		return UUID.randomUUID() + extension;
 	}
 }

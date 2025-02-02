@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="|Gallery Upload - ${page.menuItem.title}|"></title>
+    <title th:text="|Gallery Upload - ${page}|"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <script th:src="@{/js/scripts.js}"></script>
@@ -11,7 +11,7 @@
 <body>
 
 <nav
-        th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page.menuItem.url}, siteName='Gallery Upload for ' + ${page.menuItem.title})}">
+        th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page}, siteName='Gallery Upload for ' + ${page})}">
 </nav>
 
 
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Preview and Metadata Form -->
-    <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{/page/{pageUrl}/gallery/upload(pageUrl=${page.menuItem.url})}">
+    <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{upload(pageUrl=${page})}">
         <div id="preview-container"></div>
         <input type="hidden" name="metadata" id="metadata">
         <button type="submit">Save All</button>
@@ -167,7 +167,9 @@ sold: false
             data: JSON.stringify(payload),
             success: function () {
                 alert('Gallery and metadata saved successfully!');
-                location.reload();
+                let currentPath = window.location.pathname;
+                let parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                window.location.href = parentPath || "/";
             },
             error: function () {
                 alert('Error saving gallery.');
@@ -175,6 +177,8 @@ sold: false
         });
     });
 </script>
+
+
 
 
 </body>

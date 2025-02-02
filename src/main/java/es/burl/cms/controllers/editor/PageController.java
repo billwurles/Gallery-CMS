@@ -1,6 +1,5 @@
 package es.burl.cms.controllers.editor;
 
-//import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
@@ -14,24 +13,19 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Path;
 
-import static com.fasterxml.jackson.databind.util.ClassUtil.name;
-
 @Slf4j
 @RequestMapping("/page")
 @Controller
 public class PageController {
 
 	private final Site site;
-	private final String homeKey;
 	private final Path galleryRoot;
 
 	@Autowired
 	public PageController(Site site,
-				@Qualifier("getGalleryRoot") Path galleryRoot,
-				@Qualifier("getHomeKey") String homeKey) {
+				@Qualifier("getGalleryRoot") Path galleryRoot) {
 		this.site = site;
 		this.galleryRoot = galleryRoot;
-		this.homeKey = homeKey;
 	}
 
 	@GetMapping(value = {"", "/"})
@@ -43,14 +37,15 @@ public class PageController {
 		return "editor/EditPage";
 	}
 
-	//TODO: Have a live flag (maybe instead of showInMenu) so that DIY pages aren't live
+	//TODO: Have a live flag so that DIY pages aren't live
 	//TODO: ensure that home / exhibitions cannot be overwritten (should be ok?)
 	//TODO: stop the user from being able to edit url when page == home
 	//TODO: no editing of page/exhibitions
+	//TODO: Change /save to just post to /  otherwise a page named save will break stuff
 
-	@PostMapping("/save") //TODO: How to handle gallery before page is saved
-	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
-		// Save the page content (title, url, content, showInMenu)
+	@PostMapping("/") //TODO: How to handle gallery before page is saved
+	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
+		// Save the page content (title, url, content)
 
 		log.debug("Saving new page: {}"+title);
 		model.addAttribute("menuItems", site.getMenuItems());
@@ -64,7 +59,6 @@ public class PageController {
 								.url(url)
 								.title(title).build())
 						.content(content)
-						.showInMenu(showInMenu)
 						.build());
 				return "editor/EditPage";
 			}
@@ -76,7 +70,6 @@ public class PageController {
 						.order(site.getNextPageOrder())
 						.build())
 				.content(content)
-				.showInMenu(showInMenu)
 				.build()
 		);
 
@@ -105,8 +98,8 @@ public class PageController {
 	}
 
 	@PostMapping("/{pageUrl}/save")
-	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, @RequestParam boolean showInMenu, Model model) {
-		// Save the page content (title, url, content, showInMenu)
+	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
+		// Save the page content (title, url, content)
 		log.debug("Saving edited page: "+originalPageUrl);
 		model.addAttribute("menuItems", site.getMenuItems());
 
@@ -117,7 +110,6 @@ public class PageController {
 						.url(url)
 						.build())
 				.content(content)
-				.showInMenu(showInMenu)
 				.build();
 
 		if (!originalPageUrl.equals(url)) {

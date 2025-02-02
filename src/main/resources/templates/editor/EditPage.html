@@ -107,11 +107,7 @@
         <br>
 
         <label for="url">URL:</label>
-        <input id="url" type="text" th:field="*{menuItem.url}" placeholder="Enter the URL" required />
-        <br>
-
-        <label for="showInMenu">Show page in Navigation menu:</label>
-        <input id="showInMenu" type="checkbox" th:field="*{showInMenu}" />
+        <input id="url" type="text" th:field="*{menuItem.url}" placeholder="Enter the URL" required readonly />
         <br>
 
         <label for="richTextEditor">Content:</label>
