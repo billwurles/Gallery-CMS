@@ -1,9 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
     <div class="page" th:fragment="content(page)">
-
         <h1 th:text="${page.menuItem.title}"></h1>
-
         <section>
             <div class="content"> <!-- TODO: FIT inset image to page, -->
                 <div class="content-text"
@@ -11,7 +9,6 @@
                      th:utext="${page.content}">
                 </div>
             </div>
-
             <div th:if="${page.hasGallery}"
                  th:replace="~{site/fragments/gallery :: gallery(paintings=${page.gallery.getGalleryInOrder()}, url=${page.menuItem.url})}">
             </div>

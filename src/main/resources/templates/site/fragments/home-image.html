@@ -2,9 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <div class="page" th:fragment="home-image(title, image)">
     <section>
-
         <h1 th:text="${title}" class="home"></h1>
-
         <div class="content">
             <img class="home-inset"
                  th:src="@{${image.filename}}"

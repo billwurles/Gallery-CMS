@@ -12,44 +12,36 @@
         <nav
                 th:replace="~{site/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${currentPage}, siteName=${siteName})}">
         </nav>
-
         <section th:switch="${pageType}">
             <section th:case="'home'">
                 <div th:if="${homeImage != null}"
                      th:replace="~{site/fragments/home-image :: home-image(title=${siteName}, image=${homeImage})}">
                 </div>
             </section>
-
             <section th:case="'page'">
                 <div th:if="${page != null}"
                      th:replace="~{site/fragments/content :: content(page=${page})}">
                 </div>
             </section>
-
             <section th:case="'exhibitions'">
                 <div th:if="${exhibitions != null}"
                      th:replace="~{site/fragments/exhibitions :: exhibitions(exhibitions=${exhibitions}, exhibitionPage=${exhibitionPage}, totalPages=${totalPages})}">
                 </div>
             </section>
-
             <section th:case="'exhibition'">
                 <div th:if="${exhibition != null}"
                      th:replace="~{site/fragments/exhibition :: exhibition(exhibition=${exhibition})}">
                 </div>
             </section>
-
             <section th:case="'error'">
                 <div th:if="${errorCode != null}"
                      th:replace="~{site/fragments/error :: error(code=${errorCode}, shortText=${shortText}, message=${message})}">
                 </div>
             </section>
         </section>
-
-
         <footer
                 th:replace="~{site/fragments/footer :: footer(currentYear=${currentYear})}">
         </footer>
     </div>
-
 </body>
 </html>
