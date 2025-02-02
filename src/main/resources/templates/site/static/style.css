@@ -38,7 +38,7 @@ html, body {
     display: block
 }
 
-@media (max-width: 500px) {
+@media (max-width: 990px) {
   .page .home-title {
       margin-top: 8%;
       font-size: 36pt;
@@ -233,9 +233,7 @@ html, body {
   .navbar-container input[type="checkbox"]:checked ~ .hamburger-lines .line3 {
     transform: rotate(-45deg);
   }
-}
 
-@media (max-width: 500px) {
   .navbar-container input[type="checkbox"]:checked ~ .logo {
     display: none;
   }
