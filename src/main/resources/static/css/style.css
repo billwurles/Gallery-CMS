@@ -226,6 +226,20 @@ input[type="hidden"] {
   height: 100px;
 }
 
+.sorttitle {
+    display: inline-block;
+}
+
+#sortmsg {
+	color: white;
+	display: inline-block;
+	float: right;
+	border: 2px solid green;
+	padding: 3px 40px;
+	background: #155724;
+	font-weight: bolder;
+}
+
 /* Message Styling */
 #messageContainer {
   padding: 10px;

@@ -95,8 +95,8 @@ public class EditorController {
 	}
 
 	@PostMapping("/rearrange")
-	public String rearrangePages(@RequestBody Map<Integer, String> order) {
+	public ResponseEntity<?> rearrangePages(@RequestBody Map<Integer, String> order) {
 		site.updatePageOrder(order);
-		return "redirect:/"; // Redirect to the home after saving
+		return ResponseEntity.ok("Successful menu rearrange");
 	}
 }

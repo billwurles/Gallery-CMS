@@ -30,7 +30,7 @@
             <a href="/upload" class="upload-link">Upload new home image</a>
         </div>
 
-        <h2>Drag to Rearrange Pages in Menu</h2>
+        <h2 class="sorttitle">Drag to Rearrange Pages in Menu</h2>      <p id="sortmsg">Menu order saved</p>
 
         <br>
 
@@ -47,11 +47,10 @@
                 </button>
             </li>
         </ul>
-
-
     </div>
-
     <script>
+        $("#sortmsg").fadeOut(0);
+
         function confirmDelete(button) {
             let url = button.getAttribute("data-url");
 
@@ -91,11 +90,11 @@
                         contentType: 'application/json', // Set content type to JSON
                         data: JSON.stringify(order), // Send the new order as JSON
                             success: function(response) {
-                                alert("Page order saved successfully!");
-                            window.location.reload();  // Optionally reload page to reflect changes
+                                 $("#sortmsg").fadeIn().delay(4000).fadeOut();
                             },
                             error: function(xhr, status, error) {
                                 alert("An error occurred while saving the order.");
+                                window.location.reload();
                             }
                         });
                 }
