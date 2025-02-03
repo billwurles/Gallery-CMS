@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="|Page Editor - ${name}|"/>
+    <title th:text="|Page Editor - ${page.menuItem.title == null ? 'New Page' : page.menuItem.title}|"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <script th:src="@{/js/scripts.js}"></script>
@@ -88,8 +88,8 @@
     <div class="page">
 
         <h1>Site Content:</h1>
-        <div class="styled-button">
-            <a class="msg page-button" th:href="@{/page/{url}/gallery(url=${page.menuItem.url})}">
+        <div class="styled-button" >
+            <a th:if="${!newPage}" class="msg page-button" th:href="@{/page/{url}/gallery(url=${page.menuItem.url})}">
                 Edit Gallery
             </a>
         </div>

@@ -33,7 +33,7 @@ public class PageController {
 	@GetMapping(value = {"", "/"})
 	public String newPage(Model model) {
 		model.addAttribute("menuItems", site.getMenuItems());
-		model.addAttribute("message", "Creating new page");
+		model.addAttribute("message", "Creating new page - save first before adding pictures to the Gallery");
 		model.addAttribute("newPage", true);
 		model.addAttribute("page", Page.builder().build());
 		return "editor/EditPage";
@@ -94,6 +94,7 @@ public class PageController {
 			model.addAttribute("message", "Editing page " + page.getMenuItem().getTitle());
 			model.addAttribute("page", page);  // Pass the page to the model
 			model.addAttribute("hasGallery", page.hasGallery());
+			model.addAttribute("newPage", false);
 			return "editor/EditPage";
 		} else {
 			return "404";  // Return a "error.html" page if page not found
