@@ -91,9 +91,10 @@ public class EditorController {
 
 	@PostMapping("/upload")
 	public ResponseEntity<?> uploadGallery(@RequestBody ImageUploadDTO imageData, Model model) {
-		Painting homeImage = Filesystem.uploadPainting(imageData.getImages().get(0), 0, "home", galleryRoot);
+		Painting homeImage = Filesystem.uploadPainting(imageData.getImages().get(0), 0, "", galleryRoot);
 
 		if (homeImage != null) {
+			Filesystem.deletePainting(site.getHomeImage().getFilename(), "", galleryRoot);
 			site.setHomeImage(homeImage);
 			return ResponseEntity.ok("Image uploaded successfully");
 		}

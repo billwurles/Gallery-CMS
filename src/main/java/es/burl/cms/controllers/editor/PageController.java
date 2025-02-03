@@ -7,6 +7,8 @@ import es.burl.cms.helper.Filesystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -39,9 +41,6 @@ public class PageController {
 
 	//TODO: Have a live flag so that DIY pages aren't live
 	//TODO: ensure that home / exhibitions cannot be overwritten (should be ok?)
-	//TODO: stop the user from being able to edit url when page == home
-	//TODO: no editing of page/exhibitions
-	//TODO: Change /save to just post to /  otherwise a page named save will break stuff
 
 	@PostMapping("/") //TODO: How to handle gallery before page is saved
 	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
@@ -97,7 +96,7 @@ public class PageController {
 		}
 	}
 
-	@PostMapping("/{pageUrl}/save")
+	@PostMapping("/{pageUrl}")
 	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
 		// Save the page content (title, url, content)
 		log.debug("Saving edited page: "+originalPageUrl);
@@ -134,12 +133,15 @@ public class PageController {
 		return "editor/EditPage";
 	}
 
-	//TODO: add thymeleaf button for delete
-	@GetMapping("/{pageUrl}/delete")
-	public String deletePage(@PathVariable("pageUrl") String pageUrl, Model model) {
-		site.removePage(pageUrl);
+	@DeleteMapping("/{pageUrl}")
+	public ResponseEntity<?> deletePage(@PathVariable("pageUrl") String pageUrl) {
+		if(site.removePage(pageUrl)){
+			site.reorderPageOrder();
+			return ResponseEntity.ok("Page "+pageUrl+" was deleted");
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during gallery upload");
+		}
 		//TODO: also delete gallery from filesystem (or temp backup?)
 		//TODO: reset menuItems orders to remove blank space
-		return "redirect:/";
 	}
 }

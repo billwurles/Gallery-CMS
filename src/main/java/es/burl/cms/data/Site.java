@@ -52,6 +52,13 @@ public class Site {
 				.collect(Collectors.toList());
 	}
 
+	public void reorderPageOrder(){
+		int order = 0;
+		for(MenuItem item : getMenuItems()){
+			item.setOrder(order++);
+		}
+	}
+
 	public void updatePageOrder(Map<Integer, String> order) {
 		for (Map.Entry<Integer, String> entry : order.entrySet()) {
 			int pageId = entry.getKey();
@@ -78,9 +85,10 @@ public class Site {
 		pages.put(page.getMenuItem().getUrl(), page);
 	}
 
-	public void removePage(String url) {
+	public boolean removePage(String url) {
 		log.debug("Deleting page from site: {}", pages.get(url).toString());
 		pages.remove(url);
+		return true;
 	}
 
 	public void removeExhibition(String url) {

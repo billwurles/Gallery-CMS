@@ -16,21 +16,23 @@
 
 
 <div>
-    <h2 th:text="${message}"></h2>
+    <div class="content container">
+        <h2 th:text="${message}"></h2>
 
-    <!-- Drag-and-Drop Zone -->
-    <div id="drag-and-drop-zone">
-        <p>Drag and drop images here</p>
-        <input type="file" id="file-input" multiple style="display: none;">
-        <button type="button" id="file-input-trigger">Select Files</button>
+        <!-- Drag-and-Drop Zone -->
+        <div id="drag-and-drop-zone">
+            <p>Drag and drop images here</p>
+            <input type="file" id="file-input" multiple style="display: none;">
+            <button type="button" id="file-input-trigger">Select Files</button>
+        </div>
+
+        <!-- Preview and Metadata Form -->
+        <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{upload(pageUrl=${page})}">
+            <button>Upload Images To Gallery</button>
+            <div id="preview-container"></div>
+            <input type="hidden" name="metadata" id="metadata">
+        </form>
     </div>
-
-    <!-- Preview and Metadata Form -->
-    <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{upload(pageUrl=${page})}">
-        <div id="preview-container"></div>
-        <input type="hidden" name="metadata" id="metadata">
-        <button type="submit">Save All</button>
-    </form>
 </div>
 
 <script>
@@ -58,7 +60,7 @@
 const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename without extension
                 previewContainer.append(`
                     <div>
-                        <img src="${e.target.result}" alt="Preview" style="width: 100px;">
+                        <img src="${e.target.result}" alt="Preview">
     <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title" value="${fileNameWithoutExt}">
                         <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
                         <input type="text" placeholder="Medium" data-id="${fileId}" class="metadata-medium">
@@ -101,7 +103,7 @@ title: fileNameWithoutExt, // Default title is filename without extension
 const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename without extension
                 previewContainer.append(`
                     <div>
-                        <img src="${e.target.result}" alt="Preview" style="width: 100px;">
+                        <img src="${e.target.result}" alt="Preview">
     <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title" value="${fileNameWithoutExt}">
                         <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
                         <input type="text" placeholder="Medium" data-id="${fileId}" class="metadata-medium">
@@ -177,10 +179,5 @@ sold: false
         });
     });
 </script>
-
-
-
-
 </body>
-
 </html>

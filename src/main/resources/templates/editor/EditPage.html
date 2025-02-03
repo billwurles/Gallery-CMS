@@ -23,7 +23,6 @@
     document.addEventListener("DOMContentLoaded", function () {
         // Initialize Summernote editor
         $('#richTextEditor').summernote({
-            height: 300,  // Set the height of the editor
                 toolbar: [
                     ['style', ['bold', 'italic', 'underline', 'clear']],
                     ['font', ['strikethrough', 'superscript', 'subscript']],
@@ -83,44 +82,51 @@
         th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page.menuItem.url}, siteName=${name})}">
 </nav>
 
-<div class="content">
-    <h1 th:text="|${name}|"></h1>
-    <div th:if="${message}" style="color: green;">
-        <p th:text="${message}"></p>
-    </div>
+<div class="content container">
+    <div class="page">
 
-    <!-- Gallery section -->
-    <a th:href="@{/page/{url}/gallery(url=${page.menuItem.url})}">
-        <h2>Edit Gallery</h2>
-    </a>
-
-    <h1>Site Content:</h1>
-    <form th:action="${newPage} ? @{/page/save} : @{/page/{url}/save(url=${page.menuItem.url})}"
-          th:object="${page}"
-          method="post">
-        <!-- Save Button -->
-        <button type="submit">Save</button><br>
-
-        <!-- Page title and URL -->
-        <label for="title">Title:</label>
-        <input id="title" type="text" th:field="*{menuItem.title}" placeholder="Enter the title" required />
-        <br>
-
-        <label for="url">URL:</label>
-        <input id="url" type="text" th:field="*{menuItem.url}" placeholder="Enter the URL" required readonly />
-        <br>
-
-        <label for="richTextEditor">Content:</label>
-        <div id="richTextEditor">
-            <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
+        <h1>Site Content:</h1>
+        <div class="styled-button">
+            <a class="msg page-button" th:href="@{/page/{url}/gallery(url=${page.menuItem.url})}">
+                Edit Gallery
+            </a>
         </div>
-        <br>
+        <div th:if="${message}">
+            <p th:text="${message}"></p>
+        </div>
 
-    </form>
+        <form th:action="${newPage} ? @{/page/save} : @{/page/{url}/save(url=${page.menuItem.url})}"
+              th:object="${page}"
+              method="post">
+            <div class="pageflex">
+                <!-- Left side: Title & URL inputs -->
+                <div class="fields-container">
+                    <div class="field">
+                        <label for="title">Title:</label>
+                        <input id="title" type="text" th:field="*{menuItem.title}" placeholder="Enter the title" required />
+                    </div>
+                    <div class="field">
+                        <label for="url">URL:</label>
+                        <input id="url" type="text" th:field="*{menuItem.url}" placeholder="Enter the URL" required readonly />
+                    </div>
+                </div>
 
-    <div id="content-preview">
-        <h2>Content Preview:</h2>
-        <div th:if="${page.content}" th:utext="${page.content}"></div>
+                <!-- Right side: Buttons -->
+                <div class="buttons-container">
+                    <div class="styled-button">
+                        <button class="styled-button" type="submit">Save Page</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contentEditor">
+                <label for="richTextEditor">Content:</label>
+                <div id="richTextEditor">
+                    <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
+                </div>
+            </div>
+            <br>
+        </form>
     </div>
 </div>
 

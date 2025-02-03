@@ -127,7 +127,7 @@
         th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='exhibitions', siteName='Exhibition Editor')}">
 </nav>
 
-<div class="content">
+<div class="content container">
     <h1 th:text="|${name}|"></h1>
     <div th:if="${message}" style="color: green;">
         <p th:text="${message}"></p>

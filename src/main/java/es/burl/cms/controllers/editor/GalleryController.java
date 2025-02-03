@@ -58,7 +58,7 @@ public class GalleryController {
 
 	//TODO: allow boolean flags per gallery of whether or not to display title etc info
 
-	@PostMapping("/save")
+	@PostMapping(value = {"", "/"})
 	public ResponseEntity<Map<String, String>> saveGallery(@PathVariable("pageUrl") String pageUrl, @RequestBody Gallery gallery) {
 		Page page = site.getPage(pageUrl);
 
@@ -76,16 +76,6 @@ public class GalleryController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
 	}
-
-
-	@GetMapping("/delete/{filename}")
-	public String deletePainting(@PathVariable String pageUrl, @PathVariable String filename) {
-		Page page = site.getPage(pageUrl);
-		page.removePainting(filename);
-		return "redirect:/page/"+pageUrl+"/gallery/";
-	}
-
-	//TODO: Be able to delete images from gallery / delete entire gallery
 
 	@GetMapping("/upload")
 	public String getUploadPage(@PathVariable("pageUrl") String pageUrl, Model model) {
@@ -124,5 +114,18 @@ public class GalleryController {
 	@GetMapping("/image/{filename}")
 	public ResponseEntity<Resource> getImage(@PathVariable String pageUrl, @PathVariable String filename) {
 		return Filesystem.getImageFromPainting(filename, pageUrl, galleryRoot);
+	}
+
+	@DeleteMapping("/image/{filename}")
+	public  ResponseEntity<?> deletePainting(@PathVariable String pageUrl, @PathVariable String filename) {
+		log.debug("Deleting painting {}",filename);
+		Page page = site.getPage(pageUrl);
+		if(Filesystem.deletePainting(filename, pageUrl, galleryRoot)){
+			page.removePainting(filename); //TODO: delete from filesystem
+			return ResponseEntity.ok("Painting deleted successfully");
+		}  else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during painting delete");
+
+		}
 	}
 }

@@ -59,6 +59,15 @@ public class Filesystem {
 		}
 	}
 
+	public static boolean deletePainting(String filename, String url, Path galleryRoot){
+		log.debug("Deleting painting {}", filename);
+		Path imagePath = galleryRoot.resolve(url).resolve(filename);
+		File file = imagePath.toFile();
+		if(file.exists())
+			return file.delete();
+		else return false;
+	}
+
 	public static ResponseEntity<Resource> getImageFromPainting(String filename, String url, Path galleryRoot) {
 		try {
 			log.debug("trying to get image {}", filename);

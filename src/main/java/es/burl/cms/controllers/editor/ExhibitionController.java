@@ -65,10 +65,10 @@ public class ExhibitionController {
 		}
 	}
 
-	@GetMapping("/{url}/delete")
-	public String deleteExhibition(@PathVariable("url") String url, Model model){
+	@DeleteMapping("/{url}")
+	public ResponseEntity<?> deleteExhibition(@PathVariable("url") String url, Model model){
 		site.removeExhibition(url);
-		return "redirect:/exhibitions";
+		return ResponseEntity.ok("Deleted successfully");
 	}
 
 }

@@ -12,7 +12,7 @@
         th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${exhibitions.menuItem.url}, siteName='Exhibitions')}">
 </nav>
 
-<div class="content">
+<div class="content container">
     <h1>Exhibitions</h1>
     <h2><a href="/exhibitions/new">Create new exhibition post</a></h2>
 
@@ -22,7 +22,7 @@
             <!-- Link to the exhibition details -->
             <a th:href="@{/exhibitions/{url}(url=${exhibition.url})}" th:text="${exhibition.title}"></a>
         </h1>
-        <button class="action-button" th:data-url="@{/exhibitions/{url}/delete(url=${exhibition.url})}" onclick="confirmDelete(this)">
+        <button class="action-button" th:data-url="@{/exhibitions/{url}(url=${exhibition.url})}" onclick="confirmDelete(this)">
             Delete
         </button>
         <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'dd/MM/yyyy')}"></p>
@@ -55,76 +55,25 @@
 <script>
     function confirmDelete(button) {
         let url = button.getAttribute("data-url");
+
         if (confirm("Are you sure you want to delete this exhibition?")) {
-            window.location.href = url;
+            fetch(url, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Exhibition deleted successfully!");
+                    location.reload(); // Refresh page or redirect as needed
+                } else {
+                    alert("Failed to delete the exhibition.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
         }
     }
 </script>
-
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        line-height: 1.6;
-        margin: 0;
-        padding: 0;
-        background-color: #f9f9f9;
-        color: #333;
-    }
-
-    .content {
-        max-width: 800px;
-        margin: 20px auto;
-        background: #fff;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .pagination {
-        text-align: center;
-        margin: 20px 0;
-    }
-
-    .pagination ul {
-        list-style: none;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-    }
-
-    .pagination ul li {
-        margin: 0 5px;
-    }
-
-    .pagination ul li a, .pagination ul li span {
-        text-decoration: none;
-        padding: 5px 10px;
-        border: 1px solid #ddd;
-        color: #007bff;
-        border-radius: 4px;
-        font-size: 1rem;
-    }
-
-    .pagination ul li.active span {
-        background-color: #007bff;
-        color: white;
-        font-weight: bold;
-    }
-
-    .pagination ul li.disabled span, .pagination ul li.disabled a {
-        color: #ccc;
-        pointer-events: none;
-    }
-
-    .pagination ul li a:hover {
-        background-color: #ddd;
-    }
-
-    hr {
-        border: 0;
-        height: 1px;
-        background: #ccc;
-        margin: 20px 0;
-    }
-</style>
 </body>
 </html>
