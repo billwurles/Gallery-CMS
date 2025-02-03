@@ -23,14 +23,11 @@
     <!-- Main Content -->
     <div class="content container">
     <h1 th:text="|${name}|"></h1>
-    <div th:if="${message}" th:style="'color: ' + (${status} == 'success' ? 'green' : 'red')">
-        <p id="messageContainer" th:text="${message}"></p>
-    </div>
         <a th:href="@{/page/{url}/gallery/upload(url=${page.menuItem.url})}" class="upload-link">Upload Images to Gallery</a>
     <h1>Gallery Content:</h1>
     <p>Drag paintings to rearrange</p>
 
-    <form id="galleryForm" th:action="@{/page/{url}/gallery/save(url=${page.menuItem.url})}" method="post">
+    <form id="galleryForm" th:action="@{/page/{url}/gallery(url=${page.menuItem.url})}" method="post">
         <!-- Save Button -->
             <button type="submit" class="submit-button">Save Changes</button>
 
@@ -70,6 +67,27 @@
 </div>
 
 <script>
+    function confirmSave(button) {
+        let url = button.getAttribute("data-url");
+
+        if (confirm("Are you sure you want to save this gallery?")) {
+            fetch(url, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Painting deleted successfully!");
+                    location.reload(); // Refresh page or redirect as needed
+                } else {
+                    alert("Failed to delete the painting.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    }
     function confirmDelete(button) {
         let url = button.getAttribute("data-url");
 
@@ -106,49 +124,51 @@
 
         // Serialize the gallery data before form submission
         $("#galleryForm").on("submit", function (event) {
-            event.preventDefault(); // Prevent the default form submission
+            if (confirm("Are you sure you want to save this gallery?")) {
+                event.preventDefault(); // Prevent the default form submission
 
-            const galleryData = {
-                gallery: {}
-            };
-
-            // Loop through each image and create the gallery data object
-            $("#image-list li").each(function () {
-                const filename = $(this).data("id");
-                const order = $(this).data("order");
-
-                // Gather the painting data from the input fields using painting.order
-                galleryData.gallery[filename] = {
-                    title: $("#title-" + $(this).find("input[id^='title-']").attr("id").split('-')[1]).val(),
-                    filename: filename, // Add the filename
-                    dimensions: $("#dimensions-" + $(this).find("input[id^='dimensions-']").attr("id").split('-')[1]).val(),
-                    medium: $("#medium-" + $(this).find("input[id^='medium-']").attr("id").split('-')[1]).val(),
-                    sold: $("#sold-" + $(this).find("input[id^='sold-']").attr("id").split('-')[1]).prop("checked"),
-                    order: order // Get the updated order from the data-order attribute
+                const galleryData = {
+                    gallery: {}
                 };
-            });
 
-            // Send the data via AJAX
-            $.ajax({
-                url: $(this).attr("action"), // Use the form's action URL
-                method: "POST",
-                contentType: "application/json", // Set Content-Type to JSON
-                data: JSON.stringify(galleryData), // Send the gallery data as a JSON string
-                success: function (response) {
-                // Update the message container based on the status
-                const messageContainer = $("#messageContainer");
-                const responseMessage = response.message;
+                // Loop through each image and create the gallery data object
+                $("#image-list li").each(function () {
+                    const filename = $(this).data("id");
+                    const order = $(this).data("order");
 
-                if (response.status === "success") {
-                    messageContainer.html("<p style='color: green;'>" + responseMessage + "</p>");
-                    } else {
-                    messageContainer.html("<p style='color: red;'>" + responseMessage + "</p>");
-                }
-                },
-                error: function (xhr, status, error) {
-                $("#messageContainer").html("<p style='color: red;'>An error occurred: " + error + "</p>");
-                }
-            });
+                    // Gather the painting data from the input fields using painting.order
+                    galleryData.gallery[filename] = {
+                        title: $("#title-" + $(this).find("input[id^='title-']").attr("id").split('-')[1]).val(),
+                        filename: filename, // Add the filename
+                        dimensions: $("#dimensions-" + $(this).find("input[id^='dimensions-']").attr("id").split('-')[1]).val(),
+                        medium: $("#medium-" + $(this).find("input[id^='medium-']").attr("id").split('-')[1]).val(),
+                        sold: $("#sold-" + $(this).find("input[id^='sold-']").attr("id").split('-')[1]).prop("checked"),
+                        order: order // Get the updated order from the data-order attribute
+                    };
+                });
+
+                // Send the data via AJAX
+                $.ajax({
+                    url: $(this).attr("action"), // Use the form's action URL
+                    method: "POST",
+                    contentType: "application/json", // Set Content-Type to JSON
+                    data: JSON.stringify(galleryData), // Send the gallery data as a JSON string
+                    success: function (response) {
+                    // Update the message container based on the status
+                    const messageContainer = $("#messageContainer");
+                    const responseMessage = response.message;
+
+                    if (response.status === "success") {
+                            alert("Gallery saved successfully")
+                        } else {
+                            alert("Error occurred saving Gallery")
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Error occurred saving Gallery")
+                    }
+                });
+            }
         });
     });
 </script>

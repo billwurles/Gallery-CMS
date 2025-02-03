@@ -86,7 +86,11 @@ public class PageController {
 		model.addAttribute("menuItems", site.getMenuItems());
 		Page page = site.getPage(pageUrl);
 
-		if (page != null) {
+		if (page != null) { //TOOD: back to content button in  template
+			if ((page.getContent() == null || page.getContent().trim().isEmpty())
+				&& !page.getGallery().isEmpty()) {
+				return "redirect:/page/"+pageUrl+"/gallery";
+			}
 			model.addAttribute("message", "Editing page " + page.getMenuItem().getTitle());
 			model.addAttribute("page", page);  // Pass the page to the model
 			model.addAttribute("hasGallery", page.hasGallery());
