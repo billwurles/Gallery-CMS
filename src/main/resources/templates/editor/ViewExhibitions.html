@@ -14,17 +14,17 @@
 
 <div class="content container">
     <h1>Exhibitions</h1>
-    <h2><a href="/exhibitions/new">Create new exhibition post</a></h2>
+    <h2><a class="exhibition-button" href="/exhibitions/new">Create new exhibition post</a></h2>
 
     <!-- Loop through the list of exhibitions -->
     <div th:each="exhibition : ${exhibitionsPage}" class="exhibition-post">
-        <h1>
-            <!-- Link to the exhibition details -->
-            <a th:href="@{/exhibitions/{url}(url=${exhibition.url})}" th:text="${exhibition.title}"></a>
-        </h1>
-        <button class="action-button" th:data-url="@{/exhibitions/{url}(url=${exhibition.url})}" onclick="confirmDelete(this)">
+        <div class="upload-link">
+                 <a th:href="@{/exhibitions/{url}(url=${exhibition.url})}" >Edit Exhibition</a>
+        </div>
+        <button class="action-button exhibitions-delete" th:data-url="@{/exhibitions/{url}(url=${exhibition.url})}" onclick="confirmDelete(this)">
             Delete
         </button>
+        <h1 th:text="${exhibition.title}"></h1>
         <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'dd/MM/yyyy')}"></p>
         <div class="exhibition-content" th:utext="${exhibition.content}"></div>
         <hr>

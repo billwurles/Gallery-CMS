@@ -22,10 +22,14 @@
         <!-- Logo -->
         <h1 class="logo">
             <pre>
-        <button class="action-button" th:data-url="@{/save}" onclick="confirmSave(this)">
-            Publish Site
-        </button>       <a href="/">Return Home</a></pre>
+                <button class="action-button" th:data-url="@{/save}" onclick="confirmSave(this)">
+                    Publish Site
+                </button>
+            </pre>
         </h1>
+        <div class="action-button home-button">
+            <a href="/">Return Home</a>
+        </div>
     </div>
 </nav>
 </html>

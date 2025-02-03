@@ -442,12 +442,26 @@ hr {
 .action-button {
     padding: 10px 12px;
     background-color: #ff4d4d;
+    display: inline-block;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 0.9rem;
     transition: background-color 0.3s;
+}
+
+.exhibitions-delete {
+    float: right;
+    padding: 20px 40px;
+    margin: -0 5px;
+}
+
+.home-button {
+    background-color: #42b983;
+}
+
+.home-button a {
+    color: white;
 }
 
 .action-button:hover {
@@ -471,9 +485,14 @@ hr {
     background-color: #117964;
 }
 
+.upload-link a {
+    color: white;
+}
+
 /* Home Image Styling */
 .image-container {
     display: inline-block;
+    width: 100%
 }
 
 .home-image {
