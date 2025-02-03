@@ -70,8 +70,9 @@
             // Add event listener to title input field
             document.getElementById('title').addEventListener('input', generateUrl);
 
-            // Add event listener to title input field
-            document.getElementById('date').addEventListener('input', generateUrl);
+            $("#date").on('change', function() {
+                generateUrl();  // Run the generateUrl function when the date is picked
+            });
 
             // Date and Time Picker for the date field
             $("#date").datetimepicker({
