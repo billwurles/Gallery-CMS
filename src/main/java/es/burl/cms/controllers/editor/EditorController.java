@@ -55,25 +55,17 @@ public class EditorController {
 
 	//TODO: BUG: When editing a painting filename, the filename is immediately changed, but if no save occurs a later restart forgets that change - save filename changes until save?
 	@GetMapping("save") //TODO: Give some feedback about success to the user
-	public String saveSiteToJSON(Model model) {
+	public ResponseEntity<?> saveSiteToJSON(Model model) {
 		try {
 			new JsonBackup(backupPath).backup(site);
-
 			siteBuilder.buildSite(site);
 
-			model.addAttribute("message", "Site saved successfully");
 		} catch (RuntimeException e) {
-			model.addAttribute("message", "Error saving site");
+			ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred saving site");
 		} catch (IOException e) {
-			model.addAttribute("message", "Error building site");
-			throw new RuntimeException(e);
+			ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred building site");
 		}
-		model.addAttribute("page", "home");
-		model.addAttribute("homeImage", site.getHomeImage());
-		model.addAttribute("name", site.getName());
-		model.addAttribute("menuItems", site.getMenuItems());
-		model.addAttribute("pages", site.getPagesInOrder());
-		return "editor/EditorHome";
+		return ResponseEntity.ok("Site saved");
 	}
 
 	@GetMapping("/image/{filename}")
