@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="|Page Editor - ${page.menuItem.title == null ? 'New Page' : page.menuItem.title}|"/>
+    <title th:text="|Page Editor - ${page.menuItem.title == '' ? 'New Page' : page.menuItem.title}|"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <script th:src="@{/js/scripts.js}"></script>
