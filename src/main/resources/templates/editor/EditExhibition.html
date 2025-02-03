@@ -31,7 +31,8 @@
         document.addEventListener("DOMContentLoaded", function () {
             // Initialize Summernote editor
             $('#richTextEditor').summernote({
-                height: 300,  // Set the height of the editor
+            minHeight: 500,  // Minimum height of the editor
+            maxHeight: null,
                     toolbar: [
                         ['style', ['bold', 'italic', 'underline', 'clear']],
                         ['font', ['strikethrough', 'superscript', 'subscript']],

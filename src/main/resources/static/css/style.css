@@ -676,6 +676,10 @@ form > button[type="submit"] {
     box-sizing: border-box; /* Ensures padding and border are included in the width */
 }
 
+.page-button {
+    width: 450px;
+}
+
 /* Styling for the Save button */
 .page form button[type="submit"] {
     padding: 10px 20px;
