@@ -18,7 +18,7 @@ body {
 
 .container {
   max-width: 1800px;
-  width: 90%;
+  width: 80%;
   margin: auto;
 }
 
@@ -304,6 +304,10 @@ hr {
 
 /* Mobile Navbar Styling */
 @media (max-width: 990px) {
+    .container {
+      width: 95%;
+    }
+
   .navbar {
     opacity: 0.95;
   }
@@ -448,6 +452,18 @@ hr {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+}
+
+.exhibition-button {
+    background-color: #0060df;
+    color: white;
+    font-size: 13pt;
+    float: right;
+    padding: 10px 200px;
+}
+
+.exhibition-button:hover {
+    background-color: #1b7bfa;
 }
 
 .exhibitions-delete {
