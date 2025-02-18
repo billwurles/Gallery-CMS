@@ -2,6 +2,7 @@ version: "3.8"
 
 services:
   nginx:
+    restart: always
     image: nginx:latest
     ports:
       - "80:80"
@@ -12,6 +13,7 @@ services:
       - ahc_cms
 
   ahc_cms:
+    restart: always
     build:
       context: .  # Build from the root of your project (Gallery_CMS)
       dockerfile: Dockerfile  # Use the Dockerfile in the root directory
