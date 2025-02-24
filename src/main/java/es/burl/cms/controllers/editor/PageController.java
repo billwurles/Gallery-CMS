@@ -101,7 +101,7 @@ public class PageController {
 		}
 	}
 
-	@PostMapping("/{pageUrl}")
+	@PostMapping("/{pageUrl}/")
 	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
 		// Save the page content (title, url, content)
 		log.debug("Saving edited page: "+originalPageUrl);
