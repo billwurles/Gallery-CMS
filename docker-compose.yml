@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-  restart: always
   nginx:
     image: nginx:latest
     ports:
@@ -9,11 +8,11 @@ services:
     volumes:
       - ./appdata/html_root:/usr/share/nginx/html:consistent  # Bind mount the local folder for Nginx
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: always
     depends_on:
       - ahc_cms
 
   ahc_cms:
-    restart: always
     build:
       context: .  # Build from the root of your project (Gallery_CMS)
       dockerfile: Dockerfile  # Use the Dockerfile in the root directory
@@ -21,5 +20,6 @@ services:
       - "8080:8080"
     volumes:
       - ./appdata/:/appdata/  # Mount the same folder for Spring Boot to write to
+    restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
