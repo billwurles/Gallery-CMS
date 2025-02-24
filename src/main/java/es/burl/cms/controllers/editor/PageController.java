@@ -129,13 +129,8 @@ public class PageController {
 			site.removePage(originalPageUrl);
 		}
 		site.addNewPage(newPage);
-
-		// Pass the saved content back to the view
-		Page page = site.getPage(url);
-		model.addAttribute("message", "Content saved successfully!");
-		model.addAttribute("page", page); // Pass the saved content back to the view
-		model.addAttribute("hasGallery", page.hasGallery());
-		return "editor/EditPage";
+		
+		return "redirect:/page/" + url;
 	}
 
 	@DeleteMapping("/{pageUrl}")
