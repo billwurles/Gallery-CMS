@@ -97,7 +97,7 @@
             <p th:text="${message}"></p>
         </div>
 
-        <form th:action="${newPage} ? @{/page} : @{/page/{url}(url=${page.menuItem.url})}"
+        <form th:action="${newPage} ? @{/page/} : @{/page/{url}/(url=${page.menuItem.url})}"
               th:object="${page}"
               method="post">
             <div class="pageflex">
