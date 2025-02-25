@@ -1,14 +1,11 @@
 package es.burl.cms.data;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.Data;
 
-import java.text.Normalizer;
 import java.util.UUID;
 
 @Data
@@ -31,10 +28,5 @@ public class Painting {
 		private String medium = "";
 		private boolean sold = false;
 		private int order = 100;
-	}
-
-	public static String generateFilename(String filenameWithExtension){
-		String extension = filenameWithExtension.substring(filenameWithExtension.lastIndexOf("."));
-		return UUID.randomUUID() + extension;
 	}
 }

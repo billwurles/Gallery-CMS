@@ -1,5 +1,6 @@
 package es.burl.cms.controllers.editor;
 
+import es.burl.cms.backup.BackupSite;
 import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
@@ -22,12 +23,15 @@ public class PageController {
 
 	private final Site site;
 	private final Path galleryRoot;
+	private final BackupSite saveService;
 
 	@Autowired
-	public PageController(Site site,
-				@Qualifier("getGalleryRoot") Path galleryRoot) {
+	public PageController(@Qualifier("getSite") Site site,
+						  @Qualifier("getGalleryRoot") Path galleryRoot,
+						  @Qualifier("getSaveService") BackupSite saveService) {
 		this.site = site;
 		this.galleryRoot = galleryRoot;
+		this.saveService = saveService;
 	}
 
 	@GetMapping(value = {"", "/"})
@@ -42,7 +46,7 @@ public class PageController {
 	//TODO: Have a live flag so that DIY pages aren't live
 	//TODO: ensure that home / exhibitions cannot be overwritten (should be ok?)
 
-	@PostMapping("/") //TODO: How to handle gallery before page is saved
+	@PostMapping(value = {"", "/"}) //TODO: How to handle gallery before page is saved
 	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
 		// Save the page content (title, url, content)
 
@@ -77,10 +81,11 @@ public class PageController {
 		model.addAttribute("message", "Content saved successfully!");
 		model.addAttribute("page", page); // Pass the saved content back to the view
 		model.addAttribute("hasGallery", page.hasGallery());
+		saveService.backup(site);
 		return "redirect:/page/" + url;
 	}
 
-	@GetMapping("/{pageUrl}") // TODO: make it work with trailing slash
+	@GetMapping(value = {"/{pageUrl}/", "/{pageUrl}"}) // TODO: make it work with trailing slash
 	public String editPage(@PathVariable("pageUrl") String pageUrl, Model model) {
 		log.debug("Editing page: {}", pageUrl);
 		model.addAttribute("menuItems", site.getMenuItems());
@@ -101,7 +106,7 @@ public class PageController {
 		}
 	}
 
-	@PostMapping("/{pageUrl}/")
+	@PostMapping(value = {"/{pageUrl}/", "/{pageUrl}"})
 	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
 		// Save the page content (title, url, content)
 		log.debug("Saving edited page: "+originalPageUrl);
@@ -129,14 +134,15 @@ public class PageController {
 			site.removePage(originalPageUrl);
 		}
 		site.addNewPage(newPage);
-		
+		saveService.backup(site);
 		return "redirect:/page/" + url;
 	}
 
-	@DeleteMapping("/{pageUrl}")
+	@DeleteMapping(value = {"/{pageUrl}/", "/{pageUrl}"})
 	public ResponseEntity<?> deletePage(@PathVariable("pageUrl") String pageUrl) {
 		if(site.removePage(pageUrl)){
 			site.reorderPageOrder();
+			saveService.backup(site);
 			return ResponseEntity.ok("Page "+pageUrl+" was deleted");
 		} else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during gallery upload");

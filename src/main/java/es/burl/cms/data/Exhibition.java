@@ -1,18 +1,12 @@
 package es.burl.cms.data;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-//import es.burl.cms.helper.LocalDateTimeDeserializer;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.UUID;
 
 @Data
 @Getter

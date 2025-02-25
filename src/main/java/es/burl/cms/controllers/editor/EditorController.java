@@ -1,5 +1,6 @@
 package es.burl.cms.controllers.editor;
 
+import es.burl.cms.backup.BackupSite;
 import es.burl.cms.backup.JsonBackup;
 import es.burl.cms.builder.ThymeleafSiteBuilder;
 import es.burl.cms.data.*;
@@ -24,20 +25,23 @@ import java.util.Map;
 public class EditorController {
 
 	private final Site site;
-	private final Path backupPath;
 	private final Path galleryRoot;
 	private final ThymeleafSiteBuilder siteBuilder;
+	private final BackupSite saveService;
+	private final JsonBackup publishService;
 
 	@Autowired
 	public EditorController(
-			Site site,
-			@Qualifier("getBackupPath") Path backupPath,
+			@Qualifier("getSite") Site site,
 			@Qualifier("getGalleryRoot") Path galleryRoot,
+			@Qualifier("getSaveService") BackupSite saveService,
+			@Qualifier("getPublishService") JsonBackup publishService,
 			ThymeleafSiteBuilder siteBuilder
 	) {
 		this.site = site;
-		this.backupPath = backupPath;
 		this.galleryRoot = galleryRoot;
+		this.saveService = saveService;
+		this.publishService = publishService;
 		this.siteBuilder = siteBuilder;
 	}
 
@@ -56,7 +60,7 @@ public class EditorController {
 	@GetMapping("save") //TODO: Give some feedback about success to the user
 	public ResponseEntity<?> saveSiteToJSON(Model model) {
 		try {
-			new JsonBackup(backupPath).backup(site);
+			publishService.publish(site);
 			siteBuilder.buildSite(site);
 
 		} catch (RuntimeException e) {
@@ -87,6 +91,7 @@ public class EditorController {
 		if (homeImage != null) {
 			Filesystem.deletePainting(site.getHomeImage().getFilename(), "", galleryRoot);
 			site.setHomeImage(homeImage);
+			saveService.backup(site);
 			return ResponseEntity.ok("Image uploaded successfully");
 		}
 
@@ -97,6 +102,7 @@ public class EditorController {
 	@PostMapping("/rearrange")
 	public ResponseEntity<?> rearrangePages(@RequestBody Map<Integer, String> order) {
 		site.updatePageOrder(order);
+		saveService.backup(site);
 		return ResponseEntity.ok("Successful menu rearrange");
 	}
 }

@@ -3,6 +3,7 @@ package es.burl.cms.data;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import es.burl.cms.helper.Filesystem;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -14,14 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Data
@@ -70,28 +71,26 @@ public class Page {
 	}
 
 	public boolean saveGallery(Gallery galleryRequest, Path galleryRoot) {
-		// Prepare a response map
-		Map<String, String> response = new HashMap<>();
-
-		Gallery newGallery = Gallery.builder().build(); //TODO: stop it being ajax so that the data is updated in the view
+//		Gallery newGallery = Gallery.builder().build(); //TODO: stop it being ajax so that the data is updated in the view
 		if (galleryRequest != null) {
-			for (Painting painting : galleryRequest.getGalleryInOrder()) {
-				Painting old = getGallery().getPainting(painting.getFilename());
-				//				if(old != null && !painting.getTitle().equals(old.getTitle())){
-				String filename = Painting.generateFilename(painting.getFilename());
-				painting = painting.toBuilder().filename(filename).build();
-
-				// Construct the file path and save the image
-				Path uploadPath = galleryRoot.resolve(getUrl());
-				File image = uploadPath.resolve(old.getFilename()).toFile();
-				File newName = new File(image.getParent(), filename);
-				image.renameTo(newName);
-				//				}
-				newGallery.addPainting(painting);
-			}
+//			for (Painting painting : galleryRequest.getGalleryInOrder()) {
+//
+//				Painting oldPainting = getGallery().getPainting(painting.getFilename());
+//
+//				String filename = painting.getFilename();
+//				painting = painting.toBuilder().filename(filename).build();
+//
+//				// Construct the file path and save the image
+//				Path uploadPath = galleryRoot.resolve(getUrl());
+//				File image = uploadPath.resolve(oldPainting.getFilename()).toFile();
+//				File newName = new File(image.getParent(), filename);
+//				image.renameTo(newName);
+//
+//				newGallery.addPainting(painting);
+//			}
 
 			// Save the updated page with the new gallery
-			setGallery(newGallery);
+			setGallery(galleryRequest);
 
 			return true;
 		}
@@ -100,5 +99,10 @@ public class Page {
 
 	public void removePainting(String filename){
 		getGallery().getGallery().remove(filename);
+	}
+
+	public void sortPaintingsByAspectRatio(Path galleryRoot, boolean reversed) throws IOException {
+		log.debug("Sorting images for {} by aspect ratio", getUrl());
+		Filesystem.sortPaintingsByAspectRatio(this, galleryRoot, reversed);
 	}
 }

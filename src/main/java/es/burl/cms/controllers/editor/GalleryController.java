@@ -1,26 +1,19 @@
 package es.burl.cms.controllers.editor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import es.burl.cms.backup.BackupSite;
 import es.burl.cms.data.*;
 import es.burl.cms.helper.Filesystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,12 +24,15 @@ public class GalleryController {
 
 	private final Site site;
 	private final Path galleryRoot;
+	private final BackupSite saveService;
 
 	@Autowired
-	public GalleryController(Site site,
-							 @Qualifier("getGalleryRoot") Path galleryRoot) {
+	public GalleryController(@Qualifier("getSite") Site site,
+							 @Qualifier("getGalleryRoot") Path galleryRoot,
+							 @Qualifier("getSaveService") BackupSite saveService) {
 		this.site = site;
 		this.galleryRoot = galleryRoot;
+		this.saveService = saveService;
 	}
 
 	@GetMapping(value = {"", "/"})
@@ -68,6 +64,7 @@ public class GalleryController {
 			// Success message
 			response.put("status", "success");
 			response.put("message", "Content saved successfully!");
+			saveService.backup(site);
 			return ResponseEntity.ok(response);
 		} else {
 			// Failure message
@@ -104,6 +101,7 @@ public class GalleryController {
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("page", page);
 		if(ok) {
+			saveService.backup(site);
 			return ResponseEntity.ok("Gallery uploaded successfully");
 		} else {
 			System.err.println("Error uploading gallery");
@@ -122,6 +120,7 @@ public class GalleryController {
 		Page page = site.getPage(pageUrl);
 		if(Filesystem.deletePainting(filename, pageUrl, galleryRoot)){
 			page.removePainting(filename); //TODO: delete from filesystem
+			saveService.backup(site);
 			return ResponseEntity.ok("Painting deleted successfully");
 		}  else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during painting delete");
