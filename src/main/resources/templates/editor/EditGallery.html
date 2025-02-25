@@ -51,10 +51,9 @@
                         <label th:for="'sold-' + ${painting.order}">Sold:</label>
                             <input type="checkbox" th:id="'sold-' + ${painting.order}" th:checked="${painting.sold}" class="metadata-checkbox" />
 
-                        <label th:for="'delete-' + ${painting.order}">Delete:</label>
-                            <button class="action-button delete-button"
-                                th:id="'delete-' + ${painting.order}"
-                                th:data-url="@{/page/{url}/gallery/image/{filename}(url=${page.url}, filename=${painting.filename})}" onclick="confirmDelete(this)">
+                        <button class="action-button delete-button"
+                            th:id="'delete-' + ${painting.order}"
+                            th:data-url="@{/page/{url}/gallery/image/{filename}(url=${page.url}, filename=${painting.filename})}" onclick="confirmDelete(this)">
                             Delete
                         </button>
                     </div>
