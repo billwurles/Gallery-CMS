@@ -1,9 +1,7 @@
 package es.burl.cms.helper;
 
-import es.burl.cms.data.ImageUploadDTO;
-import es.burl.cms.data.Page;
-import es.burl.cms.data.Painting;
-import lombok.experimental.Helper;
+import ch.qos.logback.core.joran.sanity.Pair;
+import es.burl.cms.data.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -12,13 +10,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Base64;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Filesystem {
@@ -40,7 +41,8 @@ public class Filesystem {
 		String imageData = newImage.getImageData();
 		byte[] imageBytes = Base64.getDecoder().decode(imageData); // Decode base64 image
 
-		String filename = Painting.generateFilename(newImage.getFilename());
+		String extension = newImage.getFilename().substring(newImage.getFilename().lastIndexOf("."));
+		String filename = UUID.randomUUID() + extension;
 		// Construct the file path and save the image
 
 		Path uploadPath = (url.equals("") ? galleryRoot : galleryRoot.resolve(url)).resolve(filename);
@@ -136,5 +138,36 @@ public class Filesystem {
 		while ((length = inputStream.read(buffer)) > 0) {
 			outputStream.write(buffer, 0, length);
 		}
+	}
+
+	public static void sortPaintingsByAspectRatio(Page page, Path galleryRoot, boolean reverse) throws IOException {
+		log.debug("Sorting images for {} by aspect ratio", page.getUrl());
+
+		HashMap<String, Double> ratios = new HashMap<>();
+		for(Painting p : page.getGallery().getGallery().values()){
+			String filename = p.getFilename();
+			File file = galleryRoot.resolve(page.getUrl()).resolve(filename).toFile();
+			if(file.exists()) {
+				BufferedImage image = ImageIO.read(file);
+				ratios.put(filename, (double) image.getWidth() / image.getHeight());
+			} else log.error("Not found file {}",p.getFilename());
+		}
+
+		int i = 0;
+		Map<String, Painting> updated = new HashMap<>();
+		for(Map.Entry<String, Double> entry : ratios.entrySet()
+				.stream().sorted(reverse
+				? Map.Entry.<String, Double>comparingByValue().reversed()
+				: Map.Entry.comparingByValue())
+				.toList()){
+			updated.put(entry.getKey(),
+					page.getGallery().getPainting(entry.getKey())
+						.toBuilder()
+						.order(i++)
+						.build()
+			);
+		}
+		page.setGallery(page.getGallery().toBuilder().gallery(updated).build());
+
 	}
 }

@@ -1,26 +1,30 @@
 package es.burl.cms.controllers.editor;
 
+import es.burl.cms.backup.BackupSite;
 import es.burl.cms.data.Exhibition;
 import es.burl.cms.data.Site;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RequestMapping("/exhibitions")
 @Controller
 public class ExhibitionController {
 
 	private final Site site;
+	private final BackupSite saveService;
 
 	@Autowired
-	public ExhibitionController(Site site) {
-			this.site = site;
-		}
+	public ExhibitionController(@Qualifier("getSite") Site site,
+								@Qualifier("getSaveService") BackupSite saveService
+	) {
+		this.site = site;
+		this.saveService = saveService;
+	}
 
 	@GetMapping(value = {"", "/"})
 	public String getExhibitions(
@@ -56,6 +60,7 @@ public class ExhibitionController {
 	public ResponseEntity<?> saveExhibition(@PathVariable("url") String url, @RequestBody Exhibition exhibition) {
 		try {
 			site.getExhibitionRepo().add(exhibition);
+			saveService.backup(site);
 			return ResponseEntity.ok(exhibition);
 		} catch (Exception e) {
 			// Handle errors (e.g., log them and send an error response)
@@ -68,6 +73,7 @@ public class ExhibitionController {
 	@DeleteMapping("/{url}")
 	public ResponseEntity<?> deleteExhibition(@PathVariable("url") String url, Model model){
 		site.removeExhibition(url);
+		saveService.backup(site);
 		return ResponseEntity.ok("Deleted successfully");
 	}
 

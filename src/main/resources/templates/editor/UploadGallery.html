@@ -28,7 +28,7 @@
 
         <!-- Preview and Metadata Form -->
         <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{upload(pageUrl=${page})}">
-            <button>Upload Images To Gallery</button>
+            <button id="upload-button" >Upload Images To Gallery</button>
             <div id="preview-container"></div>
             <input type="hidden" name="metadata" id="metadata">
         </form>
@@ -126,6 +126,10 @@ sold: false
     // Submit the form and send the data using AJAX
     $('#metadata-form').on('submit', function (e) {
         e.preventDefault();
+        
+        // Disable the upload button once it's clicked
+        const uploadButton = $('#upload-button');
+        uploadButton.prop('disabled', true);
 
         // Collect metadata (title, dimensions, medium, sold)
         $('.metadata-title').each(function () {
@@ -175,6 +179,8 @@ sold: false
             },
             error: function () {
                 alert('Error saving gallery.');
+                // Re-enable the upload button
+                uploadButton.prop('disabled', false);
             }
         });
     });
