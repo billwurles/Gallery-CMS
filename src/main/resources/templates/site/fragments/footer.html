@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<footer th:fragment="footer(currentYear)">
+<footer th:fragment="footer(currentYear, name)">
     <p>
-        Copyright © <span th:text="${currentYear}">2025</span> Arabella Harcourt-Cooze, all rights reserved
+        Copyright © <span th:text="${currentYear}">2025</span> <span th:text="${name}">Arabella Harcourt-Cooze</span>, all rights reserved
     </p>
 </footer>
 </body>
