@@ -54,25 +54,29 @@ public class JsonBackup implements BackupSite {
 	private void moveOldBackups(boolean published){
 		File backupFolder = backupPath.toFile();
 		HashMap<Integer, File> foundFiles = new HashMap<>();
-		for(File file : backupFolder.listFiles()) {
-			String filename = file.getName();
-			if(filename.contains(filename) && filename.contains(published ? publishedExt : unpublishedExt)){
-				int num = Integer.parseInt(filename.split("-")[0]);
-				foundFiles.put(num, file);
+
+		File[] files = backupFolder.listFiles();
+		if(files != null){
+			for(File file : files) {
+				String filename = file.getName();
+				if(filename.contains(filename) && filename.contains(published ? publishedExt : unpublishedExt)){
+					int num = Integer.parseInt(filename.split("-")[0]);
+					foundFiles.put(num, file);
+				}
 			}
-		}
 
-		for(int i = (published ? numPublishedBackups : numUnpublishedBackups); i > 0 ; i--){
-			File file = foundFiles.get(i);
-			if(file == null) continue;
+			for(int i = (published ? numPublishedBackups : numUnpublishedBackups); i > 0 ; i--) {
+				File file = foundFiles.get(i);
+				if (file == null) continue;
 
-			if(i+1 > (published ? numPublishedBackups : numUnpublishedBackups)) {
-				log.debug("Deleting file {}", file.getName());
-				file.delete();
-			} else {
-				File newName = new File(file.getParent(), buildFilename(i+1, published, file.getName().split("-")[2]));
-				log.debug("Moving file {} to {}", file.getName(), newName.getName());
-				file.renameTo(newName);
+				if (i + 1 > (published ? numPublishedBackups : numUnpublishedBackups)) {
+					log.debug("Deleting file {}", file.getName());
+					file.delete();
+				} else {
+					File newName = new File(file.getParent(), buildFilename(i + 1, published, file.getName().split("-")[2]));
+					log.debug("Moving file {} to {}", file.getName(), newName.getName());
+					file.renameTo(newName);
+				}
 			}
 		}
 	}
