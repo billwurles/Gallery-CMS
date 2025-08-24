@@ -10,9 +10,9 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     restart: always
     depends_on:
-      - ahc_cms
+      - cms
 
-  ahc_cms:
+  cms:
     build:
       context: .  # Build from the root of your project (Gallery_CMS)
       dockerfile: Dockerfile  # Use the Dockerfile in the root directory
