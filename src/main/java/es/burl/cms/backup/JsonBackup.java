@@ -88,7 +88,7 @@ public class JsonBackup implements BackupSite {
 			log.debug("Backing up to JSON - {}",newFilename);
 			String jsonSite = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(site);
 			try {
-				Files.createDirectories(backupPath.getParent());
+				Files.createDirectories(backupPath);
 				Files.writeString(backupPath.resolve(newFilename), jsonSite);
 
 			} catch (IOException e) {

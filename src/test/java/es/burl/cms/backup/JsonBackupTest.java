@@ -134,6 +134,20 @@ class JsonBackupTest {
 		assertThat(backup.restore()).usingRecursiveComparison().isEqualTo(site);
 	}
 
+	@Test
+	void backupCreatesAMissingBackupFolder() throws IOException {
+		Path missing = dir.resolve("cms/backup");
+		JsonBackup backup = new JsonBackup(missing, "site-data-backup", 5, 10);
+
+		backup.backup(named("fresh install"));
+		backup.publish(named("fresh install"));
+
+		try (Stream<Path> s = Files.list(missing)) {
+			assertThat(s).hasSize(2);
+		}
+		assertThat(backup.restore().getName()).isEqualTo("fresh install");
+	}
+
 	private Path find(String prefix) throws IOException {
 		try (Stream<Path> s = Files.list(dir)) {
 			return s.filter(p -> p.getFileName().toString().startsWith(prefix)).findFirst().orElseThrow();

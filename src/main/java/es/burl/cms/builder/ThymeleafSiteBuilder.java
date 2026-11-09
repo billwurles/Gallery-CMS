@@ -88,11 +88,14 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		Context context = getBaseContext(site.getName(), "home", site.getMenuItems(), "Home", "home");
 		context.setVariable("homeImage", site.getHomeImage());
 
-		log.debug("Copying home image");
-		Files.createDirectories(galleryRoot);
-
-		File file = galleryRoot.resolve(site.getHomeImage().getFilename()).toFile();
-		Filesystem.copyImage(site.getHomeImage().getFilename(), file, htmlRoot);
+		String homeImage = site.getHomeImage() == null ? "" : site.getHomeImage().getFilename();
+		File file = galleryRoot.resolve(homeImage).toFile();
+		if (!homeImage.isBlank() && file.isFile()) {
+			log.debug("Copying home image");
+			Filesystem.copyImage(homeImage, file, htmlRoot);
+		} else {
+			log.warn("No home image to publish");
+		}
 
 		renderTemplate(context, htmlRoot);
 	}

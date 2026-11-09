@@ -1,6 +1,7 @@
 package es.burl.cms.builder;
 
 import es.burl.cms.data.Page;
+import es.burl.cms.data.Painting;
 import es.burl.cms.data.Site;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -157,6 +158,16 @@ class ThymeleafSiteBuilderTest {
 
 		assertThat(read("exhibitions/ex-0/index.html")).contains("Exhibition ex-0", "About ex-0");
 		assertThat(read("exhibitions/ex-1/index.html")).contains("Exhibition ex-1");
+	}
+
+	@Test
+	void publishesWithoutAHomeImage() throws IOException {
+		site.setHomeImage(Painting.builder().build());
+
+		builder.buildSite(site);
+
+		assertThat(htmlRoot.resolve("index.html")).isNotEmptyFile();
+		assertThat(htmlRoot.resolve("about/index.html")).isNotEmptyFile();
 	}
 
 	@Test
