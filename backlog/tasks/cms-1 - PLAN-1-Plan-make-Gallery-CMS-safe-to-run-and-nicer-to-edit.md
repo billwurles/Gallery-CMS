@@ -4,6 +4,7 @@ title: 'PLAN-1: Plan: make Gallery-CMS safe to run and nicer to edit'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
+updated_date: '2026-11-09T17:58:00Z'
 labels:
   - plan
 dependencies: []
@@ -31,3 +32,9 @@ Order:
 3. EDIT-1 (with subtasks): the editor redesign
 4. SITE-1..3, INFRA-2..3, TEST-1: public site polish, ops tidy-up, tests
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-09: Added STORE-1 (CMS-22, subtasks CMS-22.1-22.6): move content to MongoDB and images to S3/MinIO, keeping JSON + image export/backup. It slots in between steps 2 and 3. Do it after the BUG tickets and before EDIT-1, so the redesigned controllers use the new storage interfaces. STORE-4 supersedes most of BUG-6, and STORE-3 removes most of BUG-7.
+<!-- SECTION:NOTES:END -->

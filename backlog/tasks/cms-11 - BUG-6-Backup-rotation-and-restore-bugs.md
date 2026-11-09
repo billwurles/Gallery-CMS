@@ -4,7 +4,7 @@ title: 'BUG-6: Backup rotation and restore bugs'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T16:11:00Z'
+updated_date: '2026-11-09T17:58:00Z'
 labels:
   - bug
   - data
@@ -27,3 +27,9 @@ The JSON backups are the only copy of the site's content. In `JsonBackup`:
 Also: backups live on the same volume as the site. Add an off-machine copy, and a "restore this version"
 view in the editor (EDIT-3).
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-09: STORE-4 (CMS-22.3) replaces JsonBackup with a snapshot-based BackupService. Only fix what's needed to stop data loss here, and leave the rest to STORE-4.
+<!-- SECTION:NOTES:END -->
