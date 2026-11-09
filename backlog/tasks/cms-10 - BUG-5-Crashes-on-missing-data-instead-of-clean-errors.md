@@ -4,6 +4,7 @@ title: 'BUG-5: Crashes on missing data instead of clean errors'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
+updated_date: '2026-11-09T23:32:00Z'
 labels:
   - bug
 dependencies: []
@@ -25,3 +26,18 @@ ordinal: 10000
 Add a real not-found page and handle each case; when no backup can be read, start empty and say so loudly
 instead of failing.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-09, found while writing TEST-1:
+- An empty backup folder makes `restore()` return null, so `AppConfig.getSite()` hands out a null Site.
+- Publishing a site with no home image (filename "") tries to `Files.copy` the gallery folder onto the non-empty html_root, so the build fails.
+- `copyPageGallery` throws an NPE when a page has paintings but no `gallery/<url>/` folder (`listFiles()` returns null).
+- `GalleryController.editGallery` calls `page.toString()` before its null check, so an unknown page gives a 500 instead of a 404.
+- `ExhibitionRepo.getExhibitionsPage` throws for a page past the end (e.g. `/exhibitions?page=5`).
+- With no exhibitions, publish writes no `exhibitions/index.html`, but the menu still links to it.
+- `sortPaintingsByAspectRatio` silently drops paintings whose image file is missing from the gallery (data loss).
+
+Add a regression test to the TEST-1 suite with each fix.
+<!-- SECTION:NOTES:END -->

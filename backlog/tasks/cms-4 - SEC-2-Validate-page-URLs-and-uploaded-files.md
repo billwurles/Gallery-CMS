@@ -4,7 +4,7 @@ title: 'SEC-2: Validate page URLs and uploaded files'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T16:11:00Z'
+updated_date: '2026-11-09T23:32:00Z'
 labels:
   - security
 dependencies:
@@ -32,3 +32,9 @@ extension from the detected type.
 - [ ] #1 Saving a page with `..` or `/` in the URL is rejected with a clear message
 - [ ] #2 Non-image uploads are rejected
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-09, found while writing TEST-1: `Filesystem.uploadPainting` takes the extension with `lastIndexOf(".")`, so an uploaded filename with no dot throws StringIndexOutOfBoundsException. Slug and upload validation tests were moved here from TEST-1.
+<!-- SECTION:NOTES:END -->

@@ -4,7 +4,7 @@ title: 'SEC-1: Editor has no login and is published on port 8080'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T16:11:00Z'
+updated_date: '2026-11-09T23:32:00Z'
 labels:
   - security
 dependencies:
@@ -30,3 +30,9 @@ protection doesn't cover it.
 - [ ] #1 Every editor URL redirects to login when signed out
 - [ ] #2 State-changing requests are POST/DELETE with CSRF tokens
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-09: Add auth tests to the TEST-1 suite. Every editor URL in ContentManagerAppTest should reject anonymous requests and render for a logged-in user.
+<!-- SECTION:NOTES:END -->
