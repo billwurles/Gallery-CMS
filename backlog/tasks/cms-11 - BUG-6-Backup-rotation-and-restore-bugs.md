@@ -4,7 +4,7 @@ title: 'BUG-6: Backup rotation and restore bugs'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T23:32:00Z'
+updated_date: '2026-11-09T23:39:00Z'
 labels:
   - bug
   - data
@@ -34,4 +34,9 @@ view in the editor (EDIT-3).
 2026-11-09: STORE-4 (CMS-22.3) replaces JsonBackup with a snapshot-based BackupService. Only fix what's needed to stop data loss here, and leave the rest to STORE-4.
 
 2026-11-09, found while writing TEST-1: `saveToJson` creates `backupPath.getParent()`, not `backupPath` itself. On a fresh install with no backup folder, every save and every publish throws, and Publish still reports success (BUG-2). backup/JsonBackupTest covers the current rotation; add the regression tests there.
+
+2026-11-09: Fixed the missing backup folder: saveToJson now creates backupPath itself. Regression test: JsonBackupTest.backupCreatesAMissingBackupFolder. The other items on this ticket are still open.
+
+Commits:
+- `b7da79e` Fix saving on a fresh install and publishing with no home image (2026-11-09)
 <!-- SECTION:NOTES:END -->

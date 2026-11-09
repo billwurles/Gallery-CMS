@@ -4,7 +4,7 @@ title: 'INFRA-2: nginx config and ports'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T16:12:00Z'
+updated_date: '2026-11-09T23:39:00Z'
 labels:
   - infra
 dependencies:
@@ -24,3 +24,13 @@ ordinal: 23000
   Content-Type header rather than replacing it. Delete those blocks; nginx's mime.types already handles CSS and JS.
 - `Cache-Control: no-store` on everything: keep it for HTML, and cache images, CSS and JS for a long time.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-09: INFRA-1 put the site on 127.0.0.1:6500 and the editor on 127.0.0.1:6501. Still to do here:
+- Run the cms container as non-root (decide who owns ./appdata).
+- In nginx.conf, `error_page` points at `/html_root/404.html`, but the file is served at `/404.html`.
+- nginx.conf overrides the CSS/JS Content-Type headers, and the JS one is wrong (`application/js`).
+- Add tunnel routes, with Cloudflare Access on the editor, once SEC-1 lands.
+<!-- SECTION:NOTES:END -->

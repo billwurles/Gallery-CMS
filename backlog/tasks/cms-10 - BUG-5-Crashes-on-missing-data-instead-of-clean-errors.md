@@ -4,7 +4,7 @@ title: 'BUG-5: Crashes on missing data instead of clean errors'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T23:32:00Z'
+updated_date: '2026-11-09T23:39:00Z'
 labels:
   - bug
 dependencies: []
@@ -40,4 +40,9 @@ instead of failing.
 - `sortPaintingsByAspectRatio` silently drops paintings whose image file is missing from the gallery (data loss).
 
 Add a regression test to the TEST-1 suite with each fix.
+
+2026-11-09: Fixed publishing with no home image: the builder now skips the copy and logs a warning. Regression test: ThymeleafSiteBuilderTest.publishesWithoutAHomeImage. The other items are still open.
+
+Commits:
+- `b7da79e` Fix saving on a fresh install and publishing with no home image (2026-11-09)
 <!-- SECTION:NOTES:END -->
