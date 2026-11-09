@@ -4,6 +4,7 @@ title: 'STORE-4: Export, backup and restore as JSON + image files'
 status: To Do
 assignee: []
 created_date: '2026-11-09T17:47:00Z'
+updated_date: '2026-11-09T23:54:00Z'
 labels:
   - storage
 dependencies:
@@ -42,3 +43,9 @@ Format (a directory, or the same layout in a `.zip`):
 - [ ] #3 Snapshots are taken async and debounced, not on every keystroke-save
 - [ ] #4 Rotation keeps the configured counts and never deletes the newest valid snapshot
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-09: BACKUP-1 (CMS-23) builds the image archive, the manifest and snapshot restore on today's filesystem storage first. When this ticket comes up, move that format behind ContentRepository/ImageStore instead of designing a new one.
+<!-- SECTION:NOTES:END -->
