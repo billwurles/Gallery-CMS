@@ -4,12 +4,11 @@ title: 'EDIT-1: Editor redesign: make the CMS pleasant to use'
 status: To Do
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T16:11:00Z'
+updated_date: '2026-11-09T23:51:00Z'
 labels:
   - editor
   - ui
-dependencies:
-  - CMS-3
+dependencies: []
 priority: high
 type: feature
 ordinal: 13000
