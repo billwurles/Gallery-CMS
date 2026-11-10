@@ -1,10 +1,10 @@
 ---
 id: CMS-26
 title: 'BUG-8: New pages served with an old cached stylesheet and script'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-10T10:13:00Z'
-updated_date: '2026-11-10T10:19:00Z'
+updated_date: '2026-11-10T12:33:00Z'
 labels:
   - bug
   - site
@@ -26,7 +26,7 @@ Cause: the published HTML is sent `no-store`, but nginx's `.css` and `.js` locat
 <!-- AC:BEGIN -->
 - [x] #1 Every file the site serves has one correct Content-Type and the no-cache headers
 - [x] #2 Published pages link to the stylesheet and scripts by a content-hash version, so a changed file always gets a new URL
-- [ ] #3 Gallery pages show no modal until a painting is clicked, even for a browser that cached the old stylesheet
+- [x] #3 Gallery pages show no modal until a painting is clicked, even for a browser that cached the old stylesheet
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -41,4 +41,12 @@ Commits:
 
 Commits:
 - `9d6e426` BUG-8: version the editor's stylesheet and script links too (2026-11-10)
+
+2026-11-10: after the deploy and Will's publish, the live past-work page links include/style.css and gallery.js with ?v=2f91fbf499e1 and has the single gallery modal; Will's screenshot shows it working through the proxy.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Browsers and Cloudflare can no longer pair new pages with an old stylesheet or script. Published pages link include/* with a content hash, the editor links its CSS and JS as <name>-<md5>, nginx sends one correct content type, and both send no-cache headers.
+<!-- SECTION:FINAL_SUMMARY:END -->

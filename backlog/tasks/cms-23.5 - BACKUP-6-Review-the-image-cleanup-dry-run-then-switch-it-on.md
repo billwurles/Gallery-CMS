@@ -4,7 +4,7 @@ title: 'BACKUP-6: Review the image cleanup dry run, then switch it on'
 status: In Progress
 assignee: []
 created_date: '2026-11-10T01:24:00Z'
-updated_date: '2026-11-10T01:43:00Z'
+updated_date: '2026-11-10T12:33:00Z'
 labels:
   - data
   - backup
@@ -33,7 +33,7 @@ Rehearsal on a copy of the live appdata (2026-11-10):
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 The dry-run log from the deployed app has been reviewed
-- [ ] #2 backup.gc.dry-run is false in the deployed app
+- [x] #2 backup.gc.dry-run is false in the deployed app
 - [ ] #3 The 91 never-archived orphan files are either deleted or accounted for
 <!-- AC:END -->
 
@@ -43,4 +43,6 @@ Rehearsal on a copy of the live appdata (2026-11-10):
 2026-11-10: Reviewed the dry-run log from the deployed app after a publish. It lists 90 gallery files (71 past-work, 15 life-class, 3 new-work, 1 recent-work), the same as the rehearsal. Hashed each one against the live backup's manifest: all 90 are byte-identical duplicates of an image the site uses under another filename, and none is itself referenced. All 189 live images are present in both the gallery and the archive (185 archive files, 33M).
 
 `backup.gc.dry-run=false` is committed in application.properties (`c511ec8`) and takes effect on the next deploy. The 90 files go on the first save or publish after that. Still to do: confirm it after the deploy, and decide on the 91 never-archived orphans.
+
+2026-11-10: confirmed after the deploy: none of the 90 files on the dry-run list is still in the gallery, and the 12:29 publish logged "91 gallery files aren't used by the site or any backup and were never archived; left in place" (most are under gallery/test/). Only criterion 3 remains, and it needs Will's decision.
 <!-- SECTION:NOTES:END -->
