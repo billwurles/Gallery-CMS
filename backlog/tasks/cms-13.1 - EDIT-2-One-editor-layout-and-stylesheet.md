@@ -4,7 +4,7 @@ title: 'EDIT-2: One editor layout and stylesheet'
 status: Done
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-10T09:57:00Z'
+updated_date: '2026-11-10T10:09:00Z'
 labels:
   - editor
   - ui
@@ -45,6 +45,11 @@ Not in this task: the draft/published status in the header is EDIT-3 (CMS-13.2).
 
 Commits:
 - `5b2ff52` EDIT-2: one editor layout and stylesheet (2026-11-10)
+
+2026-11-10: Will meant nine dots (three rows of three) for the drag handle, not three lines. Changed to a 15px square of 3x3 dots.
+
+Commits:
+- `c437fce` EDIT-2: page drag handle is a 3x3 square of dots (2026-11-10)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
