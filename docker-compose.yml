@@ -1,11 +1,19 @@
+# Served through the developmess proxy (Traefik), behind Cloudflare Access. No host ports:
+# the proxy reaches both services over the shared "web" network.
+# Both use root-absolute links, so each has its own subdomain rather than a dev.burl.es/<path>.
 services:
   nginx:
     image: nginx:1.27-alpine
-    ports:
-      - "6500:80"     # public site
     volumes:
       - ./appdata/html_root:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks: [web]
+    labels:
+      traefik.enable: "true"
+      developmess.title: Gallery site
+      developmess.description: Published Gallery-CMS site
+      traefik.http.routers.gallery-cms.rule: Host(`gallery-cms.burl.es`)
+      traefik.http.services.gallery-cms.loadbalancer.server.port: "80"
     restart: always
     depends_on:
       - cms
@@ -14,10 +22,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "6501:8080"   # editor
     volumes:
       - ./appdata/:/appdata/
+    networks: [web]
+    labels:
+      traefik.enable: "true"
+      developmess.title: Gallery editor
+      developmess.description: Gallery-CMS editor (no login of its own; Access only)
+      traefik.http.routers.gallery-cms-edit.rule: Host(`gallery-cms-edit.burl.es`)
+      traefik.http.services.gallery-cms-edit.loadbalancer.server.port: "8080"
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+      # Behind Traefik: take scheme/host from X-Forwarded-* so redirects stay on https.
+      - SERVER_FORWARD_HEADERS_STRATEGY=native
+
+networks:
+  web:
+    external: true
