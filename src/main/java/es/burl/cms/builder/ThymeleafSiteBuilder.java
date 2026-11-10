@@ -233,7 +233,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	}
 
 	private void copyPageGallery(Page page, Path pagePath) throws IOException {
-		if(page.hasGallery()){
+		if(page.showsGallery()){ // a hidden gallery's images aren't published
 			log.debug("Copying gallery for {}",page.getMenuItem().getUrl());
 			// Construct the page path and image directory path, create dirs if they don't exist
 			Path imageDir = pagePath.resolve("images");

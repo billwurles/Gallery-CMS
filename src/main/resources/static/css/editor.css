@@ -162,6 +162,7 @@ a { color: var(--accent); }
 .field > span { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
 .field > span em { font-style: normal; font-weight: 400; }
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.toggles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 4px 0; }
 
 input[type="text"], input[type="datetime-local"] {
     width: 100%;
@@ -285,7 +286,7 @@ input[readonly] { background: var(--surface-2); color: var(--muted); }
 .pagination { display: flex; justify-content: center; gap: 4px; margin-top: 24px; }
 .pagination a { padding: 5px 11px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); text-decoration: none; font-size: 14px; }
 .pagination a.active { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-.pagination a.disabled { opacity: .45; pointer-events: none; }
+.pagination .disabled { padding: 5px 11px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; opacity: .45; }
 
 /* Toasts and the confirm dialog ------------------------------------ */
 #toasts { position: fixed; right: 20px; bottom: 20px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }

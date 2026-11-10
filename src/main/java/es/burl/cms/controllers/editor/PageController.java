@@ -47,7 +47,10 @@ public class PageController {
 	//TODO: ensure that home / exhibitions cannot be overwritten (should be ok?)
 
 	@PostMapping(value = {"", "/"}) //TODO: How to handle gallery before page is saved
-	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
+	public String saveNewPage(@RequestParam String title, @RequestParam String url, @RequestParam String content,
+							  @RequestParam(required = false) Boolean showContent,
+							  @RequestParam(required = false) Boolean showGallery, Model model) {
+		content = cleanContent(content);
 		// Save the page content (title, url, content)
 
 		log.debug("Saving new page: {}"+title);
@@ -62,6 +65,8 @@ public class PageController {
 								.url(url)
 								.title(title).build())
 						.content(content)
+						.showContent(showContent == null || showContent)
+						.showGallery(showGallery == null || showGallery)
 						.build());
 				return "editor/EditPage";
 			}
@@ -73,6 +78,8 @@ public class PageController {
 						.order(site.getNextPageOrder())
 						.build())
 				.content(content)
+				.showContent(showContent == null || showContent)
+				.showGallery(showGallery == null || showGallery)
 				.build()
 		);
 
@@ -86,15 +93,16 @@ public class PageController {
 	}
 
 	@GetMapping(value = {"/{pageUrl}/", "/{pageUrl}"}) // TODO: make it work with trailing slash
-	public String editPage(@PathVariable("pageUrl") String pageUrl, Model model) {
+	public String editPage(@PathVariable("pageUrl") String pageUrl,
+						   @RequestParam(name = "edit", required = false) String edit, Model model) {
 		log.debug("Editing page: {}", pageUrl);
 		model.addAttribute("menuItems", site.getMenuItems());
 		Page page = site.getPage(pageUrl);
 
 		if (page == null) throw new NotFoundException("The page " + pageUrl);
 
-		// A gallery page with no text opens on its gallery
-		if (!page.hasContent() && page.hasGallery()) {
+		// A gallery page with no text opens on its gallery, unless the text editor was asked for (?edit=text)
+		if (!"text".equals(edit) && !page.hasContent() && page.hasGallery()) {
 			return "redirect:/page/" + pageUrl + "/gallery";
 		}
 		model.addAttribute("message", "Editing page " + page.getMenuItem().getTitle());
@@ -105,7 +113,11 @@ public class PageController {
 	}
 
 	@PostMapping(value = {"/{pageUrl}/", "/{pageUrl}"})
-	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url, @RequestParam String content, Model model) {
+	public String saveContent(@PathVariable("pageUrl") String originalPageUrl, @RequestParam String title, @RequestParam String url,
+							  @RequestParam String content,
+							  @RequestParam(required = false) Boolean showContent,
+							  @RequestParam(required = false) Boolean showGallery, Model model) {
+		content = cleanContent(content);
 		// Save the page content (title, url, content)
 		log.debug("Saving edited page: "+originalPageUrl);
 		model.addAttribute("menuItems", site.getMenuItems());
@@ -118,6 +130,9 @@ public class PageController {
 						.url(url)
 						.build())
 				.content(content)
+				// Left out of the request: keep the page\'s current setting
+				.showContent(showContent == null ? originalPage.isShowContent() : showContent)
+				.showGallery(showGallery == null ? originalPage.isShowGallery() : showGallery)
 				.build();
 
 		if (!originalPageUrl.equals(url)) {
@@ -147,5 +162,10 @@ public class PageController {
 			return ResponseEntity.ok("Page " + pageUrl + " was deleted");
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The page " + pageUrl + " was not found");
+	}
+
+	/** Content with nothing to see (what the editor leaves when its text is deleted) is stored as empty. */
+	private static String cleanContent(String content) {
+		return Page.isBlankHtml(content) ? "" : content;
 	}
 }

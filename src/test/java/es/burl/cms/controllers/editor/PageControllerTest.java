@@ -196,4 +196,51 @@ class PageControllerTest {
 
 		assertThat(dir.resolve("a.jpg")).exists();
 	}
+
+	@Test
+	void savingWithTheTextDeletedStoresNoContent() throws Exception {
+		mvc.perform(post("/page/about").param("title", "About").param("url", "about").param("content", "<p><br></p>"))
+				.andExpect(redirectedUrl("/page/about"));
+
+		assertThat(site.getPage("about").getContent()).isEmpty();
+	}
+
+	@Test
+	void showSettingsAreSavedWithThePage() throws Exception {
+		mvc.perform(post("/page/work").param("title", "Work").param("url", "work").param("content", "c")
+				.param("showContent", "false").param("showGallery", "false"));
+
+		assertThat(site.getPage("work").isShowContent()).isFalse();
+		assertThat(site.getPage("work").isShowGallery()).isFalse();
+
+		// a save that doesn't send them keeps them
+		mvc.perform(post("/page/work").param("title", "Work").param("url", "work").param("content", "d"));
+		assertThat(site.getPage("work").isShowGallery()).isFalse();
+
+		mvc.perform(post("/page/work").param("title", "Work").param("url", "work").param("content", "d")
+				.param("showContent", "true").param("showGallery", "true"));
+		assertThat(site.getPage("work").isShowContent()).isTrue();
+		assertThat(site.getPage("work").isShowGallery()).isTrue();
+	}
+
+	@Test
+	void newPagesShowBothUnlessTold() throws Exception {
+		mvc.perform(post("/page").param("title", "Contact").param("url", "contact").param("content", "<p>Hi</p>"));
+		mvc.perform(post("/page").param("title", "Hidden").param("url", "hidden").param("content", "<p>Hi</p>")
+				.param("showContent", "true").param("showGallery", "false"));
+
+		assertThat(site.getPage("contact").isShowGallery()).isTrue();
+		assertThat(site.getPage("hidden").isShowGallery()).isFalse();
+	}
+
+	@Test
+	void theTextEditorCanBeOpenedForAGalleryOnlyPage() throws Exception {
+		site.addNewPage(site.getPage("work").toBuilder().content("<p><br></p>").build());
+
+		mvc.perform(get("/page/work")).andExpect(redirectedUrl("/page/work/gallery"));
+
+		mvc.perform(get("/page/work").param("edit", "text"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("editor/EditPage"));
+	}
 }

@@ -71,4 +71,24 @@ class SiteJsonTest {
 					assertThat(i.getImageData()).isEqualTo("AAEC");
 				});
 	}
+
+	@Test
+	void pagesFromOldBackupsShowTextAndGallery() throws Exception {
+		Page page = mapper.readValue("{\"menuItem\":{\"title\":\"A\",\"url\":\"a\"},\"content\":\"<p>x</p>\"}", Page.class);
+
+		assertThat(page.isShowContent()).isTrue();
+		assertThat(page.isShowGallery()).isTrue();
+	}
+
+	@Test
+	void showSettingsRoundTrip() throws Exception {
+		Page page = Page.builder().showContent(false).showGallery(false).build();
+
+		String json = mapper.writeValueAsString(page);
+		Page restored = mapper.readValue(json, Page.class);
+
+		assertThat(json).contains("\"showContent\":false", "\"showGallery\":false");
+		assertThat(restored.isShowContent()).isFalse();
+		assertThat(restored.isShowGallery()).isFalse();
+	}
 }

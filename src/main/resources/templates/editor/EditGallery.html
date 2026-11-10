@@ -17,11 +17,16 @@
                th:text="|${#lists.size(page.gallery.getGalleryInOrder())} paintings. Drag them to rearrange.|"></p>
         </div>
         <div class="page-actions">
-            <a th:href="@{/page/{url}(url=${page.menuItem.url})}" class="btn">Edit page text</a>
+            <a th:href="@{/page/{url}(url=${page.menuItem.url},edit='text')}" class="btn">Text and settings</a>
             <a th:href="@{/page/{url}/gallery/upload(url=${page.menuItem.url})}" class="btn">Upload images</a>
             <button type="submit" form="galleryForm" class="btn btn-primary">Save changes</button>
         </div>
     </div>
+
+    <p class="notice" th:unless="${page.showGallery}">
+        This gallery is hidden on the site. Tick Show gallery in
+        <a th:href="@{/page/{url}(url=${page.menuItem.url},edit='text')}">Text and settings</a> to show it again.
+    </p>
 
     <form id="galleryForm" th:action="@{/page/{url}/gallery(url=${page.menuItem.url})}" method="post">
         <ul id="image-list" class="gallery-grid" th:if="${hasGallery}">

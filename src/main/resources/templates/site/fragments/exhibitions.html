@@ -16,14 +16,12 @@
                     <hr>
                 </div>
 
-                <div class="pagination">
-                    <!-- Previous Button -->
-                    <a th:href="@{${exhibitionPage - 1 == 1 ? '/exhibitions/' : '/exhibitions/page-' + (exhibitionPage - 1) + '/'}}"
-                       th:classappend="${exhibitionPage == 1 ? 'disabled' : ''}">
-                        « Previous
-                    </a>
+                <!-- Only with more than one page; Previous/Next are links only when that page exists -->
+                <div class="pagination" th:if="${totalPages > 1}">
+                    <a th:if="${exhibitionPage > 1}"
+                       th:href="@{${exhibitionPage - 1 == 1 ? '/exhibitions/' : '/exhibitions/page-' + (exhibitionPage - 1) + '/'}}">« Previous</a>
+                    <span th:unless="${exhibitionPage > 1}" class="disabled">« Previous</span>
 
-                    <!-- Page Numbers -->
                     <span th:each="i : ${#numbers.sequence(1, totalPages)}">
                         <!-- Display first few pages, current page, last few pages -->
                         <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= exhibitionPage - 2 and i <= exhibitionPage + 2)}"
@@ -35,10 +33,9 @@
                         <span th:if="${(i == 5 and exhibitionPage > 5) or (i == totalPages - 4 and exhibitionPage < totalPages - 4)}">...</span>
                     </span>
 
-                    <!-- Next Button -->
-                    <a th:href="@{'/exhibitions/page-' + ${exhibitionPage + 1} + '/'}" th:classappend="${exhibitionPage == totalPages ? 'disabled' : ''}">
-                        Next »
-                    </a>
+                    <a th:if="${exhibitionPage < totalPages}"
+                       th:href="@{'/exhibitions/page-' + ${exhibitionPage + 1} + '/'}">Next »</a>
+                    <span th:unless="${exhibitionPage < totalPages}" class="disabled">Next »</span>
                 </div>
             </div>
         </section>

@@ -195,4 +195,13 @@ class ContentManagerAppTest {
 		assertThat(response.getHeader("Cache-Control")).contains("no-cache");
 		mvc.perform(get(css.group(1))).andExpect(status().isOk());
 	}
+
+	@org.junit.jupiter.params.ParameterizedTest
+	@org.junit.jupiter.params.provider.ValueSource(strings = {"/page/about", "/exhibitions/spring-show"})
+	void theHiddenContentFieldIsOutsideTheRichTextBox(String path) throws Exception {
+		String body = mvc.perform(get(path)).andReturn().getResponse().getContentAsString();
+
+		// Inside the box, the editor would read the field as part of the content and save it
+		assertThat(body).contains("<div id=\"richTextEditor\"></div>").contains("<textarea");
+	}
 }

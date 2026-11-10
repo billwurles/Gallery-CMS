@@ -305,4 +305,56 @@ class ThymeleafSiteBuilderTest {
 		assertThat(read("work/index.html")).contains("src=\"/include/gallery.js?v=" + version + "\"");
 		assertThat(read("404.html")).contains("src=\"/include/error.js?v=" + version + "\"");
 	}
+
+	@Test
+	void blankTextLeavesAPureGallery() throws IOException {
+		site.addNewPage(site.getPage("work").toBuilder().content("<p><br></p>").build());
+
+		builder.buildSite(site);
+
+		assertThat(read("work/index.html")).doesNotContain("content-text").contains("painting-open");
+	}
+
+	@Test
+	void aHiddenGalleryIsNotPublished() throws IOException {
+		site.addNewPage(site.getPage("work").toBuilder().content("<p>Words</p>").showGallery(false).build());
+
+		builder.buildSite(site);
+
+		assertThat(read("work/index.html")).contains("<p>Words</p>").doesNotContain("painting-open", "gallery.js");
+		assertThat(htmlRoot.resolve("work/images")).doesNotExist();
+	}
+
+	@Test
+	void hiddenTextIsNotPublished() throws IOException {
+		site.addNewPage(site.getPage("work").toBuilder().content("<p>Words</p>").showContent(false).build());
+
+		builder.buildSite(site);
+
+		assertThat(read("work/index.html")).doesNotContain("Words", "content-text").contains("painting-open");
+	}
+
+	@Test
+	void oneExhibitionPageHasNoPagination() throws IOException {
+		addExhibitions(3);
+
+		builder.buildSite(site);
+
+		assertThat(read("exhibitions/index.html")).doesNotContain("class=\"pagination\"", "page-2");
+	}
+
+	@Test
+	void paginationOnlyLinksToPagesThatExist() throws IOException {
+		addExhibitions(9); // two pages of 7
+
+		builder.buildSite(site);
+
+		String first = read("exhibitions/index.html"), second = read("exhibitions/page-2/index.html");
+		assertThat(first).contains("Next »").doesNotContain("href=\"/exhibitions/page-3/\"");
+		assertThat(second).doesNotContain("page-3");
+		for (String link : rootLinks()) {
+			if (!link.startsWith("/exhibitions/")) continue;
+			assertThat(htmlRoot.resolve(link.substring(1)).resolve("index.html")).as(link).exists();
+		}
+	}
 }

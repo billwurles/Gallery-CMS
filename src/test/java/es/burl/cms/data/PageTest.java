@@ -88,4 +88,36 @@ class PageTest {
 
 		assertThat(page.getGallery().getGallery()).containsOnlyKeys("b.jpg");
 	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"<p><br></p>", "<p>&nbsp;</p>", "<div> <br/> </div>\n<p></p>", "<p>\u00a0</p>", "<p><span style=\"x\"></span></p>"})
+	void htmlWithNothingToSeeIsNotContent(String content) {
+		assertThat(Page.builder().content(content).build().hasContent()).isFalse();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"<p>,</p>", "<p><img src=\"a.jpg\"></p>", "<iframe src=\"https://example.com\"></iframe>", "<table><tr><td></td></tr></table>"})
+	void textImagesVideoAndTablesAreContent(String content) {
+		assertThat(Page.builder().content(content).build().hasContent()).isTrue();
+	}
+
+	@Test
+	void textAndGalleryAreShownByDefault() {
+		Page page = Page.builder().content("<p>hi</p>").build();
+		page.addPaintingToGallery(es.burl.cms.TestSites.painting("a.jpg", 0));
+
+		assertThat(page.showsContent()).isTrue();
+		assertThat(page.showsGallery()).isTrue();
+	}
+
+	@Test
+	void hiddenTextAndGalleryAreKeptButNotShown() {
+		Page page = Page.builder().content("<p>hi</p>").showContent(false).showGallery(false).build();
+		page.addPaintingToGallery(es.burl.cms.TestSites.painting("a.jpg", 0));
+
+		assertThat(page.showsContent()).isFalse();
+		assertThat(page.showsGallery()).isFalse();
+		assertThat(page.hasContent()).isTrue();
+		assertThat(page.hasGallery()).isTrue();
+	}
 }

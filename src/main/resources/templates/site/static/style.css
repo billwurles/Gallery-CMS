@@ -712,3 +712,7 @@ footer p {
   margin: 0;
   font-size: 0.8em;
 }
+/* Previous / Next on the first and last page of exhibitions: shown, but not links */
+.pagination .disabled {
+  color: #bbb;
+}

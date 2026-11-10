@@ -42,9 +42,9 @@
 
         <div class="field">
             <span>Content</span>
-            <div id="richTextEditor">
-                <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
-            </div>
+            <!-- The hidden field must stay outside the editor's box, or it gets saved as part of the content -->
+            <textarea name="content" th:field="*{content}" hidden></textarea>
+            <div id="richTextEditor"></div>
         </div>
     </form>
 </main>

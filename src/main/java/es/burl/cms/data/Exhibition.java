@@ -29,5 +29,11 @@ public class Exhibition {
 //		@DateTimeFormat(pattern="yyyy-MM-dd HH:mm")
 		private Date date = new Date();
 		private String content = "";
+
+		/** Every way an exhibition is made (editor, backup restore, toBuilder) drops a stray editor field. */
+		public Builder content(String content) {
+			this.content = Html.clean(content);
+			return this;
+		}
 	}
 }

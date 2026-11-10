@@ -39,10 +39,25 @@
         </div>
 
         <div class="field">
-            <span>Content</span>
-            <div id="richTextEditor">
-                <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
+            <span>On the site</span>
+            <div class="toggles">
+                <label class="check">
+                    <input type="checkbox" id="showContentBox" th:checked="${page.showContent}"/> Show text
+                </label>
+                <label class="check">
+                    <input type="checkbox" id="showGalleryBox" th:checked="${page.showGallery}"/> Show gallery
+                </label>
+                <span class="hint">Hiding keeps the text or paintings, ready to show again.</span>
             </div>
+            <input type="hidden" name="showContent" id="showContent" th:value="${page.showContent}"/>
+            <input type="hidden" name="showGallery" id="showGallery" th:value="${page.showGallery}"/>
+        </div>
+
+        <div class="field">
+            <span>Content</span>
+            <!-- The hidden field must stay outside the editor's box, or it gets saved as part of the content -->
+            <textarea name="content" th:field="*{content}" hidden></textarea>
+            <div id="richTextEditor"></div>
         </div>
     </form>
 </main>
@@ -58,6 +73,8 @@
         $('#pageForm').on('submit', function () {
             // The controller reads plain title, url and content parameters
             $("textarea[name='content']").val($('#richTextEditor').summernote('code'));
+            $('#showContent').val($('#showContentBox').prop('checked'));
+            $('#showGallery').val($('#showGalleryBox').prop('checked'));
             $('#title').attr('name', 'title');
             $('#url').attr('name', 'url');
         });

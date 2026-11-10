@@ -38,7 +38,8 @@
     </article>
 
     <nav class="pagination" th:if="${totalPages > 1}">
-        <a th:href="@{'?page=' + ${page - 1}}" th:classappend="${page == 1 ? 'disabled' : ''}">« Previous</a>
+        <a th:if="${page > 1}" th:href="@{'?page=' + ${page - 1}}">« Previous</a>
+        <span th:unless="${page > 1}" class="disabled">« Previous</span>
         <th:block th:each="i : ${#numbers.sequence(1, totalPages)}">
             <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= page - 2 and i <= page + 2)}"
                th:href="@{'?page=' + ${i}}"
@@ -46,7 +47,8 @@
                th:classappend="${i == page ? 'active' : ''}"></a>
             <span th:if="${(i == 5 and page > 5) or (i == totalPages - 4 and page < totalPages - 4)}">…</span>
         </th:block>
-        <a th:href="@{'?page=' + ${page + 1}}" th:classappend="${page == totalPages ? 'disabled' : ''}">Next »</a>
+        <a th:if="${page < totalPages}" th:href="@{'?page=' + ${page + 1}}">Next »</a>
+        <span th:unless="${page < totalPages}" class="disabled">Next »</span>
     </nav>
 </main>
 </body>

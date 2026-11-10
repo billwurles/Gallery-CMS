@@ -34,12 +34,24 @@ public class Page {
 	private final MenuItem menuItem;
 	private final String content;
 	private Gallery gallery;
+	/** Whether the published page shows its text / its gallery. Hiding keeps them, so they can come back. */
+	private final boolean showContent;
+	private final boolean showGallery;
 
 	@JsonPOJOBuilder(withPrefix = "")
 	public static class Builder {
 		private MenuItem menuItem = MenuItem.builder().build();
 		private String content = null;
 		private Gallery gallery = new Gallery.Builder().build();
+		// Backups from before these settings existed show both
+		private boolean showContent = true;
+		private boolean showGallery = true;
+
+		/** Every way a page is made (editor, backup restore, toBuilder) drops a stray editor field. */
+		public Builder content(String content) {
+			this.content = Html.clean(content);
+			return this;
+		}
 	}
 
 	public MenuItem getMenuItem() {
@@ -58,10 +70,24 @@ public class Page {
 		gallery.addPainting(painting);
 	}
 
+	/** True when the content has something to see: visible text, or an image, video or table. */
 	public boolean hasContent() {
-		if(this.content != null){
-			return !this.content.replaceAll("\\s+", "").isEmpty();
-		} else return false;
+		return !isBlankHtml(content);
+	}
+
+	/** HTML with nothing to see; see {@link Html#isBlank}. */
+	public static boolean isBlankHtml(String html) {
+		return Html.isBlank(html);
+	}
+
+	/** The published page shows its text: it has some, and it isn't hidden. */
+	public boolean showsContent() {
+		return showContent && hasContent();
+	}
+
+	/** The published page shows its gallery: it has paintings, and it isn't hidden. */
+	public boolean showsGallery() {
+		return showGallery && hasGallery();
 	}
 
 	public boolean hasGallery() {
