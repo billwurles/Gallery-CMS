@@ -3,6 +3,7 @@
 <head>
     <title th:text="${title} + ' - ' + ${siteName}"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link th:href="@{/include/style.css}" rel="stylesheet">
     <script th:if="${pageType.equals('page') and page != null and page.hasGallery}" th:src="@{/include/gallery.js}"></script></head>
     <script th:if="${pageType.equals('error') and errorCode != null}" th:src="@{/include/error.js}"></script>

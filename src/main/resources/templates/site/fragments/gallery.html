@@ -13,17 +13,21 @@
                         <p class="caption" th:text="${painting.title}"></p>
                     </div>
 
-                    <!-- Modal fragment TODO: ensure modal works with large pictures -->
-                    <div th:id="|modal-${iterStat.index}|" class="painting-modal" style="display: none;">
-                        <div class="modal-content">
-                            <button th:onclick="|closeModal(${iterStat.index})|">Close</button>
+                    <!-- Full-size view: the image shrinks to fit the screen, caption included -->
+                    <div th:id="|modal-${iterStat.index}|" class="painting-modal" th:onclick="|closeModal(${iterStat.index}, event)|">
+                        <button type="button" class="modal-close" aria-label="Close" th:onclick="|closeModal(${iterStat.index})|">Close</button>
+                        <figure class="modal-content">
                             <img th:src="@{'images/' + ${painting.filename}}"
                                  th:alt="${painting.title}" />
-                            <p th:text="${painting.title}"></p>
-                            <p th:text="${painting.dimensions}"></p>
-                            <p th:text="${painting.medium}"></p>
-                            <p th:text="${painting.sold ? 'Sold' : 'Available'}"></p>
-                        </div>
+                            <figcaption>
+                                <p class="modal-title" th:text="${painting.title}"></p>
+                                <p class="modal-details">
+                                    <span th:if="${painting.dimensions != null and !painting.dimensions.isBlank()}" th:text="${painting.dimensions}"></span>
+                                    <span th:if="${painting.medium != null and !painting.medium.isBlank()}" th:text="${painting.medium}"></span>
+                                    <span th:text="${painting.sold ? 'Sold' : 'Available'}"></span>
+                                </p>
+                            </figcaption>
+                        </figure>
                     </div>
                 </div>
             </section>

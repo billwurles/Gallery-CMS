@@ -146,10 +146,10 @@ html, body {
   .navbar-container input[type="checkbox"] {
     position: absolute;
     display: block;
-    height: 50px;
-    width: 63px;
-    top: 20px;
-    left: -15px;
+    height: 26px;
+    width: 34px;
+    top: 16px;
+    left: 0;
     z-index: 5;
     opacity: 0;
     cursor: pointer;
@@ -157,11 +157,11 @@ html, body {
 
   .navbar-container .hamburger-lines {
     display: block;
-    height: 50px;
-    width: 63px;
+    height: 26px;
+    width: 34px;
     position: absolute;
-    top: 20px;
-    left: -15px;
+    top: 16px;
+    left: 0;
     z-index: 2;
     display: flex;
     flex-direction: column;
@@ -170,9 +170,9 @@ html, body {
 
   .navbar-container .hamburger-lines .line {
     display: block;
-    height: 9px;
+    height: 4px;
     width: 100%;
-    border-radius: 10px;
+    border-radius: 4px;
     background: #333;
   }
 
@@ -206,8 +206,8 @@ html, body {
   }
 
   .navbar .menu-items li {
-    margin-bottom: 1.8rem;
-    font-size: 1.9rem;
+    margin-bottom: 1.2rem;
+    font-size: 1.3rem;
     font-weight: 500;
     text-align: left;
     width: 100%;
@@ -215,9 +215,11 @@ html, body {
 
   .logo {
     position: absolute;
-    top: 18px;
-    right: 15px;
-    font-size: 1.5rem;
+    top: 12px;
+    left: 52px; /* clear of the menu button */
+    right: 0;
+    text-align: right;
+    font-size: 1.2rem;
   }
 
   .navbar-container input[type="checkbox"]:checked ~ .menu-items {
@@ -365,66 +367,96 @@ nav a.active-nav-link {
   flex: 1 1 25%;
 }
 
-/* Modal Styles */
+/* Modal Styles: the painting at full size, scaled down to fit the screen with its caption */
 .painting-modal {
+  --modal-pad: 16px;
+  --modal-close: 56px;    /* room above the image for the close button */
+  --modal-caption: 5.5rem; /* title and one line of details */
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8); /* Dim background */
+  inset: 0;
   z-index: 1050;
-  display: flex;
-  justify-content: center;
+  display: none;
+  flex-direction: column;
   align-items: center;
-  padding: 20px;
+  justify-content: center;
+  padding: var(--modal-close) var(--modal-pad) var(--modal-pad);
+  background-color: rgba(0, 0, 0, 0.85);
   box-sizing: border-box;
   text-align: center;
+  cursor: zoom-out;
+}
+
+.painting-modal.open {
+  display: flex;
+}
+
+body.modal-open {
+  overflow: hidden;
 }
 
 .painting-modal .modal-content {
-  position: relative;
-  display: inline-block;
-  max-width: 90%; /* Limit the size of the image to fit screen */
-  max-height: 80%; /* Prevent overflow vertically */
-  object-fit: contain; /* Maintain aspect ratio */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  max-width: 100%;
+  min-height: 0;
+  cursor: default;
 }
 
 .painting-modal img {
-  margin-top: 75px; /* Push the image down */
-  width: 100%; /* Match container width */
-  height: auto; /* Maintain aspect ratio */
-  object-fit: contain; /* Prevent distortion */
-  display: block; /* Prevent inline gaps */
-  box-shadow: 0px 0px 30px 10px #222;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - var(--modal-close) - var(--modal-pad) - var(--modal-caption));
+  max-height: calc(100dvh - var(--modal-close) - var(--modal-pad) - var(--modal-caption));
+  object-fit: contain;
+  box-shadow: 0 0 30px 10px #222;
+}
+
+.painting-modal figcaption {
+  max-width: 60ch;
+  padding-top: 12px;
 }
 
 .painting-modal p {
   color: white;
   text-align: center;
+  margin: 0;
+  text-shadow: 2px 2px 3px black;
+}
+
+.painting-modal .modal-title {
   font-size: 1.3rem;
-  margin: 10px 0;
-  text-shadow: 4px 4px 3px black;
 }
 
-.painting-modal button {
+.painting-modal .modal-details {
+  margin-top: 4px;
+  font-size: 1rem;
+  opacity: .85;
+}
+
+.painting-modal .modal-details span + span::before {
+  content: " · ";
+}
+
+.painting-modal .modal-close {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 8px;
+  right: 12px;
   z-index: 10;
-  background-color: rgba(0, 0, 0, 0.3); /* Optional: add background */
   padding: 5px 10px;
-  border-radius: 5px; /* Rounded corners */
-  font-size: 1.5rem;
-  color: white;
   border: none;
-  font-size: 2rem;
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 1.5rem;
   cursor: pointer;
-  text-shadow: 4px 4px 3px black;
+  text-shadow: 2px 2px 3px black;
 }
 
-/* Close button hover effect */
-.painting-modal button:hover {
+.painting-modal .modal-close:hover {
   color: #ff4d4d;
 }
 
