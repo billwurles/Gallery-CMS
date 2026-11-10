@@ -6,6 +6,19 @@
     let current = -1;
     let modal, img, title, details, count, opener;
 
+    // Size the painting to fill the space left by the modal's padding and the caption, keeping its
+    // proportions; never larger than the image's own pixel size, so nothing is shown blown up
+    function fit() {
+        if (!isOpen() || !img.naturalWidth) return;
+        const cs = getComputedStyle(modal);
+        const availW = modal.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        const availH = modal.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+            - modal.querySelector('figcaption').offsetHeight;
+        const scale = Math.min(1, availW / img.naturalWidth, availH / img.naturalHeight);
+        img.style.width = Math.floor(img.naturalWidth * scale) + 'px';
+        img.style.height = Math.floor(img.naturalHeight * scale) + 'px';
+    }
+
     function show(index) {
         current = (index + thumbs.length) % thumbs.length; // wraps around at both ends
         const t = thumbs[current].dataset;
@@ -16,6 +29,7 @@
             .filter(v => v && v.trim())
             .map(v => Object.assign(document.createElement('span'), {textContent: v})));
         count.textContent = thumbs.length > 1 ? `${current + 1} of ${thumbs.length}` : '';
+        if (img.complete) fit();
         // Fetch the neighbours now, so the next arrow press shows its painting straight away
         [current - 1, current + 1].forEach(i => { new Image().src = thumbs[(i + thumbs.length) % thumbs.length].dataset.src; });
     }
@@ -26,6 +40,7 @@
         modal.hidden = false;
         modal.classList.add('open');
         document.body.classList.add('modal-open');
+        fit();
         modal.querySelector('.modal-close').focus();
     }
 
@@ -49,6 +64,8 @@
         details = modal.querySelector('.modal-details');
         count = modal.querySelector('.modal-count');
         if (thumbs.length < 2) modal.classList.add('single');
+        img.addEventListener('load', fit);
+        window.addEventListener('resize', fit);
 
         thumbs.forEach((thumb, i) => {
             thumb.addEventListener('click', () => open(i));

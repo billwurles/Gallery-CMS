@@ -369,9 +369,9 @@ nav a.active-nav-link {
 
 /* Modal Styles: the painting at full size, scaled down to fit the screen with its caption */
 .painting-modal {
-  --modal-pad: 16px;
-  --modal-close: 56px;    /* room above the image for the close button */
-  --modal-caption: 6.7rem; /* title, one line of details and the count */
+  --modal-pad: 12px;
+  --modal-close: 52px;     /* room above the image for the close button */
+  --modal-caption: 6.2rem; /* title, one line of details and the count */
   --modal-side: 64px;      /* room each side for the arrows */
   position: fixed;
   inset: 0;
@@ -427,6 +427,7 @@ body.modal-open {
   display: block;
   width: auto;
   height: auto;
+  /* gallery.js sets the exact size to fill the space; these limits apply until it has */
   max-width: 100%;
   max-height: calc(100vh - var(--modal-close) - var(--modal-pad) - var(--modal-caption));
   max-height: calc(100dvh - var(--modal-close) - var(--modal-pad) - var(--modal-caption));
@@ -436,7 +437,7 @@ body.modal-open {
 
 .painting-modal figcaption {
   max-width: 60ch;
-  padding-top: 12px;
+  padding-top: 10px;
 }
 
 .painting-modal p {
