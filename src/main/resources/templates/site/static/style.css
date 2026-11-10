@@ -371,7 +371,8 @@ nav a.active-nav-link {
 .painting-modal {
   --modal-pad: 16px;
   --modal-close: 56px;    /* room above the image for the close button */
-  --modal-caption: 5.5rem; /* title and one line of details */
+  --modal-caption: 6.7rem; /* title, one line of details and the count */
+  --modal-side: 64px;      /* room each side for the arrows */
   position: fixed;
   inset: 0;
   z-index: 1050;
@@ -379,15 +380,33 @@ nav a.active-nav-link {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--modal-close) var(--modal-pad) var(--modal-pad);
+  padding: var(--modal-close) var(--modal-side) var(--modal-pad);
   background-color: rgba(0, 0, 0, 0.85);
   box-sizing: border-box;
   text-align: center;
   cursor: zoom-out;
+  touch-action: pan-y;
+}
+
+.painting-modal.single {
+  --modal-side: var(--modal-pad);
+}
+
+.painting-modal.single .modal-nav {
+  display: none;
 }
 
 .painting-modal.open {
   display: flex;
+}
+
+.painting-open {
+  cursor: pointer;
+}
+
+.painting-open:focus-visible {
+  outline: 2px solid #117964;
+  outline-offset: 4px;
 }
 
 body.modal-open {
@@ -458,6 +477,46 @@ body.modal-open {
 
 .painting-modal .modal-close:hover {
   color: #ff4d4d;
+}
+
+.painting-modal .modal-count {
+  margin-top: 4px;
+  font-size: .85rem;
+  opacity: .65;
+}
+
+/* Previous / next: big tap targets at the sides, clear of the painting */
+.painting-modal .modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 72px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.35);
+  color: white;
+  font-size: 3rem;
+  line-height: 1;
+  cursor: pointer;
+  text-shadow: 2px 2px 3px black;
+}
+
+.painting-modal .modal-prev { left: 8px; }
+.painting-modal .modal-next { right: 8px; }
+
+.painting-modal .modal-nav:hover,
+.painting-modal .modal-close:focus-visible,
+.painting-modal .modal-nav:focus-visible {
+  background-color: rgba(255, 255, 255, 0.18);
+  outline: none;
+}
+
+@media (max-width: 600px) {
+  /* On a phone the arrows sit over the image's edges, and swiping works too */
+  .painting-modal { --modal-side: var(--modal-pad); }
+  .painting-modal .modal-nav { width: 40px; height: 56px; font-size: 2.4rem; background-color: rgba(0, 0, 0, 0.45); }
 }
 
 

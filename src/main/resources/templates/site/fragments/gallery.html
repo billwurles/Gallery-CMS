@@ -6,31 +6,36 @@
         <div th:fragment="gallery(paintings, url)">
             <section th:if="${paintings}" class="grid">
                 <div th:each="painting, iterStat : ${paintings}" th:key="${iterStat.index}" class="painting">
-                    <!-- Image and caption display -->
-                        <div th:data-id="${iterStat.index}" th:onclick="|showModal(this.dataset.id)|" style="cursor: pointer;">
+                    <!-- Thumbnail; its data-* attributes fill the shared full-size view below -->
+                    <div class="painting-open" role="button" tabindex="0"
+                         th:data-id="${iterStat.index}"
+                         th:data-src="@{'images/' + ${painting.filename}}"
+                         th:data-title="${painting.title}"
+                         th:data-dimensions="${painting.dimensions}"
+                         th:data-medium="${painting.medium}"
+                         th:data-sold="${painting.sold ? 'Sold' : 'Available'}"
+                         th:aria-label="|View ${painting.title}|">
                         <img th:src="@{'images/' + ${painting.filename}}"
-                             th:alt="${painting.title}" />
+                             th:alt="${painting.title}" loading="lazy" />
                         <p class="caption" th:text="${painting.title}"></p>
-                    </div>
-
-                    <!-- Full-size view: the image shrinks to fit the screen, caption included -->
-                    <div th:id="|modal-${iterStat.index}|" class="painting-modal" th:onclick="|closeModal(${iterStat.index}, event)|">
-                        <button type="button" class="modal-close" aria-label="Close" th:onclick="|closeModal(${iterStat.index})|">Close</button>
-                        <figure class="modal-content">
-                            <img th:src="@{'images/' + ${painting.filename}}"
-                                 th:alt="${painting.title}" />
-                            <figcaption>
-                                <p class="modal-title" th:text="${painting.title}"></p>
-                                <p class="modal-details">
-                                    <span th:if="${painting.dimensions != null and !painting.dimensions.isBlank()}" th:text="${painting.dimensions}"></span>
-                                    <span th:if="${painting.medium != null and !painting.medium.isBlank()}" th:text="${painting.medium}"></span>
-                                    <span th:text="${painting.sold ? 'Sold' : 'Available'}"></span>
-                                </p>
-                            </figcaption>
-                        </figure>
                     </div>
                 </div>
             </section>
+
+            <!-- One full-size view for the whole gallery: the image shrinks to fit the screen, caption included -->
+            <div th:if="${paintings}" id="painting-modal" class="painting-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+                <button type="button" class="modal-close" aria-label="Close">Close</button>
+                <button type="button" class="modal-nav modal-prev" aria-label="Previous painting">&#8249;</button>
+                <figure class="modal-content">
+                    <img alt="" />
+                    <figcaption>
+                        <p class="modal-title" id="modal-title"></p>
+                        <p class="modal-details"></p>
+                        <p class="modal-count"></p>
+                    </figcaption>
+                </figure>
+                <button type="button" class="modal-nav modal-next" aria-label="Next painting">&#8250;</button>
+            </div>
         </div>
     </body>
 </html>
