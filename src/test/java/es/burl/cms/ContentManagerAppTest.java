@@ -150,4 +150,13 @@ class ContentManagerAppTest {
 			assertThat(files.map(p -> p.getFileName().toString())).anyMatch(n -> n.startsWith("1-published-"));
 		}
 	}
+
+	@Test
+	void unknownPagesGetTheEditorsNotFoundPage() throws Exception {
+		String body = mvc.perform(get("/page/no-such-page"))
+				.andExpect(status().isNotFound())
+				.andReturn().getResponse().getContentAsString();
+
+		assertThat(body).contains("The page no-such-page was not found");
+	}
 }

@@ -39,17 +39,14 @@ public class GalleryController {
 	public String editGallery(@PathVariable("pageUrl") String pageUrl, Model model) {
 		model.addAttribute("menuItems", site.getMenuItems());
 		Page page = site.getPage(pageUrl);
-		log.debug("Editing gallery for page: {}", page.toString());
+		if (page == null) throw new NotFoundException("The page " + pageUrl);
+		log.debug("Editing gallery for page: {}", pageUrl);
 
-		if (page != null) {
-			model.addAttribute("message", "Editing gallery " + page.getMenuItem().getTitle());
-			model.addAttribute("page", page);  // Pass the page to the model
-			model.addAttribute("galleryRoot", galleryRoot);
-			model.addAttribute("hasGallery", page.getGallery() != null);
-			return "editor/EditGallery";
-		} else {
-			return "404";  // Return a "error.html" page if page not found
-		}
+		model.addAttribute("message", "Editing gallery " + page.getMenuItem().getTitle());
+		model.addAttribute("page", page);
+		model.addAttribute("galleryRoot", galleryRoot);
+		model.addAttribute("hasGallery", page.hasGallery());
+		return "editor/EditGallery";
 	}
 
 	//TODO: allow boolean flags per gallery of whether or not to display title etc info
@@ -59,6 +56,11 @@ public class GalleryController {
 		Page page = site.getPage(pageUrl);
 
 		Map<String, String> response = new HashMap<>();
+		if (page == null) {
+			response.put("status", "failure");
+			response.put("message", "The page " + pageUrl + " was not found");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+		}
 
 		if(page.saveGallery(gallery, galleryRoot)){
 			// Success message
@@ -77,14 +79,11 @@ public class GalleryController {
 	@GetMapping("/upload")
 	public String getUploadPage(@PathVariable("pageUrl") String pageUrl, Model model) {
 		Page page = site.getPage(pageUrl);
-		if (page != null) {
-			model.addAttribute("menuItems", site.getMenuItems());
-			model.addAttribute("page", page.getUrl());
-			model.addAttribute("message", "Upload and Edit Metadata for " + page.getMenuItem().getTitle());
-			return "editor/UploadGallery";
-		} else {
-			return "404"; // Return a 404 page if the page is not found
-		}
+		if (page == null) throw new NotFoundException("The page " + pageUrl);
+		model.addAttribute("menuItems", site.getMenuItems());
+		model.addAttribute("page", page.getUrl());
+		model.addAttribute("message", "Upload and Edit Metadata for " + page.getMenuItem().getTitle());
+		return "editor/UploadGallery";
 	}
 
 	//TODO: pass in nextInt in order
@@ -118,6 +117,9 @@ public class GalleryController {
 	public  ResponseEntity<?> deletePainting(@PathVariable String pageUrl, @PathVariable String filename) {
 		log.debug("Deleting painting {}",filename);
 		Page page = site.getPage(pageUrl);
+		if (page == null || page.getGallery() == null || page.getGallery().getPainting(filename) == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("That painting was not found");
+		}
 		if(saveService.retireImage(pageUrl, filename)){ // file leaves the gallery but stays in the backup archive
 			page.removePainting(filename);
 			saveService.backup(site);

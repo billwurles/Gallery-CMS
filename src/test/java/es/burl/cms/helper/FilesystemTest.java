@@ -107,15 +107,23 @@ class FilesystemTest {
 	}
 
 	@Test
-	void copyGalleryImagesToNewUrlCopiesEveryFile() throws IOException {
+	void renamingAPageMovesItsGallery() throws IOException {
 		Path old = Files.createDirectories(galleryRoot.resolve("old"));
 		Files.write(old.resolve("a.jpg"), BYTES);
 		Files.write(old.resolve("b.jpg"), BYTES);
 
-		assertThat(Filesystem.copyGalleryImagesToNewUrl("old", "new", galleryRoot)).isTrue();
+		Filesystem.moveGalleryToNewUrl("old", "new", galleryRoot);
 
 		assertThat(galleryRoot.resolve("new/a.jpg")).hasBinaryContent(BYTES);
 		assertThat(galleryRoot.resolve("new/b.jpg")).hasBinaryContent(BYTES);
+		assertThat(old).doesNotExist(); // no duplicates left under the old address
+	}
+
+	@Test
+	void renamingAPageWithoutAGalleryFolderDoesNothing() {
+		Filesystem.moveGalleryToNewUrl("none", "new", galleryRoot);
+
+		assertThat(galleryRoot.resolve("new")).doesNotExist();
 	}
 
 	@Test
@@ -163,6 +171,20 @@ class FilesystemTest {
 		Filesystem.sortPaintingsByAspectRatio(work, galleryRoot, false);
 
 		assertThat(work.getGallery().getPainting("wide.png").getTitle()).isEqualTo("Title wide.png");
+	}
+
+	@Test
+	void sortByAspectRatioKeepsPaintingsWhoseFileIsMissing() throws IOException {
+		Page work = galleryOfShapes();
+		work.addPaintingToGallery(painting("gone.png", 3));
+
+		Filesystem.sortPaintingsByAspectRatio(work, galleryRoot, false);
+		assertThat(work.getGallery().getGalleryInOrder()).extracting(Painting::getFilename)
+				.containsExactly("tall.png", "square.png", "wide.png", "gone.png");
+
+		work.sortPaintingsByAspectRatio(galleryRoot, true);
+		assertThat(work.getGallery().getGalleryInOrder()).extracting(Painting::getFilename)
+				.containsExactly("wide.png", "square.png", "tall.png", "gone.png");
 	}
 
 	private Page galleryOfShapes() throws IOException {

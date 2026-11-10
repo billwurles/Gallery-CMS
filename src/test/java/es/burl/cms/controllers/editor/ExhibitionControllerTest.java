@@ -31,7 +31,8 @@ class ExhibitionControllerTest {
 		site = twoPageSite();
 		for (int i = 0; i < 9; i++) site.getExhibitionRepo().add(exhibition("ex-" + i, i * 86_400_000L));
 		backup = mock(BackupSite.class);
-		mvc = MockMvcBuilders.standaloneSetup(new ExhibitionController(site, backup)).build();
+		mvc = MockMvcBuilders.standaloneSetup(new ExhibitionController(site, backup))
+				.setControllerAdvice(new EditorAdvice(site)).build();
 	}
 
 	@Test
@@ -98,5 +99,32 @@ class ExhibitionControllerTest {
 
 		assertThat(site.getExhibitionRepo().get("ex-3")).isNull();
 		verify(backup).backup(site);
+	}
+
+	@Test
+	void editingAnUnknownExhibitionIs404() throws Exception {
+		mvc.perform(get("/exhibitions/nope"))
+				.andExpect(status().isNotFound())
+				.andExpect(view().name("editor/NotFound"));
+	}
+
+	@Test
+	void deletingAnUnknownExhibitionIs404() throws Exception {
+		mvc.perform(delete("/exhibitions/nope")).andExpect(status().isNotFound());
+
+		verifyNoInteractions(backup);
+	}
+
+	@Test
+	void changingTheAddressReplacesTheOldEntry() throws Exception {
+		int before = site.getExhibitionRepo().getExhibitions().size();
+		String json = "{\"url\":\"renamed\",\"title\":\"Renamed\",\"date\":\"2024-05-01T10:00\",\"content\":\"<p>x</p>\"}";
+
+		mvc.perform(post("/exhibitions/ex-3/save").contentType(MediaType.APPLICATION_JSON).content(json))
+				.andExpect(status().isOk());
+
+		assertThat(site.getExhibitionRepo().get("ex-3")).isNull();
+		assertThat(site.getExhibitionRepo().get("renamed").getTitle()).isEqualTo("Renamed");
+		assertThat(site.getExhibitionRepo().getExhibitions()).hasSize(before);
 	}
 }

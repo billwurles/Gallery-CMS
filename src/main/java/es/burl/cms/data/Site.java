@@ -86,14 +86,13 @@ public class Site {
 	}
 
 	public boolean removePage(String url) {
-		log.debug("Deleting page from site: {}", pages.get(url).toString());
-		pages.remove(url);
-		return true;
+		Page removed = pages.remove(url);
+		log.debug("Deleting page from site: {}", removed);
+		return removed != null;
 	}
 
 	public void removeExhibition(String url) {
-		log.debug("Deleting exhibition from site: {}", exhibitionRepo.getExhibitions().get(url).toString());
-		exhibitionRepo.getExhibitions().remove(url);
+		log.debug("Deleting exhibition from site: {}", exhibitionRepo.getExhibitions().remove(url));
 	}
 
 	public Gallery getPageGallery(String url) {

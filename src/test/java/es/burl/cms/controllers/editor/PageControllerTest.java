@@ -31,7 +31,8 @@ class PageControllerTest {
 	void setUp() {
 		site = twoPageSite();
 		backup = mock(BackupSite.class);
-		mvc = MockMvcBuilders.standaloneSetup(new PageController(site, galleryRoot, backup)).build();
+		mvc = MockMvcBuilders.standaloneSetup(new PageController(site, galleryRoot, backup))
+				.setControllerAdvice(new EditorAdvice(site)).build();
 	}
 
 	@Test
@@ -102,7 +103,10 @@ class PageControllerTest {
 
 	@Test
 	void unknownPageIs404View() throws Exception {
-		mvc.perform(get("/page/missing")).andExpect(view().name("404"));
+		mvc.perform(get("/page/missing"))
+				.andExpect(status().isNotFound())
+				.andExpect(view().name("editor/NotFound"))
+				.andExpect(model().attribute("message", "The page missing was not found"));
 	}
 
 	@Test
@@ -118,7 +122,7 @@ class PageControllerTest {
 	}
 
 	@Test
-	void renameMovesThePageAndCopiesItsImages() throws Exception {
+	void renameMovesThePageAndItsImages() throws Exception {
 		Path oldDir = Files.createDirectories(galleryRoot.resolve("work"));
 		Files.write(oldDir.resolve("a.jpg"), new byte[]{1});
 		Files.write(oldDir.resolve("b.jpg"), new byte[]{2});
@@ -133,6 +137,7 @@ class PageControllerTest {
 		assertThat(renamed.getGallery().getGallery()).containsOnlyKeys("a.jpg", "b.jpg");
 		assertThat(galleryRoot.resolve("paintings/a.jpg")).hasBinaryContent(new byte[]{1});
 		assertThat(galleryRoot.resolve("paintings/b.jpg")).hasBinaryContent(new byte[]{2});
+		assertThat(oldDir).doesNotExist(); // moved, not copied: no duplicates for the cleanup to find
 		verify(backup).backup(site);
 	}
 
@@ -157,5 +162,38 @@ class PageControllerTest {
 		assertThat(site.getMenuItems()).extracting(m -> m.getUrl() + "=" + m.getOrder())
 				.containsExactly("exhibitions=0", "work=1");
 		verify(backup).backup(site);
+	}
+
+	@Test
+	void aPageWithoutAGalleryOpensItsEditor() throws Exception {
+		site.addNewPage(site.getPage("about").toBuilder().gallery(null).content(null).build());
+
+		mvc.perform(get("/page/about")).andExpect(view().name("editor/EditPage"));
+	}
+
+	@Test
+	void savingAnUnknownPageIs404() throws Exception {
+		mvc.perform(post("/page/missing").param("title", "X").param("url", "missing").param("content", "c"))
+				.andExpect(status().isNotFound())
+				.andExpect(view().name("editor/NotFound"));
+
+		verifyNoInteractions(backup);
+	}
+
+	@Test
+	void deletingAnUnknownPageIs404() throws Exception {
+		mvc.perform(delete("/page/missing")).andExpect(status().isNotFound());
+
+		verifyNoInteractions(backup);
+	}
+
+	@Test
+	void deletingAPageLeavesItsGalleryFolderForTheCleanup() throws Exception {
+		Path dir = Files.createDirectories(galleryRoot.resolve("work"));
+		Files.write(dir.resolve("a.jpg"), new byte[]{1});
+
+		mvc.perform(delete("/page/work")).andExpect(status().isOk());
+
+		assertThat(dir.resolve("a.jpg")).exists();
 	}
 }

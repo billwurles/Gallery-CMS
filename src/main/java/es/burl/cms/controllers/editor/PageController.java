@@ -91,19 +91,17 @@ public class PageController {
 		model.addAttribute("menuItems", site.getMenuItems());
 		Page page = site.getPage(pageUrl);
 
-		if (page != null) { //TOOD: back to content button in  template
-			if ((page.getContent() == null || page.getContent().trim().isEmpty())
-				&& !page.getGallery().isEmpty()) {
-				return "redirect:/page/"+pageUrl+"/gallery";
-			}
-			model.addAttribute("message", "Editing page " + page.getMenuItem().getTitle());
-			model.addAttribute("page", page);  // Pass the page to the model
-			model.addAttribute("hasGallery", page.hasGallery());
-			model.addAttribute("newPage", false);
-			return "editor/EditPage";
-		} else {
-			return "404";  // Return a "error.html" page if page not found
+		if (page == null) throw new NotFoundException("The page " + pageUrl);
+
+		// A gallery page with no text opens on its gallery
+		if (!page.hasContent() && page.hasGallery()) {
+			return "redirect:/page/" + pageUrl + "/gallery";
 		}
+		model.addAttribute("message", "Editing page " + page.getMenuItem().getTitle());
+		model.addAttribute("page", page);
+		model.addAttribute("hasGallery", page.hasGallery());
+		model.addAttribute("newPage", false);
+		return "editor/EditPage";
 	}
 
 	@PostMapping(value = {"/{pageUrl}/", "/{pageUrl}"})
@@ -113,6 +111,7 @@ public class PageController {
 		model.addAttribute("menuItems", site.getMenuItems());
 
 		Page originalPage = site.getPage(originalPageUrl);
+		if (originalPage == null) throw new NotFoundException("The page " + originalPageUrl);
 		Page newPage = originalPage.toBuilder()
 				.menuItem(originalPage.getMenuItem().toBuilder()
 						.title(title)
@@ -130,7 +129,7 @@ public class PageController {
 					return "editor/EditPage";
 				}
 			}
-			Filesystem.copyGalleryImagesToNewUrl(originalPageUrl, newPage.getUrl(), galleryRoot);
+			Filesystem.moveGalleryToNewUrl(originalPageUrl, newPage.getUrl(), galleryRoot);
 			site.removePage(originalPageUrl);
 		}
 		site.addNewPage(newPage);
@@ -140,14 +139,13 @@ public class PageController {
 
 	@DeleteMapping(value = {"/{pageUrl}/", "/{pageUrl}"})
 	public ResponseEntity<?> deletePage(@PathVariable("pageUrl") String pageUrl) {
-		if(site.removePage(pageUrl)){
+		if (site.removePage(pageUrl)) {
 			site.reorderPageOrder();
 			saveService.backup(site);
-			return ResponseEntity.ok("Page "+pageUrl+" was deleted");
-		} else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during gallery upload");
+			// The gallery folder stays: its images are archived with the backups, and the backup cleanup
+			// removes them from the gallery once nothing live uses them
+			return ResponseEntity.ok("Page " + pageUrl + " was deleted");
 		}
-		//TODO: also delete gallery from filesystem (or temp backup?)
-		//TODO: reset menuItems orders to remove blank space
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The page " + pageUrl + " was not found");
 	}
 }

@@ -97,28 +97,29 @@ public class Filesystem {
 		}
 	}
 
-	public static boolean copyGalleryImagesToNewUrl(String oldPageUrl, String newPageUrl, Path galleryRoot) {
-		// Construct the page path and image directory path, create dirs if they don't exist
-		Path newPageGallery = galleryRoot.resolve(newPageUrl);
-		File oldPageGallery = galleryRoot.resolve(oldPageUrl).toFile();
+	/**
+	 * Moves a page's gallery folder when its URL changes. Files are moved one by one, so it works whether or
+	 * not the new folder exists already; nothing is left behind as a duplicate under the old URL.
+	 */
+	public static void moveGalleryToNewUrl(String oldPageUrl, String newPageUrl, Path galleryRoot) {
+		Path oldGallery = galleryRoot.resolve(oldPageUrl);
+		Path newGallery = galleryRoot.resolve(newPageUrl);
+		if (!Files.isDirectory(oldGallery)) {
+			log.debug("Page {} has no gallery folder to move", oldPageUrl);
+			return;
+		}
+		log.debug("Moving gallery folder from {} to {}", oldPageUrl, newPageUrl);
 		try {
-			Files.createDirectories(newPageGallery);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		log.debug("Moving gallery folder from {} to {}",oldPageUrl, newPageUrl);
-
-		//Copy all the images from a gallery
-		for(File file : Objects.requireNonNull(oldPageGallery.listFiles())) {
-			String filename = file.getName();
-			try {
-				copyImage(filename, file, newPageGallery);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+			Files.createDirectories(newGallery);
+			try (var files = Files.list(oldGallery)) {
+				for (Path file : files.toList()) {
+					Files.move(file, newGallery.resolve(file.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+				}
 			}
+			Files.delete(oldGallery);
+		} catch (IOException e) {
+			throw new UncheckedIOException("Could not move the gallery from " + oldPageUrl + " to " + newPageUrl, e);
 		}
-		return true; //TODO: add more edges cases and return false
 	}
 
 	public static void copyImage(String filename, File file, Path imageDir) throws IOException {
@@ -141,10 +142,14 @@ public class Filesystem {
 		for(Painting p : page.getGallery().getGallery().values()){
 			String filename = p.getFilename();
 			File file = galleryRoot.resolve(page.getUrl()).resolve(filename).toFile();
-			if(file.exists()) {
-				BufferedImage image = ImageIO.read(file);
+			BufferedImage image = file.exists() ? ImageIO.read(file) : null;
+			if (image != null) {
 				ratios.put(filename, (double) image.getWidth() / image.getHeight());
-			} else log.error("Not found file {}",p.getFilename());
+			} else {
+				// Kept, after the others: a missing or unreadable file must not drop the painting
+				log.error("Can't read image {} for page {}", filename, page.getUrl());
+				ratios.put(filename, reverse ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
+			}
 		}
 
 		int i = 0;

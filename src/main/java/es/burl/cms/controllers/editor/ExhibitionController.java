@@ -49,7 +49,9 @@ public class ExhibitionController {
 			exhibition = Exhibition.builder().build();
 		} else {
 			exhibition = site.getExhibitionRepo().get(url);
+			if (exhibition == null) throw new NotFoundException("The exhibition " + url);
 		}
+		model.addAttribute("newExhibition", url.equals("new"));
 		model.addAttribute("name", site.getName());
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("exhibition", exhibition);
@@ -59,6 +61,10 @@ public class ExhibitionController {
 	@PostMapping("/{url}/save")
 	public ResponseEntity<?> saveExhibition(@PathVariable("url") String url, @RequestBody Exhibition exhibition) {
 		try {
+			// A changed title or date changes the address: replace the old entry instead of keeping both
+			if (!url.equals(exhibition.getUrl()) && site.getExhibitionRepo().get(url) != null) {
+				site.removeExhibition(url);
+			}
 			site.getExhibitionRepo().add(exhibition);
 			saveService.backup(site);
 			return ResponseEntity.ok(exhibition);
@@ -72,6 +78,9 @@ public class ExhibitionController {
 
 	@DeleteMapping("/{url}")
 	public ResponseEntity<?> deleteExhibition(@PathVariable("url") String url, Model model){
+		if (site.getExhibitionRepo().get(url) == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The exhibition " + url + " was not found");
+		}
 		site.removeExhibition(url);
 		saveService.backup(site);
 		return ResponseEntity.ok("Deleted successfully");

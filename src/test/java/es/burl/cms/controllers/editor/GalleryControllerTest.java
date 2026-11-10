@@ -34,7 +34,8 @@ class GalleryControllerTest {
 	void setUp() {
 		site = twoPageSite();
 		backup = mock(BackupSite.class);
-		mvc = MockMvcBuilders.standaloneSetup(new GalleryController(site, galleryRoot, backup)).build();
+		mvc = MockMvcBuilders.standaloneSetup(new GalleryController(site, galleryRoot, backup))
+				.setControllerAdvice(new EditorAdvice(site)).build();
 	}
 
 	@Test
@@ -76,7 +77,9 @@ class GalleryControllerTest {
 
 	@Test
 	void uploadPageForUnknownPageIs404View() throws Exception {
-		mvc.perform(get("/page/missing/gallery/upload")).andExpect(view().name("404"));
+		mvc.perform(get("/page/missing/gallery/upload"))
+				.andExpect(status().isNotFound())
+				.andExpect(view().name("editor/NotFound"));
 	}
 
 	@Test
@@ -143,5 +146,28 @@ class GalleryControllerTest {
 
 		assertThat(site.getPage("work").getGallery().getGallery()).containsKey("a.jpg");
 		verify(backup, never()).backup(any());
+	}
+
+	@Test
+	void editingTheGalleryOfAnUnknownPageIs404() throws Exception {
+		mvc.perform(get("/page/missing/gallery"))
+				.andExpect(status().isNotFound())
+				.andExpect(view().name("editor/NotFound"));
+	}
+
+	@Test
+	void savingTheGalleryOfAnUnknownPageIs404() throws Exception {
+		mvc.perform(post("/page/missing/gallery").contentType(MediaType.APPLICATION_JSON).content("{\"gallery\":{}}"))
+				.andExpect(status().isNotFound());
+
+		verifyNoInteractions(backup);
+	}
+
+	@Test
+	void deletingAnUnknownPaintingIs404AndRetiresNothing() throws Exception {
+		mvc.perform(delete("/page/work/gallery/image/nope.jpg")).andExpect(status().isNotFound());
+		mvc.perform(delete("/page/missing/gallery/image/a.jpg")).andExpect(status().isNotFound());
+
+		verifyNoInteractions(backup);
 	}
 }
