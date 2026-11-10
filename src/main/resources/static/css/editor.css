@@ -195,18 +195,14 @@ input[readonly] { background: var(--surface-2); color: var(--muted); }
     background: var(--surface);
 }
 .page-row + .page-row { margin-top: 8px; }
-/* Drag handle: three short lines close together, making a square */
+/* Drag handle: nine dots in a 3x3 square */
 .grip {
     flex: none;
-    width: 14px;
-    height: 12px;
+    width: 15px;
+    height: 15px;
     margin: 0 4px;
     color: var(--muted);
-    background:
-        linear-gradient(currentColor, currentColor) top / 100% 2px no-repeat,
-        linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat,
-        linear-gradient(currentColor, currentColor) bottom / 100% 2px no-repeat;
-    border-radius: 1px;
+    background: radial-gradient(circle, currentColor 1.4px, transparent 1.8px) 0 0 / 5px 5px;
     cursor: grab;
 }
 .page-row:hover .grip { color: var(--text); }
