@@ -1,10 +1,10 @@
 ---
 id: CMS-11
 title: 'BUG-6: Backup rotation and restore bugs'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T23:39:00Z'
+updated_date: '2026-11-10T01:24:00Z'
 labels:
   - bug
   - data
@@ -37,6 +37,24 @@ view in the editor (EDIT-3).
 
 2026-11-09: Fixed the missing backup folder: saveToJson now creates backupPath itself. Regression test: JsonBackupTest.backupCreatesAMissingBackupFolder. The other items on this ticket are still open.
 
+2026-11-10: Fixed the rest of the data-loss bugs in JsonBackup:
+- Backup files are matched by a pattern built from the configured name, so other files in the folder are ignored.
+- Restore considers every backup including the oldest, skips one that can't be parsed and tries the next, and falls back from drafts to published.
+- Rotation deletes everything at or beyond the limit, so lowering the limit works.
+- Backups are written to a temp file and moved into place, so a crash can't leave a half-written newest backup.
+- If nothing can be restored the app starts with an empty site and logs an error, instead of failing to start.
+
+Each has a regression test in JsonBackupTest; the five restore and rotation tests fail on the old code.
+
+Not done here, tracked elsewhere: every edit still writes a full backup synchronously (STORE-4, CMS-22.3); the off-machine copy is BACKUP-5 (CMS-23.4); the "restore this version" view is BACKUP-4 (CMS-23.3) and EDIT-3 (CMS-13.2).
+
 Commits:
 - `b7da79e` Fix saving on a fresh install and publishing with no home image (2026-11-09)
+- `d49f156` BACKUP-2, BACKUP-3, BUG-6: version images with backups and stop losing them (2026-11-10)
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The backup rotation and restore bugs that could lose the site's content are fixed: backup files are matched by name, the oldest backup is no longer skipped, a corrupt backup no longer blocks restore, and backups are written atomically. The synchronous backup per edit, the off-machine copy and the restore view are left to STORE-4, BACKUP-5 and BACKUP-4.
+<!-- SECTION:FINAL_SUMMARY:END -->

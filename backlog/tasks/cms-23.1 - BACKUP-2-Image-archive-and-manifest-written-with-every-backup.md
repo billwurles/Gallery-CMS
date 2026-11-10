@@ -1,9 +1,10 @@
 ---
 id: CMS-23.1
 title: 'BACKUP-2: Image archive and manifest written with every backup'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-09T23:54:00Z'
+updated_date: '2026-11-10T01:24:00Z'
 labels:
   - backup
   - data
@@ -35,8 +36,25 @@ Make every JSON backup carry the images it needs.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every draft and published backup has a manifest listing each referenced image with sha256 and size
-- [ ] #2 Every image in a manifest exists in backup/images/ under its hash
-- [ ] #3 Backing up an unchanged site adds no files and no disk usage
-- [ ] #4 Existing backups without a manifest still restore
+- [x] #1 Every draft and published backup has a manifest listing each referenced image with sha256 and size
+- [x] #2 Every image in a manifest exists in backup/images/ under its hash
+- [x] #3 Backing up an unchanged site adds no files and no disk usage
+- [x] #4 Existing backups without a manifest still restore
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-10: Built as `ImageArchive` (backup/images/<sha256><.ext>) plus a `backupManifest` object inside each backup JSON, rather than a separate manifest file, so a backup and its image list can't drift apart. Images are hard-linked from the gallery with a verified-copy fallback. Hashes are cached by path, size and mtime.
+
+Rehearsal on a copy of the live appdata: 189 images in the manifest, 0 missing, 185 archive files (33M, all hard links so no extra disk). The first publish took 2.5s and later ones 0.46s.
+
+Commits:
+- `d49f156` BACKUP-2, BACKUP-3, BUG-6: version images with backups and stop losing them (2026-11-10)
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Every draft and published backup now carries a manifest of the images it needs (path, sha256, size), and the content of each one is kept in a content-addressed archive at backup/images. The archive hard-links from the gallery, so an unchanged site adds no files and no disk. Backups written before this have no manifest and still restore. Covered by ImageVersioningTest; 174 tests pass.
+<!-- SECTION:FINAL_SUMMARY:END -->
