@@ -137,8 +137,10 @@ public class JsonBackup implements BackupSite {
 		log.debug("Backing up to JSON - {}", newFilename);
 		try {
 			Files.createDirectories(backupPath);
-			// Write then rename, so a crash mid-write never leaves a broken "newest" backup
-			Path tmp = Files.createTempFile(backupPath, ".tmp-", fileExt);
+			// Write then rename, so a crash mid-write never leaves a broken "newest" backup.
+			// Not Files.createTempFile: that makes the file owner-only, and backups must stay readable
+			// to whatever copies them off the machine. Saves are synchronized, so the name can't clash.
+			Path tmp = backupPath.resolve(".tmp-" + newFilename);
 			try {
 				Files.writeString(tmp, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json));
 				Files.move(tmp, backupPath.resolve(newFilename), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);

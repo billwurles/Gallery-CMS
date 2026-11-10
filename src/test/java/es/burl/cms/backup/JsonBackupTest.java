@@ -218,6 +218,18 @@ class JsonBackupTest {
 		}
 	}
 
+	@Test
+	void backupsGetTheSamePermissionsAsAnyOtherNewFile() throws IOException {
+		JsonBackup backup = backups(5, 10);
+		backup.backup(named("a"));
+		backup.publish(named("b"));
+
+		// Regression: writing through Files.createTempFile left backups readable by their owner only
+		var expected = Files.getPosixFilePermissions(Files.createFile(dir.resolve("ordinary-file")));
+		assertThat(Files.getPosixFilePermissions(find("1-unpublished"))).isEqualTo(expected);
+		assertThat(Files.getPosixFilePermissions(find("1-published"))).isEqualTo(expected);
+	}
+
 	private Path find(String prefix) throws IOException {
 		try (Stream<Path> s = Files.list(dir)) {
 			return s.filter(p -> p.getFileName().toString().startsWith(prefix)).findFirst().orElseThrow();

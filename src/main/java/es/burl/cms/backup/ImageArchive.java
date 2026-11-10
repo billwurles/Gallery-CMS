@@ -91,7 +91,8 @@ public class ImageArchive {
 		} catch (FileAlreadyExistsException e) {
 			return sha;
 		} catch (IOException | UnsupportedOperationException e) {
-			Path tmp = Files.createTempFile(archiveDir, ".tmp-", ".part");
+			// Not Files.createTempFile, which makes an owner-only file: archived images keep normal permissions
+			Path tmp = archiveDir.resolve(".tmp-" + UUID.randomUUID() + ".part");
 			try {
 				Files.copy(file, tmp, StandardCopyOption.REPLACE_EXISTING);
 				if (!hashOf(tmp).equals(sha)) throw new IOException("Archive copy of " + file + " doesn't match its hash");
