@@ -8,7 +8,7 @@ services:
   nginx:
     image: nginx:1.27-alpine
     ports:
-      - "6500:80"     # public site
+      - "0.0.0.0:6500:80"     # public site (IPv4 only)
     environment:
       SITE_BASE_PATH: ${SITE_BASE_PATH-/gallery-cms}
       NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "6501:8080"   # editor
+      - "0.0.0.0:6501:8080"   # editor (IPv4 only)
     volumes:
       - ./appdata/:/appdata/
     environment:
