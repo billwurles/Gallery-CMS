@@ -70,4 +70,11 @@ class ExhibitionRepoTest {
 	void exactlyFullPage() {
 		assertThat(repoWith(7).getExhibitionsPage(1, 7)).hasSize(7);
 	}
+
+	@Test
+	void pagesPastTheEndAreEmpty() {
+		assertThat(repoWith(3).getExhibitionsPage(2, 7)).isEmpty();
+		assertThat(repoWith(0).getExhibitionsPage(1, 7)).isEmpty();
+		assertThat(repoWith(3).getExhibitionsPage(0, 7)).isEmpty();
+	}
 }

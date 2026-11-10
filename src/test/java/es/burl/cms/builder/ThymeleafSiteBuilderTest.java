@@ -230,4 +230,65 @@ class ThymeleafSiteBuilderTest {
 
 		assertThat(read("about/index.html")).contains("<p>Changed</p>");
 	}
+
+	@Test
+	void aDeletedPageIsGoneAfterTheNextPublish() throws IOException {
+		builder.buildSite(site);
+		assertThat(htmlRoot.resolve("about/index.html")).exists();
+
+		site.removePage("about");
+		builder.buildSite(site);
+
+		assertThat(htmlRoot.resolve("about")).doesNotExist();
+		assertThat(htmlRoot.resolve("404.html")).exists();
+		assertThat(htmlRoot.resolve("work/index.html")).exists();
+	}
+
+	@Test
+	void aFailedBuildLeavesThePreviousSiteInPlace() throws IOException {
+		builder.buildSite(site);
+		String before = read("about/index.html");
+
+		// A page whose folder would clash with the 404 page's file makes the build fail part way
+		site.addNewPage(page("Clash", "404.html", 5));
+		site.addNewPage(site.getPage("about").toBuilder().content("<p>Changed</p>").build());
+
+		org.assertj.core.api.Assertions.assertThatThrownBy(() -> builder.buildSite(site)).isInstanceOf(IOException.class);
+
+		assertThat(read("about/index.html")).isEqualTo(before);
+		assertThat(htmlRoot.resolve("work/images/a.jpg")).exists();
+		try (Stream<Path> siblings = Files.list(tmp)) {
+			assertThat(siblings.map(p -> p.getFileName().toString())).containsExactlyInAnyOrder("html", "gallery");
+		}
+	}
+
+	@Test
+	void theHtmlRootFolderItselfIsKept() throws IOException {
+		// nginx bind-mounts html_root, so publishing must change its contents and not replace the folder
+		Object before = Files.readAttributes(htmlRoot, java.nio.file.attribute.BasicFileAttributes.class).fileKey();
+		builder.buildSite(site);
+		builder.buildSite(site);
+
+		assertThat(Files.readAttributes(htmlRoot, java.nio.file.attribute.BasicFileAttributes.class).fileKey()).isEqualTo(before);
+	}
+
+	@Test
+	void aGalleryWithoutAnImageFolderStillPublishes() throws IOException {
+		Page empty = page("Empty", "empty", 4);
+		empty.addPaintingToGallery(painting("gone.jpg", 0));
+		site.addNewPage(empty);
+
+		builder.buildSite(site);
+
+		assertThat(htmlRoot.resolve("empty/index.html")).exists();
+		assertThat(htmlRoot.resolve("empty/images/gone.jpg")).doesNotExist();
+	}
+
+	@Test
+	void theExhibitionsPageExistsWithNoExhibitions() throws IOException {
+		builder.buildSite(site);
+
+		assertThat(htmlRoot.resolve("exhibitions/index.html")).exists();
+		assertThat(htmlRoot.resolve("exhibitions/page-2")).doesNotExist();
+	}
 }

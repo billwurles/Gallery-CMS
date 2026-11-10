@@ -14,11 +14,14 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -26,6 +29,8 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 
 	String baseTemplate = "site/base";
 	Path htmlRoot;
+	/** Where the build in progress writes: a staging folder, swapped into htmlRoot when it completes. */
+	private Path out;
 	Path galleryRoot;
 	String staticRoot;
 	SpringTemplateEngine engine;
@@ -50,28 +55,76 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		log.info("Publishing with base path {}", ServerlessLinkBuilder.normalise(basePath));
 	}
 
+	/**
+	 * Builds the whole site into a staging folder next to html_root, then swaps it in. A failed build leaves the
+	 * live site as it was, and anything the new build doesn't write (a deleted page, an old image) disappears.
+	 * html_root itself is kept (only its contents change): nginx bind-mounts that directory, so replacing it
+	 * would leave nginx serving the old one.
+	 */
 	@Override
-	public void buildSite(Site site) throws IOException {
-		//TODO: clear the html_root folder, or backup existing and then make new structure
+	public synchronized void buildSite(Site site) throws IOException {
 		log.info("Generating Site {}", site.getName());
+		Path staging = htmlRoot.resolveSibling("." + htmlRoot.getFileName() + ".building");
+		deleteTree(staging);
+		Files.createDirectories(staging);
+		out = staging;
+		try {
+			copyStaticIncludes();
 
-		copyStaticIncludes();
+			generateErrorPage(site, 404, "Not Found", "The page does not exist on this server, please return <a href=\"" + homeUrl + "\">home</a>");
 
-		generateErrorPage(site, 404, "Not Found", "The page does not exist on this server, please return <a href=\"" + homeUrl + "\">home</a>");
+			generateHomePage(site);
+			generatePages(site);
 
-		generateHomePage(site);
-		generatePages(site);
+			Path exhibitionsPath = out.resolve(site.getExhibitionRepo().getMenuItem().getUrl());
+			generateExhibitionsPages(site, exhibitionsPath);
+			generateExhibitionsDirectPages(site, exhibitionsPath);
+		} catch (IOException | RuntimeException e) {
+			log.error("Site build failed, the live site is unchanged", e);
+			deleteTree(staging);
+			throw e;
+		} finally {
+			out = null;
+		}
 
-		Path exhibitionsPath = htmlRoot.resolve(site.getExhibitionRepo().getMenuItem().getUrl());
-		generateExhibitionsPages(site, exhibitionsPath);
-		generateExhibitionsDirectPages(site, exhibitionsPath);
-
+		swapIn(staging);
 		log.info("Site rendering complete");
+	}
+
+	/** Replaces html_root's contents with the staging folder's, by renames on the same filesystem. */
+	private void swapIn(Path staging) throws IOException {
+		Files.createDirectories(htmlRoot);
+		Path old = htmlRoot.resolveSibling("." + htmlRoot.getFileName() + ".old");
+		deleteTree(old);
+		Files.createDirectories(old);
+		for (Path entry : list(htmlRoot)) {
+			Files.move(entry, old.resolve(entry.getFileName()));
+		}
+		for (Path entry : list(staging)) {
+			Files.move(entry, htmlRoot.resolve(entry.getFileName()));
+		}
+		deleteTree(staging);
+		deleteTree(old);
+	}
+
+	private static List<Path> list(Path dir) throws IOException {
+		try (Stream<Path> entries = Files.list(dir)) {
+			return entries.toList();
+		}
+	}
+
+	static void deleteTree(Path dir) throws IOException {
+		if (!Files.exists(dir, LinkOption.NOFOLLOW_LINKS)) return;
+		try (Stream<Path> paths = Files.walk(dir)) {
+			for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+				Files.delete(path);
+			}
+		}
 	}
 
 	private void copyStaticIncludes() throws IOException {
 		log.debug("Copying static include files");
-		Path includesPath = htmlRoot.resolve("include");
+		Path includesPath = out.resolve("include");
 		Files.createDirectories(includesPath);
 
 		Filesystem.copyClassPathResource("style.css", staticRoot, includesPath);
@@ -86,7 +139,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		context.setVariable("errorCode", code);
 		context.setVariable("shortText", shortText);
 		context.setVariable("message", message);
-		renderTemplateToFile(baseTemplate, context, htmlRoot, code+".html");
+		renderTemplateToFile(baseTemplate, context, out, code+".html");
 	}
 
 	private void generateHomePage(Site site) throws IOException {
@@ -98,18 +151,18 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		File file = galleryRoot.resolve(homeImage).toFile();
 		if (!homeImage.isBlank() && file.isFile()) {
 			log.debug("Copying home image");
-			Filesystem.copyImage(homeImage, file, htmlRoot);
+			Filesystem.copyImage(homeImage, file, out);
 		} else {
 			log.warn("No home image to publish");
 		}
 
-		renderTemplate(context, htmlRoot);
+		renderTemplate(context, out);
 	}
 
 	private void generatePages(Site site) throws IOException {
 		for (Page page : site.getPages().values()) {
 			log.debug("Generating page {} -hasGallery:{} -content:{}", page.getMenuItem().getUrl(), page.hasGallery(), page.hasContent());
-			Path pagePath = htmlRoot.resolve(page.getMenuItem().getUrl());
+			Path pagePath = out.resolve(page.getMenuItem().getUrl());
 			Files.createDirectories(pagePath);
 			copyPageGallery(page, pagePath);
 
@@ -121,7 +174,8 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	}
 
 	private void generateExhibitionsPages(Site site, Path exhibitionsPath) throws IOException {
-		int totalPages = site.getExhibitionRepo().getTotalPages(postsPerPage);
+		// At least one page, so the menu's Exhibitions link works before the first exhibition is added
+		int totalPages = Math.max(1, site.getExhibitionRepo().getTotalPages(postsPerPage));
 
 		for (int exhibitionPage = 1; exhibitionPage <= totalPages; exhibitionPage++) {
 			log.debug("Generating exhibition page {}", exhibitionPage);
@@ -164,16 +218,16 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 			log.debug("Copying gallery for {}",page.getMenuItem().getUrl());
 			// Construct the page path and image directory path, create dirs if they don't exist
 			Path imageDir = pagePath.resolve("images");
-			File cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl()).toFile();
+			Path cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl());
 			Files.createDirectories(imageDir);
 
-			//Copy all the images from a gallery
-			for(File file : Objects.requireNonNull(cmsImageDir.listFiles())) {
-//				log.debug("Found file {}",file.getName());
-				Painting painting = page.getGallery().getPainting(file.getName());
-				if(painting != null) {
-					log.debug("Copying file: {} from painting {}", file, painting);
-					Filesystem.copyImage(painting.getFilename(), file, imageDir);
+			// Copy each painting's image; one whose file is missing is left out of the published gallery folder
+			for (Painting painting : page.getGallery().getGallery().values()) {
+				Path file = cmsImageDir.resolve(painting.getFilename());
+				if (Files.isRegularFile(file)) {
+					Filesystem.copyImage(painting.getFilename(), file.toFile(), imageDir);
+				} else {
+					log.warn("Painting {} on page {} has no image file", painting.getFilename(), page.getMenuItem().getUrl());
 				}
 			}
 		}

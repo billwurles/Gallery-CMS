@@ -48,9 +48,9 @@ public class ExhibitionRepo {
 
 	public List<Exhibition> getExhibitionsPage(int page, int postsPerPage) {
 		List<Exhibition> sortedExhibitions = getExhibitionsInDateOrder();
-		int to = page * postsPerPage;
-		int from = to - postsPerPage;
-		if (to > sortedExhibitions.size()) to = sortedExhibitions.size();
+		if (page < 1) return List.of();
+		int from = Math.min((page - 1) * postsPerPage, sortedExhibitions.size()); // past the last page: empty
+		int to = Math.min(from + postsPerPage, sortedExhibitions.size());
 		return sortedExhibitions.subList(from, to);
 	}
 

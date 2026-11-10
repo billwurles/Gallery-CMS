@@ -129,14 +129,8 @@ public class Filesystem {
 
 	public static void copyClassPathResource(String filename, String fromDirectory, Path toDirectory) throws IOException {
 		ClassPathResource resource = new ClassPathResource(fromDirectory+filename);
-		InputStream inputStream = resource.getInputStream();
-		File outputFile = toDirectory.resolve(filename).toFile();
-
-		OutputStream outputStream = new FileOutputStream(outputFile);
-		byte[] buffer = new byte[8192];
-		int length;
-		while ((length = inputStream.read(buffer)) > 0) {
-			outputStream.write(buffer, 0, length);
+		try (InputStream in = resource.getInputStream()) {
+			Files.copy(in, toDirectory.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 
