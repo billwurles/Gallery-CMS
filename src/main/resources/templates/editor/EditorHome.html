@@ -2,104 +2,86 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title th:text="|Editor Home - ${name}|"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/scripts.js}"></script>
-
-    <!-- jQuery, UI & UI CSS-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
-
 </head>
 <body>
-    <nav
-            th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${name}, siteName=${name})}">
-    </nav>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='')}"></header>
 
-<!-- Main Content -->
-    <div class="content container">
-        <h1 th:text="|${name}|"></h1>
+<main class="main">
+    <div class="page-head">
         <div>
-            <h2 class="hometitle">Home Image:</h2>
-            <a th:href="@{/page}" class="upload-link">Create New Page</a>
+            <h1 th:text="${name}"></h1>
+            <p class="sub">Changes are saved as a draft. Publish to put them on the live site.</p>
         </div>
-        <div class="image-container">
-            <img th:src="@{/image/{f}(f=${homeImage.filename})}"
-                 th:alt="${homeImage.title}" class="home-image" />
-            <a th:href="@{/upload}" class="upload-link">Upload new home image</a>
-        </div>
-
-        <h2 class="sorttitle">Drag to Rearrange Pages in Menu</h2>      <p id="sortmsg">Menu order saved</p>
-
-        <br>
-
-        <ul class="page-list" id="sortable">
-                <li class="page-list-item"
-                th:each="item : ${menuItems}"
-            th:data-id="${item.order}"
-            th:data-url="${item.url}">
-                <span th:text="${item.title}"></span>
-                <button class="action-button"
-                        th:if="${item.url != 'exhibitions'}"
-                        th:data-url="@{/page/{url}(url=${item.url})}" onclick="confirmDelete(this)">
-                    Delete
-                </button>
-            </li>
-        </ul>
     </div>
-    <script th:inline="javascript">
-        $("#sortmsg").fadeOut(0);
 
-        function confirmDelete(button) {
-            let url = button.getAttribute("data-url");
+    <div class="home-grid">
+        <section class="card">
+            <div class="card-head">
+                <h2>Home image</h2>
+            </div>
+            <img th:if="${homeImage != null}" th:src="@{/image/{f}(f=${homeImage.filename})}"
+                 th:alt="${homeImage.title}" class="home-image"/>
+            <a th:href="@{/upload}" class="btn btn-block">Replace image</a>
+        </section>
 
-            if (confirm("Are you sure you want to delete this page?")) {
-                fetch(url, {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json"
+        <section class="card">
+            <div class="card-head">
+                <h2>Pages</h2>
+                <span class="hint">Drag to change the order of the menu</span>
+                <span id="sortmsg" class="saved-note" hidden>Menu order saved</span>
+            </div>
+            <a class="new-row" th:href="@{/page}">+ New page</a>
+            <ul class="page-list" id="sortable">
+                <li class="page-row" th:each="item : ${menuItems}" th:data-id="${item.order}" th:data-url="${item.url}">
+                    <span class="grip" title="Drag to reorder" aria-hidden="true"></span>
+                    <a class="page-title" th:text="${item.title}"
+                       th:href="@{${item.url == 'exhibitions' ? '/' + item.url : '/page/' + item.url}}"></a>
+                    <span class="page-url" th:text="|/${item.url}|"></span>
+                    <span class="row-actions">
+                        <a class="btn btn-small"
+                           th:href="@{${item.url == 'exhibitions' ? '/' + item.url : '/page/' + item.url}}">Edit</a>
+                        <button type="button" class="btn btn-small btn-danger"
+                                th:if="${item.url != 'exhibitions'}"
+                                th:data-url="@{/page/{url}(url=${item.url})}"
+                                th:data-what="|the page “${item.title}”|"
+                                onclick="confirmDelete(this)">Delete</button>
+                    </span>
+                </li>
+            </ul>
+        </section>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    $(function () {
+        $("#sortable").sortable({
+            handle: ".grip",
+            placeholder: "sortable-placeholder",
+            forcePlaceholderSize: true,
+            update: function () {
+                // The new menu order, as {position: page url}
+                const order = {};
+                $("#sortable li").each(function (index) {
+                    order[index] = $(this).data("url");
+                });
+                $.ajax({
+                    url: /*[[@{/rearrange}]]*/ '/rearrange',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(order),
+                    success: function () {
+                        $("#sortmsg").prop("hidden", false).stop(true, true).show().delay(3000).fadeOut();
+                    },
+                    error: function () {
+                        flash("The menu order could not be saved", "error");
+                        window.location.reload();
                     }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        alert("Page deleted successfully!");
-                        location.reload(); // Refresh page or redirect as needed
-                    } else {
-                        alert("Failed to delete the page.");
-                    }
-                })
-                .catch(error => console.error("Error:", error));
+                });
             }
-        }
-
-        $(document).ready(function () {
-            $("#sortable").sortable({
-                update: function(event, ui) {
-                    // Generate the new order in 'order: url' format
-                    let order = {};
-                    $("#sortable li").each(function(index) {
-                        let pageUrl = $(this).data("url");  // Assuming the page URL is stored in 'data-url'
-                        order[index] = pageUrl;  // Store the index as the key (order) and page URL as the value
-                        });
-
-                        // Send the order as a JSON request via AJAX
-                        $.ajax({
-                            url: /*[[@{/rearrange}]]*/ '/rearrange', // URL to handle the request
-                            type: 'POST',
-                        contentType: 'application/json', // Set content type to JSON
-                        data: JSON.stringify(order), // Send the new order as JSON
-                            success: function(response) {
-                                 $("#sortmsg").fadeIn().delay(4000).fadeOut();
-                            },
-                            error: function(xhr, status, error) {
-                                alert("An error occurred while saving the order.");
-                                window.location.reload();
-                            }
-                        });
-                }
-            });
         });
-    </script>
+    });
+</script>
 </body>
 </html>

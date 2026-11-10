@@ -2,151 +2,64 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title th:text="|Page Editor - ${page.menuItem.title == '' ? 'New Page' : page.menuItem.title}|"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/scripts.js}"></script>
-
-    <!-- jQuery, UI & CSS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
-
-    <!-- summernote: include libraries(bootstrap) -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-
-    <!-- include summernote css/js -->
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote.min.js"></script>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Initialize Summernote editor
-        $('#richTextEditor').summernote({
-            minHeight: 500,  // Minimum height of the editor
-            maxHeight: null,
-                toolbar: [
-                    ['style', ['bold', 'italic', 'underline', 'clear']],
-                    ['font', ['strikethrough', 'superscript', 'subscript']],
-                    ['fontsize', ['fontsize']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'video']],
-                    ['view', ['fullscreen', 'codeview']],
-                    ['height', ['height']]
-                ]
-        });
-
-        // Populate Summernote editor with existing content
-        var existingContent = document.querySelector("textarea[name='content']").value;
-        if (existingContent) {
-            $('#richTextEditor').summernote('code', existingContent);
-        }
-
-        // Handle form submission to include Summernote content
-        document.querySelector("form").addEventListener("submit", function () {
-            var contentField = document.querySelector("textarea[name='content']");
-            contentField.value = $('#richTextEditor').summernote('code');
-        });
-
-        // Function to generate URL from Title
-        function generateUrl() {
-            var title = document.getElementById('title').value; // Get the title value
-            var url = title
-                .toLowerCase() // Convert to lowercase
-                .replace(/[^\w\s-]/g, '') // Remove all non-word characters (except spaces and hyphens)
-                .replace(/\s+/g, '-') // Replace spaces with hyphens
-                .replace(/-+/g, '-'); // Replace multiple hyphens with a single hyphen
-
-            // Set the generated url into the URL field
-            document.getElementById('url').value = url;
-        }
-
-        // Add event listener to title input field
-        document.getElementById('title').addEventListener('input', generateUrl);
-
-        // Modify form submission to map menuItem.title -> title and menuItem.url -> url
-        document.querySelector("form").addEventListener("submit", function(event) {
-            // Update the name attributes of title and url before submitting the form
-            var titleField = document.getElementById('title');
-            var urlField = document.getElementById('url');
-
-            // Temporarily set the name attributes of the title and url fields
-            titleField.setAttribute('name', 'title');
-            urlField.setAttribute('name', 'url');
-        });
-    });
-</script>
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
+    <th:block th:replace="~{editor/fragments/summernote :: summernote}"/>
 </head>
 <body>
-<nav
-        th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page.menuItem.url}, siteName=${name})}">
-</nav>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page.menuItem.url})}"></header>
 
-<div class="content container">
-    <div class="page">
-
-        <h1>Site Content:</h1>
-        <div class="styled-button" >
-            <a th:if="${!newPage}" class="msg page-button" th:href="@{/page/{url}/gallery(url=${page.menuItem.url})}">
-                Edit Gallery
-            </a>
+<main class="main">
+    <div class="page-head">
+        <div>
+            <p class="crumb" th:text="${newPage} ? 'New page' : 'Page'"></p>
+            <h1 th:text="${page.menuItem.title == '' ? 'Untitled page' : page.menuItem.title}"></h1>
         </div>
-        <div th:if="${message}">
-            <p th:text="${message}"></p>
+        <div class="page-actions">
+            <a th:if="${!newPage}" class="btn" th:href="@{/page/{url}/gallery(url=${page.menuItem.url})}">Edit gallery</a>
+            <button type="submit" form="pageForm" class="btn btn-primary">Save page</button>
         </div>
-
-        <form th:action="${newPage} ? @{/page/} : @{/page/{url}/(url=${page.menuItem.url})}"
-              th:object="${page}"
-              method="post">
-            <div class="pageflex">
-                <!-- Left side: Title & URL inputs -->
-                <div class="fields-container">
-                    <div class="field">
-                        <label for="title">Title:</label>
-                        <input id="title" type="text" th:field="*{menuItem.title}" placeholder="Enter the title" required />
-                    </div>
-                    <div class="field">
-                        <label for="url">URL:</label>
-                        <input id="url" type="text" th:field="*{menuItem.url}" placeholder="Enter the URL" required readonly />
-                    </div>
-                </div>
-
-                <!-- Right side: Buttons -->
-                <div class="buttons-container">
-                    <div class="styled-button">
-                        <button class="styled-button" type="submit">Save Page</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="contentEditor">
-                <label for="richTextEditor">Content:</label>
-                <div id="richTextEditor">
-                    <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
-                </div>
-            </div>
-            <br>
-        </form>
     </div>
-</div>
+
+    <p class="notice" th:if="${newPage}">Save the page first, then add pictures to its gallery.</p>
+    <p class="notice notice-error" th:if="${message != null and #strings.contains(message, 'already in use')}" th:text="${message}"></p>
+
+    <form id="pageForm" class="card"
+          th:action="${newPage} ? @{/page/} : @{/page/{url}/(url=${page.menuItem.url})}"
+          th:object="${page}"
+          method="post">
+        <div class="field-pair">
+            <label class="field">
+                <span>Title</span>
+                <input id="title" type="text" th:field="*{menuItem.title}" placeholder="Page title" required/>
+            </label>
+            <label class="field">
+                <span>Address <em>(made from the title)</em></span>
+                <input id="url" type="text" th:field="*{menuItem.url}" required readonly/>
+            </label>
+        </div>
+
+        <div class="field">
+            <span>Content</span>
+            <div id="richTextEditor">
+                <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
+            </div>
+        </div>
+    </form>
+</main>
 
 <script>
-    $(document).ready(function () {
-        // Make the image list sortable
-        $("#image-list").sortable({
-            placeholder: "sortable-placeholder"
+    $(function () {
+        startRichText();
+
+        $('#title').on('input', function () {
+            $('#url').val(slugify(this.value));
         });
 
-        // Serialize the order of images before form submission
-        $("form").on("submit", function () {
-            const orderedPaintingTitles = $("#image-list li").map(function () {
-                return $(this).data("id"); // Extract the title from the data-id attribute
-            }).get();
-
-            // Set the ordered painting titles as a hidden input value
-            $("#orderedPaintingTitles").val(JSON.stringify(orderedPaintingTitles));
+        $('#pageForm').on('submit', function () {
+            // The controller reads plain title, url and content parameters
+            $("textarea[name='content']").val($('#richTextEditor').summernote('code'));
+            $('#title').attr('name', 'title');
+            $('#url').attr('name', 'url');
         });
     });
 </script>

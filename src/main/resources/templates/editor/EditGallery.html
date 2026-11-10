@@ -2,151 +2,112 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title th:text="|Gallery Editor - ${page.menuItem.title}|"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/scripts.js}"></script>
-
-    <!-- jQuery -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
-    <!-- jQuery UI -->
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
-
-    <!-- jQuery UI CSS for styling -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
 </head>
 <body>
-<nav
-        th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page.menuItem.url}, siteName='Gallery Edit')}">
-</nav>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page.menuItem.url})}"></header>
 
-    <!-- Main Content -->
-    <div class="content container">
-    <h1 th:text="|${name}|"></h1>
-        <a th:href="@{/page/{url}/gallery/upload(url=${page.menuItem.url})}" class="upload-link">Upload Images to Gallery</a>
-    <h1>Gallery Content:</h1>
-    <p>Drag paintings to rearrange</p>
+<main class="main main-wide">
+    <div class="page-head">
+        <div>
+            <p class="crumb">Gallery</p>
+            <h1 th:text="${page.menuItem.title}"></h1>
+            <p class="sub" th:if="${hasGallery}"
+               th:text="|${#lists.size(page.gallery.getGalleryInOrder())} paintings. Drag them to rearrange.|"></p>
+        </div>
+        <div class="page-actions">
+            <a th:href="@{/page/{url}(url=${page.menuItem.url})}" class="btn">Edit page text</a>
+            <a th:href="@{/page/{url}/gallery/upload(url=${page.menuItem.url})}" class="btn">Upload images</a>
+            <button type="submit" form="galleryForm" class="btn btn-primary">Save changes</button>
+        </div>
+    </div>
 
     <form id="galleryForm" th:action="@{/page/{url}/gallery(url=${page.menuItem.url})}" method="post">
-        <!-- Save Button -->
-            <button type="submit" class="submit-button">Save Changes</button>
-
-        <!-- Gallery section -->
-        <h2 th:if="${hasGallery}">Gallery of Paintings:</h2>
-        <div th:if="${hasGallery}">
-                <ul id="image-list" class="gallery-list">
-                    <li th:each="painting : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}" th:data-order="${painting.order}" class="gallery-item">
+        <ul id="image-list" class="gallery-grid" th:if="${hasGallery}">
+            <li th:each="painting : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}"
+                class="painting">
+                <div class="painting-thumb">
                     <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.menuItem.url},filename=${painting.filename})}"
-                             th:alt="${painting.title}" class="gallery-image" />
-                        <div class="gallery-metadata">
-                        <label th:for="|title-${painting.filename}|">Title:</label>
-                            <input type="text" th:id="|title-${painting.filename}|" th:value="${painting.title}" class="metadata-input f-title" />
-
-                        <label th:for="|dimensions-${painting.filename}|">Dimensions:</label>
-                            <input type="text" th:id="|dimensions-${painting.filename}|" th:value="${painting.dimensions}" class="metadata-input f-dimensions" />
-
-                        <label th:for="|medium-${painting.filename}|">Medium:</label>
-                            <input type="text" th:id="|medium-${painting.filename}|" th:value="${painting.medium}" class="metadata-input f-medium" />
-
-                        <label th:for="|sold-${painting.filename}|">Sold:</label>
-                            <input type="checkbox" th:id="|sold-${painting.filename}|" th:checked="${painting.sold}" class="metadata-checkbox f-sold" />
-
-                        <button type="button" class="action-button delete-button"
-                            th:data-url="@{/page/{url}/gallery/image/{filename}(url=${page.url}, filename=${painting.filename})}" onclick="confirmDelete(this)">
-                            Delete
-                        </button>
+                         th:alt="${painting.title}" loading="lazy"/>
+                    <span class="sold-flag" th:if="${painting.sold}">Sold</span>
+                </div>
+                <div class="painting-fields">
+                    <label class="field">
+                        <span>Title</span>
+                        <input type="text" class="f-title" th:value="${painting.title}"/>
+                    </label>
+                    <div class="field-pair">
+                        <label class="field">
+                            <span>Dimensions</span>
+                            <input type="text" class="f-dimensions" th:value="${painting.dimensions}"/>
+                        </label>
+                        <label class="field">
+                            <span>Medium</span>
+                            <input type="text" class="f-medium" th:value="${painting.medium}"/>
+                        </label>
                     </div>
-                </li>
-            </ul>
-        </div>
-        <!-- Hidden input to store the gallery JSON -->
-        <input type="hidden" id="galleryData" name="galleryData" />
+                    <div class="painting-foot">
+                        <label class="check">
+                            <input type="checkbox" class="f-sold" th:checked="${painting.sold}"/> Sold
+                        </label>
+                        <button type="button" class="btn btn-small btn-danger"
+                                th:data-url="@{/page/{url}/gallery/image/{filename}(url=${page.url}, filename=${painting.filename})}"
+                                th:data-what="|“${painting.title}”|"
+                                onclick="confirmDelete(this)">Delete</button>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <p class="empty" th:unless="${hasGallery}">No paintings yet. Upload some images to start the gallery.</p>
     </form>
-</div>
+</main>
 
 <script>
-    function confirmDelete(button) {
-        let url = button.getAttribute("data-url");
-
-        if (confirm("Are you sure you want to delete this painting?")) {
-            fetch(url, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert("Painting deleted successfully!");
-                    location.reload(); // Refresh page or redirect as needed
-                } else {
-                    alert("Failed to delete the painting.");
-                }
-            })
-            .catch(error => console.error("Error:", error));
-        }
-    }
-
-    $(document).ready(function () {
-        // Make the image list sortable
+    $(function () {
         $("#image-list").sortable({
-            placeholder: "sortable-placeholder",
-            update: function (event, ui) {
-                // After the list is reordered, update the order of each painting
-                $("#image-list li").each(function (index) {
-                    $(this).attr("data-order", index + 1); // Update the order based on the new position
-                });
-            }
+            placeholder: "painting sortable-placeholder",
+            forcePlaceholderSize: true,
+            tolerance: "pointer",
+            cancel: "input, button, label"
         });
 
-        // Serialize the gallery data before form submission
         $("#galleryForm").on("submit", function (event) {
-            event.preventDefault(); // always: a plain form post isn't something the server accepts
-            if (confirm("Are you sure you want to save this gallery?")) {
+            event.preventDefault();
 
-                const galleryData = {
-                    gallery: {}
+            // Every field is read from inside its own card, keyed by filename, in the order shown
+            const galleryData = {gallery: {}};
+            $("#image-list li").each(function (index) {
+                const card = $(this);
+                const filename = card.data("id");
+                galleryData.gallery[filename] = {
+                    title: card.find(".f-title").val(),
+                    filename: filename,
+                    dimensions: card.find(".f-dimensions").val(),
+                    medium: card.find(".f-medium").val(),
+                    sold: card.find(".f-sold").prop("checked"),
+                    order: index + 1
                 };
+            });
 
-                // Read each painting's fields from inside its own card, keyed by filename, in the order shown
-                $("#image-list li").each(function (index) {
-                    const card = $(this);
-                    const filename = card.data("id");
-                    galleryData.gallery[filename] = {
-                        title: card.find(".f-title").val(),
-                        filename: filename,
-                        dimensions: card.find(".f-dimensions").val(),
-                        medium: card.find(".f-medium").val(),
-                        sold: card.find(".f-sold").prop("checked"),
-                        order: index + 1
-                    };
-                });
-
-                // Send the data via AJAX
-                $.ajax({
-                    url: $(this).attr("action"), // Use the form's action URL
-                    method: "POST",
-                    contentType: "application/json", // Set Content-Type to JSON
-                    data: JSON.stringify(galleryData), // Send the gallery data as a JSON string
-                    success: function (response) {
-                    // Update the message container based on the status
-                    const messageContainer = $("#messageContainer");
-                    const responseMessage = response.message;
-
+            $.ajax({
+                url: $(this).attr("action"),
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(galleryData),
+                success: function (response) {
                     if (response.status === "success") {
-                            alert("Gallery saved successfully")
-                        } else {
-                            alert("Error occurred saving Gallery")
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        alert("Error occurred saving Gallery")
+                        toast("Gallery saved");
+                    } else {
+                        toast("The gallery could not be saved", "error");
                     }
-                });
-            }
+                },
+                error: function () {
+                    toast("The gallery could not be saved", "error");
+                }
+            });
         });
     });
 </script>
-
 </body>
 </html>

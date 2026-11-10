@@ -1,79 +1,53 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Exhibition Blog</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/scripts.js}"></script>
+    <title>Exhibitions</title>
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
 </head>
 <body>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${exhibitions.menuItem.url})}"></header>
 
-<nav
-        th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${exhibitions.menuItem.url}, siteName='Exhibitions')}">
-</nav>
-
-<div class="content container">
-    <h1 class="hometitle">Exhibitions</h1>
-    <a class="action-button exhibition-button" th:href="@{/exhibitions/new}">Create new exhibition post</a>
-
-    <!-- Loop through the list of exhibitions -->
-    <div th:each="exhibition : ${exhibitionsPage}" class="exhibition-post">
-        <div class="upload-link">
-                 <a th:href="@{/exhibitions/{url}(url=${exhibition.url})}" >Edit Exhibition</a>
+<main class="main">
+    <div class="page-head">
+        <div>
+            <h1>Exhibitions</h1>
+            <p class="sub">Posts appear on the site newest first.</p>
         </div>
-        <button class="action-button exhibitions-delete" th:data-url="@{/exhibitions/{url}(url=${exhibition.url})}" onclick="confirmDelete(this)">
-            Delete
-        </button>
-        <h1 th:text="${exhibition.title}"></h1>
-        <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'dd/MM/yyyy')}"></p>
-        <div class="exhibition-content" th:utext="${exhibition.content}"></div>
-        <hr>
+        <div class="page-actions">
+            <a class="btn btn-primary" th:href="@{/exhibitions/new}">New exhibition</a>
+        </div>
     </div>
 
-    <div class="pagination" th:if="${totalPages > 1}">
-        <!-- Previous Button -->
-        <a th:href="@{'?page=' + ${page - 1}}" th:classappend="${page == 1 ? 'disabled' : ''}">« Previous</a>
+    <p class="empty" th:if="${#lists.isEmpty(exhibitionsPage)}">No exhibitions yet.</p>
 
-            <!-- Page Numbers -->
-            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
-            <!-- Display first few pages, current page, last few pages -->
-                <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= page - 2 and i <= page + 2)}"
-                   th:href="@{'?page=' + ${i}}"
-                   th:text="${i}"
-                   th:classappend="${i == page ? 'active' : ''}"></a>
-
-                    <!-- Display '...' for skipped pages -->
-                <span th:if="${(i == 5 and page > 5) or (i == totalPages - 4 and page < totalPages - 4)}">...</span>
+    <article th:each="exhibition : ${exhibitionsPage}" class="card post">
+        <div class="post-head">
+            <div>
+                <h2 th:text="${exhibition.title}"></h2>
+                <p class="post-date" th:text="${#dates.format(exhibition.date, 'd MMMM yyyy')}"></p>
+            </div>
+            <span class="row-actions">
+                <a class="btn btn-small" th:href="@{/exhibitions/{url}(url=${exhibition.url})}">Edit</a>
+                <button type="button" class="btn btn-small btn-danger"
+                        th:data-url="@{/exhibitions/{url}(url=${exhibition.url})}"
+                        th:data-what="|the exhibition “${exhibition.title}”|"
+                        onclick="confirmDelete(this)">Delete</button>
             </span>
+        </div>
+        <div class="post-content" th:utext="${exhibition.content}"></div>
+    </article>
 
-            <!-- Next Button -->
+    <nav class="pagination" th:if="${totalPages > 1}">
+        <a th:href="@{'?page=' + ${page - 1}}" th:classappend="${page == 1 ? 'disabled' : ''}">« Previous</a>
+        <th:block th:each="i : ${#numbers.sequence(1, totalPages)}">
+            <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= page - 2 and i <= page + 2)}"
+               th:href="@{'?page=' + ${i}}"
+               th:text="${i}"
+               th:classappend="${i == page ? 'active' : ''}"></a>
+            <span th:if="${(i == 5 and page > 5) or (i == totalPages - 4 and page < totalPages - 4)}">…</span>
+        </th:block>
         <a th:href="@{'?page=' + ${page + 1}}" th:classappend="${page == totalPages ? 'disabled' : ''}">Next »</a>
-    </div>
-
-
-</div>
-<script>
-    function confirmDelete(button) {
-        let url = button.getAttribute("data-url");
-
-        if (confirm("Are you sure you want to delete this exhibition?")) {
-            fetch(url, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert("Exhibition deleted successfully!");
-                    location.reload(); // Refresh page or redirect as needed
-                } else {
-                    alert("Failed to delete the exhibition.");
-                }
-            })
-            .catch(error => console.error("Error:", error));
-        }
-    }
-</script>
+    </nav>
+</main>
 </body>
 </html>

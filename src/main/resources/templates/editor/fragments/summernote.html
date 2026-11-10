@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- The rich text editor, in its standalone build (no Bootstrap) -->
+    <th:block th:fragment="summernote">
+        <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
+        <script>
+            // Turns #richTextEditor into the editor, loaded with the hidden content textarea
+            function startRichText() {
+                $('#richTextEditor').summernote({
+                    minHeight: 420,
+                    maxHeight: null,
+                    toolbar: [
+                        ['style', ['bold', 'italic', 'underline', 'clear']],
+                        ['font', ['strikethrough', 'superscript', 'subscript']],
+                        ['fontsize', ['fontsize']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['table', ['table']],
+                        ['insert', ['link', 'picture', 'video']],
+                        ['view', ['fullscreen', 'codeview']],
+                        ['height', ['height']]
+                    ]
+                });
+                const existing = document.querySelector("textarea[name='content']").value;
+                if (existing) {
+                    $('#richTextEditor').summernote('code', existing);
+                }
+            }
+
+            // "My Title" -> "my-title"
+            function slugify(text) {
+                return text.toLowerCase()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
+            }
+        </script>
+    </th:block>
+</head>
+</html>

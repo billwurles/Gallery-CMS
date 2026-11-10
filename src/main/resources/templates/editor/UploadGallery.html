@@ -1,186 +1,125 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="|Gallery Upload - ${page}|"></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/scripts.js}"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <title th:text="|Upload - ${page}|"></title>
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
 </head>
 <body>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page})}"></header>
 
-<nav
-        th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page}, siteName='Gallery Upload for ' + ${page})}">
-</nav>
-
-
-<div>
-    <div class="content container">
-        <h2 th:text="${message}"></h2>
-
-        <!-- Drag-and-Drop Zone -->
-        <div id="drag-and-drop-zone">
-            <p>Drag and drop images here</p>
-            <input type="file" id="file-input" multiple style="display: none;">
-            <button type="button" id="file-input-trigger">Select Files</button>
+<main class="main main-wide">
+    <div class="page-head">
+        <div>
+            <p class="crumb">Upload</p>
+            <h1 th:text="${message}"></h1>
         </div>
-
-        <!-- Preview and Metadata Form -->
-        <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{upload(pageUrl=${page})}">
-            <button id="upload-button" >Upload Images To Gallery</button>
-            <div id="preview-container"></div>
-            <input type="hidden" name="metadata" id="metadata">
-        </form>
+        <div class="page-actions">
+            <button type="submit" form="metadata-form" id="upload-button" class="btn btn-primary" disabled>Upload images</button>
+        </div>
     </div>
-</div>
+
+    <div id="drag-and-drop-zone" class="dropzone">
+        <p><strong>Drag and drop images here</strong></p>
+        <p class="hint">or</p>
+        <input type="file" id="file-input" accept="image/*" multiple hidden>
+        <button type="button" id="file-input-trigger" class="btn">Choose files</button>
+    </div>
+
+    <form id="metadata-form" method="post" enctype="multipart/form-data" th:action="@{upload(pageUrl=${page})}">
+        <div id="preview-container" class="gallery-grid"></div>
+    </form>
+</main>
 
 <script>
     const previewContainer = $('#preview-container');
-    const metadata = [];
+    const images = [];   // base64 image data, by position
 
-// Function to generate a unique ID for each image
-    function generateUniqueID() {
-        return 'xxx-xxx'.replace(/[x]/g, function() {
-            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            return chars.charAt(Math.floor(Math.random() * chars.length));
+    function randomId() {
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return 'xxx-xxx'.replace(/x/g, () => chars.charAt(Math.floor(Math.random() * chars.length)));
+    }
+
+    function addFiles(files) {
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const id = images.length;
+                images.push(e.target.result.split(',')[1]);
+                const card = $(`
+                    <div class="painting" data-id="${id}">
+                        <div class="painting-thumb"><img alt="Preview"></div>
+                        <div class="painting-fields">
+                            <label class="field"><span>Title</span><input type="text" class="f-title"></label>
+                            <div class="field-pair">
+                                <label class="field"><span>Dimensions</span><input type="text" class="f-dimensions"></label>
+                                <label class="field"><span>Medium</span><input type="text" class="f-medium"></label>
+                            </div>
+                            <div class="painting-foot">
+                                <label class="check"><input type="checkbox" class="f-sold"> Sold</label>
+                            </div>
+                        </div>
+                    </div>`);
+                card.find('img').attr('src', e.target.result);
+                card.find('.f-title').val(file.name.replace(/\.[^/.]+$/, ''));
+                previewContainer.append(card);
+                $('#upload-button').prop('disabled', false);
+            };
+            reader.readAsDataURL(file);
         });
     }
 
-    // Trigger file input when 'Select Files' button is clicked
     $('#file-input-trigger').on('click', () => $('#file-input').click());
-
-    // Handle file input change (when files are selected via dialog)
     $('#file-input').on('change', function () {
-        const files = this.files;
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const fileId = metadata.length;
-const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename without extension
-                previewContainer.append(`
-                    <div>
-                        <img src="${e.target.result}" alt="Preview">
-    <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title" value="${fileNameWithoutExt}">
-                        <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
-                        <input type="text" placeholder="Medium" data-id="${fileId}" class="metadata-medium">
-                        <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
-                    </div>
-                `);
-                metadata.push({
-                    imageData: e.target.result.split(',')[1], // Save Base64-encoded image data
-title: fileNameWithoutExt, // Default title is filename without extension
-                    dimensions: "",
-                    medium: "",
-                    sold: false
-                });
-            };
-            reader.readAsDataURL(file);
+        addFiles(this.files);
+    });
+
+    $('#drag-and-drop-zone')
+        .on('dragover', function (e) {
+            e.preventDefault();
+            $(this).addClass('over');
+        })
+        .on('dragleave', function () {
+            $(this).removeClass('over');
+        })
+        .on('drop', function (e) {
+            e.preventDefault();
+            $(this).removeClass('over');
+            addFiles(e.originalEvent.dataTransfer.files);
         });
-    });
 
-    // Drag over handler to prevent default behavior (browser will try to open the image)
-    $('#drag-and-drop-zone').on('dragover', function (e) {
-        e.preventDefault();
-        $(this).css('background-color', '#f0f0f0'); // Optional: change background color when dragging over
-    });
-
-    // Drag leave handler to reset the background color
-    $('#drag-and-drop-zone').on('dragleave', function () {
-        $(this).css('background-color', ''); // Reset background color when drag leaves
-    });
-
-    // Handle drop event for the drag-and-drop zone
-    $('#drag-and-drop-zone').on('drop', function (e) {
-        e.preventDefault();  // Prevent the browser from trying to open the image
-        $(this).css('background-color', ''); // Reset background color when the files are dropped
-
-        const files = e.originalEvent.dataTransfer.files;
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const fileId = metadata.length;
-const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ''); // Get filename without extension
-                previewContainer.append(`
-                    <div>
-                        <img src="${e.target.result}" alt="Preview">
-    <input type="text" placeholder="Title" data-id="${fileId}" class="metadata-title" value="${fileNameWithoutExt}">
-                        <input type="text" placeholder="Dimensions" data-id="${fileId}" class="metadata-dimensions">
-                        <input type="text" placeholder="Medium" data-id="${fileId}" class="metadata-medium">
-                        <label>Sold <input type="checkbox" data-id="${fileId}" class="metadata-sold"></label>
-                    </div>
-                `);
-
-metadata.push({
-imageData: e.target.result.split(',')[1], // Save Base64-encoded image data
-title: fileNameWithoutExt, // Default title is filename without extension
-dimensions: "",
-medium: "",
-sold: false
-});
-            };
-            reader.readAsDataURL(file);
-        });
-    });
-
-    // Submit the form and send the data using AJAX
     $('#metadata-form').on('submit', function (e) {
         e.preventDefault();
-        
-        // Disable the upload button once it's clicked
-        const uploadButton = $('#upload-button');
-        uploadButton.prop('disabled', true);
+        const uploadButton = $('#upload-button').prop('disabled', true).text('Uploading…');
 
-        // Collect metadata (title, dimensions, medium, sold)
-        $('.metadata-title').each(function () {
-            const id = $(this).data('id');
-            metadata[id].title = $(this).val();
-        });
-        $('.metadata-dimensions').each(function () {
-            const id = $(this).data('id');
-            metadata[id].dimensions = $(this).val();
-        });
-        $('.metadata-medium').each(function () {
-            const id = $(this).data('id');
-            metadata[id].medium = $(this).val();
-        });
-        $('.metadata-sold').each(function () {
-            const id = $(this).data('id');
-            metadata[id].sold = $(this).is(':checked');
-        });
-
-        // Prepare the JSON payload
         const payload = {
-        images: metadata.map(meta => {
-        const uniqueID = generateUniqueID();
-        return {
-            title: meta.title,
-            filename: `${meta.title.replace(/[^a-zA-Z0-9]/g, '_')}_${uniqueID}.jpg`, // Add unique ID to the filename
-            dimensions: meta.dimensions,
-            medium: meta.medium,
-            sold: meta.sold,
-            order: "", // Add order if necessary
-            imageData: meta.imageData // Base64 image data
-        };
-            })
+            images: previewContainer.find('.painting').map(function () {
+                const card = $(this);
+                const title = card.find('.f-title').val();
+                return {
+                    title: title,
+                    filename: `${title.replace(/[^a-zA-Z0-9]/g, '_')}_${randomId()}.jpg`,
+                    dimensions: card.find('.f-dimensions').val(),
+                    medium: card.find('.f-medium').val(),
+                    sold: card.find('.f-sold').is(':checked'),
+                    order: "",
+                    imageData: images[card.data('id')]
+                };
+            }).get()
         };
 
-        // Send the JSON payload via AJAX
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(payload),
             success: function () {
-                alert('Gallery and metadata saved successfully!');
-                let currentPath = window.location.pathname;
-                let parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-                window.location.href = parentPath || "/";
+                flash('Images uploaded');
+                const path = window.location.pathname;
+                window.location.href = path.substring(0, path.lastIndexOf('/')) || "/";
             },
             error: function () {
-                alert('Error saving gallery.');
-                // Re-enable the upload button
-                uploadButton.prop('disabled', false);
+                toast('The images could not be uploaded', 'error');
+                uploadButton.prop('disabled', false).text('Upload images');
             }
         });
     });

@@ -2,16 +2,21 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Not found</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/scripts.js}"></script>
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
 </head>
 <body>
-<nav th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='')}"></nav>
-<div class="content container">
-    <h1>Not found</h1>
-    <p th:text="|${message}.|"></p>
-    <p><a th:href="@{/}" class="upload-link">Back to the editor home</a></p>
-</div>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='')}"></header>
+
+<main class="main">
+    <div class="page-head">
+        <div>
+            <h1>Not found</h1>
+            <p class="sub" th:text="|${message}. It may have been renamed or deleted.|"></p>
+        </div>
+        <div class="page-actions">
+            <a th:href="@{/}" class="btn btn-primary">Back to the editor home</a>
+        </div>
+    </div>
+</main>
 </body>
 </html>

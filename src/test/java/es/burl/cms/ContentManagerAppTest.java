@@ -159,4 +159,24 @@ class ContentManagerAppTest {
 
 		assertThat(body).contains("The page no-such-page was not found");
 	}
+
+	@org.junit.jupiter.params.ParameterizedTest
+	@org.junit.jupiter.params.provider.ValueSource(strings = {"/", "/page", "/page/about", "/page/work/gallery",
+			"/page/work/gallery/upload", "/upload", "/exhibitions", "/exhibitions/new", "/exhibitions/spring-show"})
+	void editorPagesUseTheEditorStylesheetOnly(String path) throws Exception {
+		String body = mvc.perform(get(path))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		assertThat(body)
+				.contains("/css/editor.css", "class=\"sidebar\"", "Test Site")
+				.doesNotContain("bootstrap", "jquery-ui.min.css", "/css/style.css");
+	}
+
+	@Test
+	void aNewExhibitionSavesToARealAddress() throws Exception {
+		String form = mvc.perform(get("/exhibitions/new")).andReturn().getResponse().getContentAsString();
+
+		assertThat(form).contains("action=\"/exhibitions/new/save\"");
+	}
 }

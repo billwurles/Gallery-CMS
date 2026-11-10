@@ -2,170 +2,85 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title th:text="|Exhibition Editor - ${exhibition.title}|"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <script th:src="@{/js/scripts.js}"></script>
-
-    <!-- jQuery -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
-    <!-- jQuery UI -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
-
-    <!-- jQuery UI CSS for styling -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
-
-    <!-- jQuery UI Timepicker Addon -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css">
-
-    <!-- summernote: include libraries(bootstrap) -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-
-    <!-- include summernote css/js -->
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote.min.js"></script>
-
-    <script th:inline="javascript">
-        document.addEventListener("DOMContentLoaded", function () {
-            // Initialize Summernote editor
-            $('#richTextEditor').summernote({
-            minHeight: 500,  // Minimum height of the editor
-            maxHeight: null,
-                    toolbar: [
-                        ['style', ['bold', 'italic', 'underline', 'clear']],
-                        ['font', ['strikethrough', 'superscript', 'subscript']],
-                        ['fontsize', ['fontsize']],
-                        ['color', ['color']],
-                        ['para', ['ul', 'ol', 'paragraph']],
-                        ['table', ['table']],
-                        ['insert', ['link', 'picture', 'video']],
-                        ['view', ['fullscreen', 'codeview']],
-                        ['height', ['height']]
-                    ]
-            });
-
-            // Populate Summernote editor with existing content
-            var existingContent = document.querySelector("textarea[name='content']").value;
-            if (existingContent) {
-                $('#richTextEditor').summernote('code', existingContent);
-            }
-
-            // Function to generate URL from Title
-            function generateUrl() {
-                var title = document.getElementById('title').value; // Get the title value
-                var date = document.getElementById('date');
-                date = date.value.replace('/', '-').replace(':', '-');
-                var title = date + '-' + title;
-                var url = title
-                    .toLowerCase() // Convert to lowercase
-                    .replace(/[^\w\s-]/g, '') // Remove all non-word characters (except spaces and hyphens)
-                    .replace(/\s+/g, '-') // Replace spaces with hyphens
-                    .replace(/-+/g, '-'); // Replace multiple hyphens with a single hyphen
-
-                // Set the generated url into the URL field
-                document.getElementById('url').value = url;
-            }
-
-            // Add event listener to title input field
-            document.getElementById('title').addEventListener('input', generateUrl);
-
-            $("#date").on('change', function() {
-                generateUrl();  // Run the generateUrl function when the date is picked
-            });
-
-            // Date and Time Picker for the date field
-            $("#date").datetimepicker({
-                dateFormat: "yy-mm-dd",
-                timeFormat: "HH:mm", // 24-hour format without seconds
-                controlType: 'select',
-                oneLine: true
-            });
-
-
-            // Handle form submission to send JSON
-            document.querySelector("form").addEventListener("submit", function (event) {
-                event.preventDefault(); // Prevent the default form submission
-
-                // Gather form data (url, title, date, and content)
-                    var exhibition = {
-                        url: document.getElementById("url").value,
-                        title: document.getElementById("title").value,
-                        date: document.getElementById("date").value.replace(" ", "T"),
-                        content: $('#richTextEditor').summernote('code')
-                    };
-
-                    // Send data as JSON via AJAX
-                    fetch(this.action, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(exhibition)
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        } else {
-                            throw new Error('Failed to save exhibition');
-                        }
-                    })
-                    .then(data => {
-                        alert("Exhibition saved successfully!");
-                        console.log(data); // Log the server's response
-                        // redirect or reload page after successful submission
-                        window.location.href = /*[[@{/exhibitions}]]*/ "/exhibitions";  // Or change this URL as needed
-                    })
-                    .catch(error => {
-                        alert("An error occurred: " + error.message);
-                    });
-                });
-            });
-    </script>
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
+    <th:block th:replace="~{editor/fragments/summernote :: summernote}"/>
 </head>
 <body>
-<nav
-        th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='exhibitions', siteName='Exhibition Editor')}">
-</nav>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='exhibitions')}"></header>
 
-<div class="content container">
-    <h1 th:text="|${name}|"></h1>
-    <div th:if="${message}" style="color: green;">
-        <p th:text="${message}"></p>
+<main class="main">
+    <div class="page-head">
+        <div>
+            <p class="crumb"><a th:href="@{/exhibitions}">Exhibitions</a></p>
+            <h1 th:text="${newExhibition} ? 'New exhibition' : ${exhibition.title}"></h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn" th:href="@{/exhibitions}">Cancel</a>
+            <button type="submit" form="exhibitionForm" class="btn btn-primary">Save exhibition</button>
+        </div>
     </div>
 
-    <h1>Edit Exhibition:</h1>
-    <form th:action="${newExhibition} ? @{/exhibition/save} : @{/exhibitions/{url}/save(url=${exhibition.url})}"
+    <form id="exhibitionForm" class="card"
+          th:action="${newExhibition} ? @{/exhibitions/new/save} : @{/exhibitions/{url}/save(url=${exhibition.url})}"
           th:object="${exhibition}"
           method="post">
-
-        <!-- Exhibition title -->
-        <label for="title">Title:</label>
-        <input id="title" type="text" th:field="*{title}" placeholder="Enter the title" required />
-        <br>
-
-        <!-- Exhibition date -->
-        <label for="date">Date & Time:</label>
-        <input id="date" type="text"
-               th:value="*{#dates.format(date, 'yyyy-MM-dd HH:mm')}"
-               placeholder="yyyy-MM-dd HH:mm" required />
-        <br>
-
-        <!-- Exhibtion url -->
-        <label for="url">URL:</label>
-        <input id="url" type="text" th:field="*{url}" required readonly>
-        <br>
-
-        <label for="richTextEditor">Content:</label>
-        <div id="richTextEditor">
-            <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
+        <div class="field-pair">
+            <label class="field">
+                <span>Title</span>
+                <input id="title" type="text" th:field="*{title}" placeholder="Exhibition title" required/>
+            </label>
+            <label class="field">
+                <span>Date and time</span>
+                <input id="date" type="datetime-local"
+                       th:value="*{#dates.format(date, 'yyyy-MM-dd''T''HH:mm')}" required/>
+            </label>
         </div>
-        <br>
+        <label class="field">
+            <span>Address <em>(made from the date and title)</em></span>
+            <input id="url" type="text" th:field="*{url}" required readonly>
+        </label>
 
-        <!-- Submit Button -->
-        <button type="submit">Save</button>
+        <div class="field">
+            <span>Content</span>
+            <div id="richTextEditor">
+                <textarea name="content" th:field="*{content}" style="display:none;"></textarea>
+            </div>
+        </div>
     </form>
-</div>
+</main>
+
+<script th:inline="javascript">
+    $(function () {
+        startRichText();
+
+        function generateUrl() {
+            const date = $('#date').val().replace('T', ' ').replace(':', '-');
+            $('#url').val(slugify(date + '-' + $('#title').val()));
+        }
+        $('#title').on('input', generateUrl);
+        $('#date').on('change', generateUrl);
+
+        $('#exhibitionForm').on('submit', function (event) {
+            event.preventDefault();
+            const exhibition = {
+                url: $('#url').val(),
+                title: $('#title').val(),
+                date: $('#date').val(),
+                content: $('#richTextEditor').summernote('code')
+            };
+            fetch(this.action, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(exhibition)
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error();
+                    flash("Exhibition saved");
+                    window.location.href = /*[[@{/exhibitions}]]*/ "/exhibitions";
+                })
+                .catch(() => toast("The exhibition could not be saved", "error"));
+        });
+    });
+</script>
 </body>
 </html>
