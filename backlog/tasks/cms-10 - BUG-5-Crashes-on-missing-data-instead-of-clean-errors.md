@@ -1,10 +1,10 @@
 ---
 id: CMS-10
 title: 'BUG-5: Crashes on missing data instead of clean errors'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T23:39:00Z'
+updated_date: '2026-11-10T09:50:00Z'
 labels:
   - bug
 dependencies: []
@@ -27,6 +27,13 @@ Add a real not-found page and handle each case; when no backup can be read, star
 instead of failing.
 <!-- SECTION:DESCRIPTION:END -->
 
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Unknown pages, galleries and exhibitions show a not-found page instead of a 500
+- [x] #2 Publishing works with no home image, no exhibitions, and paintings without image files
+- [x] #3 No list or sort silently drops data
+<!-- AC:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -45,4 +52,24 @@ Add a regression test to the TEST-1 suite with each fix.
 
 Commits:
 - `b7da79e` Fix saving on a fresh install and publishing with no home image (2026-11-09)
+
+2026-11-10: Each case from the description and the TEST-1 notes, with its fix:
+- null Site on an empty backup folder, and publishing with no home image: fixed earlier (TEST-1).
+- `editPage` with a null gallery: uses `hasContent()` / `hasGallery()`, which are null-safe.
+- `editGallery` logging before its null check, `saveContent` NPE, the missing "404" view: controllers throw `NotFoundException`, and `EditorAdvice` renders `editor/NotFound` with a 404 status. Unknown items on save or delete return 404 and back up nothing (gallery save, painting delete, page delete, exhibition delete). `Site.removePage` / `removeExhibition` no longer NPE on an unknown URL.
+- `copyPageGallery` NPE with no gallery folder: copies each painting's file if it exists and logs the rest.
+- `getExhibitionsPage` past the end: returns an empty list.
+- no `exhibitions/index.html` with no exhibitions: always builds at least one page.
+- `sortPaintingsByAspectRatio` dropping paintings: missing or unreadable files sort last instead of vanishing.
+Also found and fixed: renaming an exhibition (title or date change) left the old entry beside the new one, and `copyClassPathResource` never closed its streams. Each fix has a regression test (controller tests, ThymeleafSiteBuilderTest, ExhibitionRepoTest, FilesystemTest, plus a full-app test that the not-found page renders).
+
+Commits:
+- `372274b` BUG-3, BUG-5: build the site in a staging folder and swap it in (2026-11-10)
+- `2bb145b` BUG-5, BUG-7: 404 page for missing items, move galleries on rename (2026-11-10)
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Missing data now gives clean errors: an editor not-found page with a 404 status, 404 responses for API calls on unknown items, and a publish that copes with missing folders, files and exhibitions. No path silently drops paintings any more.
+<!-- SECTION:FINAL_SUMMARY:END -->

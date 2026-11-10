@@ -1,9 +1,10 @@
 ---
 id: CMS-9
 title: 'BUG-4: Gallery editor: Delete submits the form; fields keyed by order'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
+updated_date: '2026-11-10T09:50:00Z'
 labels:
   - bug
   - editor
@@ -27,6 +28,21 @@ In `EditGallery.html`:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Deleting a painting doesn't trigger a save
-- [ ] #2 Editing metadata after reorder/upload/delete saves to the right painting
+- [x] #1 Deleting a painting doesn't trigger a save
+- [x] #2 Editing metadata after reorder/upload/delete saves to the right painting
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-10: Delete is `type="button"`. Each card's fields carry classes (f-title, f-dimensions, f-medium, f-sold) and are read from inside that card, keyed by its filename, with the order taken from the cards' positions. Also: cancelling the save confirm used to post the form anyway (preventDefault only ran on OK). The unused confirmSave is gone. Checked in a browser on a copy of the live data: a cancelled Delete sent no request, and after moving the first painting to the end and renaming it, one save put it last with the new title and every other title unchanged.
+
+Commits:
+- `b8b21e8` BUG-4: gallery editor saves each field to the right painting (2026-11-10)
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The gallery editor's Delete no longer submits the form, and each painting's fields are saved to that painting whatever the order. The editor UI touch-up keeps the same approach.
+<!-- SECTION:FINAL_SUMMARY:END -->
