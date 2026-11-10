@@ -357,4 +357,22 @@ class ThymeleafSiteBuilderTest {
 			assertThat(htmlRoot.resolve(link.substring(1)).resolve("index.html")).as(link).exists();
 		}
 	}
+
+	@Test
+	void theGridGetsSmallCopiesAndTheFullSizeViewLargeOnes() throws IOException {
+		WebImagesTest.jpeg(galleryRoot.resolve("work/a.jpg"), 4000, 2000, 0);   // big upload
+		WebImagesTest.jpeg(galleryRoot.resolve("work/b.jpg"), 800, 600, 0);     // already small
+		WebImagesTest.jpeg(galleryRoot.resolve("home.jpg"), 3200, 1600, 0);
+
+		builder.buildSite(site);
+
+		assertThat(WebImagesTest.size(htmlRoot.resolve("work/images/thumbs/a.jpg"))).containsExactly(900, 450);
+		assertThat(WebImagesTest.size(htmlRoot.resolve("work/images/a.jpg"))).containsExactly(2000, 1000);
+		assertThat(WebImagesTest.size(htmlRoot.resolve("work/images/thumbs/b.jpg"))).containsExactly(800, 600);
+		assertThat(htmlRoot.resolve("work/images/b.jpg")).hasSameBinaryContentAs(galleryRoot.resolve("work/b.jpg"));
+		assertThat(WebImagesTest.size(htmlRoot.resolve("home.jpg"))).containsExactly(2000, 1000);
+
+		String work = read("work/index.html");
+		assertThat(work).contains("src=\"images/thumbs/a.jpg\"", "data-src=\"images/a.jpg\"");
+	}
 }

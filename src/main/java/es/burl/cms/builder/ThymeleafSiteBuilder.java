@@ -38,6 +38,14 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	private String assetVersion;
 
 	static final List<String> STATIC_INCLUDES = List.of("style.css", "gallery.js", "error.js");
+
+	/** Longest side of a gallery grid image: grid columns are up to ~460 CSS px, so sharp on 2x screens. */
+	static final int THUMB_SIZE = 900;
+	/** Longest side of the full-size view's image and the home image. */
+	static final int LARGE_SIZE = 2000;
+
+	/** Resized copies of gallery images, cached next to the gallery folder by content hash. */
+	private final WebImages webImages;
 	Path galleryRoot;
 	String staticRoot;
 	SpringTemplateEngine engine;
@@ -56,6 +64,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		this.staticRoot = staticRoot;
 		this.postsPerPage = postsPerPage;
 		this.engine = springTemplateEngine;
+		this.webImages = new WebImages(galleryRoot.toAbsolutePath().normalize().resolveSibling("web-images"));
 		this.engine.setLinkBuilder(new ServerlessLinkBuilder(basePath));
 		String base = ServerlessLinkBuilder.normalise(basePath);
 		this.homeUrl = base.equals("/") ? "/" : base + "/";
@@ -75,6 +84,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		deleteTree(staging);
 		Files.createDirectories(staging);
 		out = staging;
+		webImages.startBuild();
 		try {
 			copyStaticIncludes();
 
@@ -95,6 +105,11 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		}
 
 		swapIn(staging);
+		try {
+			webImages.pruneUnused();
+		} catch (IOException e) {
+			log.warn("Couldn't tidy the resized image cache", e); // the site is published; this is housekeeping
+		}
 		log.info("Site rendering complete");
 	}
 
@@ -169,8 +184,8 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		String homeImage = site.getHomeImage() == null ? "" : site.getHomeImage().getFilename();
 		File file = galleryRoot.resolve(homeImage).toFile();
 		if (!homeImage.isBlank() && file.isFile()) {
-			log.debug("Copying home image");
-			Filesystem.copyImage(homeImage, file, out);
+			log.debug("Publishing home image");
+			webImages.publish(file.toPath(), LARGE_SIZE, out.resolve(homeImage));
 		} else {
 			log.warn("No home image to publish");
 		}
@@ -240,11 +255,13 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 			Path cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl());
 			Files.createDirectories(imageDir);
 
-			// Copy each painting's image; one whose file is missing is left out of the published gallery folder
+			// Each painting gets images/<file> for the full-size view and images/thumbs/<file> for the grid;
+			// one whose file is missing is left out of the published gallery folder
 			for (Painting painting : page.getGallery().getGallery().values()) {
 				Path file = cmsImageDir.resolve(painting.getFilename());
 				if (Files.isRegularFile(file)) {
-					Filesystem.copyImage(painting.getFilename(), file.toFile(), imageDir);
+					webImages.publish(file, LARGE_SIZE, imageDir.resolve(painting.getFilename()));
+					webImages.publish(file, THUMB_SIZE, imageDir.resolve("thumbs").resolve(painting.getFilename()));
 				} else {
 					log.warn("Painting {} on page {} has no image file", painting.getFilename(), page.getMenuItem().getUrl());
 				}

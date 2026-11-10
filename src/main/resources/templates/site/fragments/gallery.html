@@ -15,7 +15,8 @@
                          th:data-medium="${painting.medium}"
                          th:data-sold="${painting.sold ? 'Sold' : 'Available'}"
                          th:aria-label="|View ${painting.title}|">
-                        <img th:src="@{'images/' + ${painting.filename}}"
+                        <!-- The grid loads a small copy; the full-size view loads images/<file> -->
+                        <img th:src="@{'images/thumbs/' + ${painting.filename}}"
                              th:alt="${painting.title}" loading="lazy" />
                         <p class="caption" th:text="${painting.title}"></p>
                     </div>
