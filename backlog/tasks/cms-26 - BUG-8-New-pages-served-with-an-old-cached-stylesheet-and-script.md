@@ -4,7 +4,7 @@ title: 'BUG-8: New pages served with an old cached stylesheet and script'
 status: In Progress
 assignee: []
 created_date: '2026-11-10T10:13:00Z'
-updated_date: '2026-11-10T10:13:00Z'
+updated_date: '2026-11-10T10:19:00Z'
 labels:
   - bug
   - site
@@ -36,4 +36,9 @@ Cause: the published HTML is sent `no-store`, but nginx's `.css` and `.js` locat
 
 Commits:
 - `d01c603` BUG-8: stop browsers pairing new pages with an old stylesheet (2026-11-10)
+
+2026-11-10: the editor had the same problem. Will saw the old Publish redirect to dev.burl.es/ and the old drag handle even after a force reload, which bypasses only the browser cache, so Cloudflare's edge was serving the old files. application.properties turns on Spring's content-version strategy for all static files, so links become /css/editor-<md5>.css and /js/scripts-<md5>.js (prefix-aware behind the proxy), and sets Cache-Control: no-cache. ContentManagerAppTest checks both versioned links under X-Forwarded-Prefix, that they resolve, and the header.
+
+Commits:
+- `9d6e426` BUG-8: version the editor's stylesheet and script links too (2026-11-10)
 <!-- SECTION:NOTES:END -->
