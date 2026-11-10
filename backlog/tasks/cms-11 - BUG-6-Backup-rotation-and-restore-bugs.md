@@ -4,7 +4,7 @@ title: 'BUG-6: Backup rotation and restore bugs'
 status: Done
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-10T01:24:00Z'
+updated_date: '2026-11-10T01:43:00Z'
 labels:
   - bug
   - data
@@ -51,6 +51,11 @@ Not done here, tracked elsewhere: every edit still writes a full backup synchron
 Commits:
 - `b7da79e` Fix saving on a fresh install and publishing with no home image (2026-11-09)
 - `d49f156` BACKUP-2, BACKUP-3, BUG-6: version images with backups and stop losing them (2026-11-10)
+
+2026-11-10, found on the first deploy: backups written through `Files.createTempFile` came out mode 600 and root-owned, where older ones are 644, so nothing outside the container could read them. Fixed by writing to a named temp file; regression test JsonBackupTest.backupsGetTheSamePermissionsAsAnyOtherNewFile. One backup written before the fix (`1-published-013813...`) is still 600 on the server.
+
+Commits:
+- `497d5e7` BUG-6: keep new backups readable (2026-11-10)
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
