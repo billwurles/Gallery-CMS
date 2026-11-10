@@ -55,14 +55,35 @@ class EditorControllerTest {
 	}
 
 	@Test
-	void publishBacksUpThenBuilds() throws Exception {
+	void publishBuildsThenBacksUp() throws Exception {
 		mvc.perform(get("/save"))
 				.andExpect(status().isOk())
-				.andExpect(content().string("Site saved"));
+				.andExpect(content().string("Site published"));
 
 		var order = inOrder(publisher, builder);
-		order.verify(publisher).publish(site);
 		order.verify(builder).buildSite(site);
+		order.verify(publisher).publish(site);
+	}
+
+	@Test
+	void aFailedBuildIsReportedAndNothingIsMarkedPublished() throws Exception {
+		doThrow(new java.io.IOException("disk full")).when(builder).buildSite(site);
+
+		mvc.perform(get("/save"))
+				.andExpect(status().isInternalServerError())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("live site is unchanged")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("disk full")));
+
+		verify(publisher, never()).publish(any());
+	}
+
+	@Test
+	void aFailedPublishedBackupIsReported() throws Exception {
+		doThrow(new RuntimeException("backup folder missing")).when(publisher).publish(site);
+
+		mvc.perform(get("/save"))
+				.andExpect(status().isInternalServerError())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("backup folder missing")));
 	}
 
 	@Test

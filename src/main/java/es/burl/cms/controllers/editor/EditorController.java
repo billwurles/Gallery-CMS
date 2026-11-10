@@ -57,18 +57,34 @@ public class EditorController {
 	}
 
 	//TODO: BUG: When editing a painting filename, the filename is immediately changed, but if no save occurs a later restart forgets that change - save filename changes until save?
-	@GetMapping("save") //TODO: Give some feedback about success to the user
-	public ResponseEntity<?> saveSiteToJSON(Model model) {
+	/**
+	 * Publishes the site: builds it (swapped in only if the whole build succeeds), then records the published
+	 * backup. Errors come back as a 500 with a message the editor shows.
+	 */
+	@GetMapping("save")
+	public ResponseEntity<String> saveSiteToJSON() {
+		try {
+			siteBuilder.buildSite(site);
+		} catch (IOException | RuntimeException e) {
+			log.error("Publishing failed while building the site", e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("The site could not be built, so the live site is unchanged (" + describe(e) + ")");
+		}
 		try {
 			publishService.publish(site);
-			siteBuilder.buildSite(site);
-
 		} catch (RuntimeException e) {
-			ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred saving site");
-		} catch (IOException e) {
-			ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred building site");
+			log.error("The site was published but its backup failed", e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("The site is live, but saving its published backup failed (" + describe(e) + ")");
 		}
-		return ResponseEntity.ok("Site saved");
+		return ResponseEntity.ok("Site published");
+	}
+
+	private static String describe(Throwable e) {
+		Throwable root = e;
+		while (root.getCause() != null && root.getCause() != root) root = root.getCause();
+		String message = root.getMessage();
+		return root.getClass().getSimpleName() + (message == null || message.isBlank() ? "" : ": " + message);
 	}
 
 	@GetMapping("/image/{filename}")
