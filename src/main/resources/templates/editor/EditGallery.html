@@ -39,20 +39,19 @@
                     <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.menuItem.url},filename=${painting.filename})}"
                              th:alt="${painting.title}" class="gallery-image" />
                         <div class="gallery-metadata">
-                        <label th:for="'title-' + ${painting.order}">Title:</label>
-                            <input type="text" th:id="'title-' + ${painting.order}" th:value="${painting.title}" class="metadata-input" />
+                        <label th:for="|title-${painting.filename}|">Title:</label>
+                            <input type="text" th:id="|title-${painting.filename}|" th:value="${painting.title}" class="metadata-input f-title" />
 
-                        <label th:for="'dimensions-' + ${painting.order}">Dimensions:</label>
-                            <input type="text" th:id="'dimensions-' + ${painting.order}" th:value="${painting.dimensions}" class="metadata-input" />
+                        <label th:for="|dimensions-${painting.filename}|">Dimensions:</label>
+                            <input type="text" th:id="|dimensions-${painting.filename}|" th:value="${painting.dimensions}" class="metadata-input f-dimensions" />
 
-                        <label th:for="'medium-' + ${painting.order}">Medium:</label>
-                            <input type="text" th:id="'medium-' + ${painting.order}" th:value="${painting.medium}" class="metadata-input" />
+                        <label th:for="|medium-${painting.filename}|">Medium:</label>
+                            <input type="text" th:id="|medium-${painting.filename}|" th:value="${painting.medium}" class="metadata-input f-medium" />
 
-                        <label th:for="'sold-' + ${painting.order}">Sold:</label>
-                            <input type="checkbox" th:id="'sold-' + ${painting.order}" th:checked="${painting.sold}" class="metadata-checkbox" />
+                        <label th:for="|sold-${painting.filename}|">Sold:</label>
+                            <input type="checkbox" th:id="|sold-${painting.filename}|" th:checked="${painting.sold}" class="metadata-checkbox f-sold" />
 
-                        <button class="action-button delete-button"
-                            th:id="'delete-' + ${painting.order}"
+                        <button type="button" class="action-button delete-button"
                             th:data-url="@{/page/{url}/gallery/image/{filename}(url=${page.url}, filename=${painting.filename})}" onclick="confirmDelete(this)">
                             Delete
                         </button>
@@ -66,27 +65,6 @@
 </div>
 
 <script>
-    function confirmSave(button) {
-        let url = button.getAttribute("data-url");
-
-        if (confirm("Are you sure you want to save this gallery?")) {
-            fetch(url, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert("Painting deleted successfully!");
-                    location.reload(); // Refresh page or redirect as needed
-                } else {
-                    alert("Failed to delete the painting.");
-                }
-            })
-            .catch(error => console.error("Error:", error));
-        }
-    }
     function confirmDelete(button) {
         let url = button.getAttribute("data-url");
 
@@ -123,26 +101,24 @@
 
         // Serialize the gallery data before form submission
         $("#galleryForm").on("submit", function (event) {
+            event.preventDefault(); // always: a plain form post isn't something the server accepts
             if (confirm("Are you sure you want to save this gallery?")) {
-                event.preventDefault(); // Prevent the default form submission
 
                 const galleryData = {
                     gallery: {}
                 };
 
-                // Loop through each image and create the gallery data object
-                $("#image-list li").each(function () {
-                    const filename = $(this).data("id");
-                    const order = $(this).data("order");
-
-                    // Gather the painting data from the input fields using painting.order
+                // Read each painting's fields from inside its own card, keyed by filename, in the order shown
+                $("#image-list li").each(function (index) {
+                    const card = $(this);
+                    const filename = card.data("id");
                     galleryData.gallery[filename] = {
-                        title: $("#title-" + $(this).find("input[id^='title-']").attr("id").split('-')[1]).val(),
-                        filename: filename, // Add the filename
-                        dimensions: $("#dimensions-" + $(this).find("input[id^='dimensions-']").attr("id").split('-')[1]).val(),
-                        medium: $("#medium-" + $(this).find("input[id^='medium-']").attr("id").split('-')[1]).val(),
-                        sold: $("#sold-" + $(this).find("input[id^='sold-']").attr("id").split('-')[1]).prop("checked"),
-                        order: order // Get the updated order from the data-order attribute
+                        title: card.find(".f-title").val(),
+                        filename: filename,
+                        dimensions: card.find(".f-dimensions").val(),
+                        medium: card.find(".f-medium").val(),
+                        sold: card.find(".f-sold").prop("checked"),
+                        order: index + 1
                     };
                 });
 
