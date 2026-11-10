@@ -169,7 +169,7 @@ class ContentManagerAppTest {
 				.andReturn().getResponse().getContentAsString();
 
 		assertThat(body)
-				.contains("/css/editor.css", "class=\"sidebar\"", "Test Site")
+				.containsPattern("/css/editor-[0-9a-f]{32}\\.css").contains("class=\"sidebar\"", "Test Site")
 				.doesNotContain("bootstrap", "jquery-ui.min.css", "/css/style.css");
 	}
 
@@ -178,5 +178,21 @@ class ContentManagerAppTest {
 		String form = mvc.perform(get("/exhibitions/new")).andReturn().getResponse().getContentAsString();
 
 		assertThat(form).contains("action=\"/exhibitions/new/save\"");
+	}
+
+	@Test
+	void editorStylesheetAndScriptLinksCarryAContentHash() throws Exception {
+		String home = mvc.perform(get("/").header("X-Forwarded-Prefix", "/gallery-cms-editor"))
+				.andReturn().getResponse().getContentAsString();
+
+		java.util.regex.Matcher css = java.util.regex.Pattern.compile("href=\"/gallery-cms-editor(/css/editor-[0-9a-f]{32}\\.css)\"").matcher(home);
+		java.util.regex.Matcher js = java.util.regex.Pattern.compile("src=\"/gallery-cms-editor(/js/scripts-[0-9a-f]{32}\\.js)\"").matcher(home);
+		assertThat(css.find()).as("versioned stylesheet link in %s", home).isTrue();
+		assertThat(js.find()).as("versioned script link").isTrue();
+
+		var response = mvc.perform(get(js.group(1))).andExpect(status().isOk()).andReturn().getResponse();
+		assertThat(response.getContentAsString()).contains("function confirmSave");
+		assertThat(response.getHeader("Cache-Control")).contains("no-cache");
+		mvc.perform(get(css.group(1))).andExpect(status().isOk());
 	}
 }
