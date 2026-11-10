@@ -14,7 +14,7 @@
 
 <div class="content container">
     <h1 class="hometitle">Exhibitions</h1>
-    <a class="action-button exhibition-button" href="/exhibitions/new">Create new exhibition post</a>
+    <a class="action-button exhibition-button" th:href="@{/exhibitions/new}">Create new exhibition post</a>
 
     <!-- Loop through the list of exhibitions -->
     <div th:each="exhibition : ${exhibitionsPage}" class="exhibition-post">

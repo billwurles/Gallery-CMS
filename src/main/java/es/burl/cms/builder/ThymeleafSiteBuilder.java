@@ -5,6 +5,7 @@ import es.burl.cms.helper.Filesystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.context.*;
@@ -29,19 +30,24 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	String staticRoot;
 	SpringTemplateEngine engine;
 	int postsPerPage;
+	String homeUrl;
 
 	@Autowired
 	public ThymeleafSiteBuilder(@Qualifier("getHtmlRoot") Path htmlRoot,
 								@Qualifier("getGalleryRoot") Path galleryRoot,
 								@Qualifier("getStaticRoot") String staticRoot,
 								@Qualifier("getPostsPerPage") int postsPerPage,
+								@Value("${site.base-path:/}") String basePath,
 								SpringTemplateEngine springTemplateEngine){
 		this.htmlRoot = htmlRoot;
 		this.galleryRoot = galleryRoot;
 		this.staticRoot = staticRoot;
 		this.postsPerPage = postsPerPage;
 		this.engine = springTemplateEngine;
-		this.engine.setLinkBuilder(new ServerlessLinkBuilder());
+		this.engine.setLinkBuilder(new ServerlessLinkBuilder(basePath));
+		String base = ServerlessLinkBuilder.normalise(basePath);
+		this.homeUrl = base.equals("/") ? "/" : base + "/";
+		log.info("Publishing with base path {}", ServerlessLinkBuilder.normalise(basePath));
 	}
 
 	@Override
@@ -51,7 +57,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 
 		copyStaticIncludes();
 
-		generateErrorPage(site, 404, "Not Found", "The page does not exist on this server, please return <a href=\"/\">home</a>");
+		generateErrorPage(site, 404, "Not Found", "The page does not exist on this server, please return <a href=\"" + homeUrl + "\">home</a>");
 
 		generateHomePage(site);
 		generatePages(site);

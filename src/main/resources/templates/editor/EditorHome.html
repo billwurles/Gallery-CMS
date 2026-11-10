@@ -22,12 +22,12 @@
         <h1 th:text="|${name}|"></h1>
         <div>
             <h2 class="hometitle">Home Image:</h2>
-            <a href="/page" class="upload-link">Create New Page</a>
+            <a th:href="@{/page}" class="upload-link">Create New Page</a>
         </div>
         <div class="image-container">
-            <img th:src="'/image/' + ${homeImage.filename}"
+            <img th:src="@{/image/{f}(f=${homeImage.filename})}"
                  th:alt="${homeImage.title}" class="home-image" />
-            <a href="/upload" class="upload-link">Upload new home image</a>
+            <a th:href="@{/upload}" class="upload-link">Upload new home image</a>
         </div>
 
         <h2 class="sorttitle">Drag to Rearrange Pages in Menu</h2>      <p id="sortmsg">Menu order saved</p>
@@ -48,7 +48,7 @@
             </li>
         </ul>
     </div>
-    <script>
+    <script th:inline="javascript">
         $("#sortmsg").fadeOut(0);
 
         function confirmDelete(button) {
@@ -85,7 +85,7 @@
 
                         // Send the order as a JSON request via AJAX
                         $.ajax({
-                            url: '/rearrange', // URL to handle the request
+                            url: /*[[@{/rearrange}]]*/ '/rearrange', // URL to handle the request
                             type: 'POST',
                         contentType: 'application/json', // Set content type to JSON
                         data: JSON.stringify(order), // Send the new order as JSON

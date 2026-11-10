@@ -14,7 +14,7 @@
             <!-- Navigation Menu -->
             <ul class="menu-items">
                 <li th:each="item : ${menuItems}" class="links">
-                    <a th:href="@{'/'+${item.url}}"
+                    <a th:href="@{'/' + ${item.url} + '/'}"
                        th:text="${item.title}"
                        th:classappend="${currentPage == item.url ? 'active' : ''}">
                     </a>
@@ -23,7 +23,7 @@
 
             <!-- Logo -->
             <h1 class="logo" th:if="${currentPage != 'home'}">
-                <a href="/" th:text="${siteName}"></a>
+                <a th:href="@{/}" th:text="${siteName}"></a>
             </h1>
         </div>
     </nav>

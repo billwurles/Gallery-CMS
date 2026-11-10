@@ -16,10 +16,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static es.burl.cms.TestSites.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -98,6 +104,38 @@ class ContentManagerAppTest {
 				.andReturn().getResponse().getContentAsString();
 
 		assertThat(html).contains("</html>").contains("About", "Work");
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"/", "/page", "/page/about", "/page/work/gallery", "/exhibitions", "/exhibitions/spring-show"})
+	void editorLinksCarryTheProxyPrefix(String url) throws Exception {
+		String html = mvc.perform(get(url).header("X-Forwarded-Prefix", "/gallery-cms-editor"))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		Matcher m = Pattern.compile("(?:href|src|action|data-url)=\"(/[^\"]*)\"").matcher(html);
+		List<String> links = new ArrayList<>();
+		while (m.find()) links.add(m.group(1));
+		assertThat(links).isNotEmpty().allMatch(l -> l.startsWith("/gallery-cms-editor/"), "starts with the prefix");
+	}
+
+	@Test
+	void editorScriptUrlsCarryTheProxyPrefix() throws Exception {
+		String home = mvc.perform(get("/").header("X-Forwarded-Prefix", "/gallery-cms-editor"))
+				.andReturn().getResponse().getContentAsString();
+
+		// Thymeleaf escapes "/" as "\/" inside inlined JavaScript strings
+		assertThat(home).contains("\"\\/gallery-cms-editor\\/rearrange\"").doesNotContain("'/rearrange'");
+	}
+
+	@Test
+	void redirectsCarryTheProxyPrefix() throws Exception {
+		mvc.perform(post("/page/about")
+						.header("X-Forwarded-Prefix", "/gallery-cms-editor")
+						.header("X-Forwarded-Proto", "https")
+						.header("X-Forwarded-Host", "dev.burl.es")
+						.param("title", "About").param("url", "about").param("content", "<p>About</p>"))
+				.andExpect(redirectedUrl("https://dev.burl.es/gallery-cms-editor/page/about"));
 	}
 
 	@Test

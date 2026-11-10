@@ -14,6 +14,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static es.burl.cms.TestSites.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +31,7 @@ class ThymeleafSiteBuilderTest {
 	Path htmlRoot;
 	Path galleryRoot;
 	ThymeleafSiteBuilder builder;
+	SpringTemplateEngine engine;
 	Site site;
 
 	private static final byte[] IMAGE = {1, 2, 3};
@@ -39,10 +45,10 @@ class ThymeleafSiteBuilderTest {
 		resolver.setPrefix("templates/");
 		resolver.setSuffix(".html");
 		resolver.setTemplateMode(TemplateMode.HTML);
-		SpringTemplateEngine engine = new SpringTemplateEngine();
+		engine = new SpringTemplateEngine();
 		engine.setTemplateResolver(resolver);
 
-		builder = new ThymeleafSiteBuilder(htmlRoot, galleryRoot, "templates/site/static/", 7, engine);
+		builder = builderWithBasePath("/");
 
 		site = twoPageSite();
 		site.setHomeImage(painting("home.jpg", 0));
@@ -51,6 +57,23 @@ class ThymeleafSiteBuilderTest {
 		Files.write(work.resolve("a.jpg"), IMAGE);
 		Files.write(work.resolve("b.jpg"), IMAGE);
 		Files.createDirectories(galleryRoot.resolve("about"));
+	}
+
+	private ThymeleafSiteBuilder builderWithBasePath(String basePath) {
+		return new ThymeleafSiteBuilder(htmlRoot, galleryRoot, "templates/site/static/", 7, basePath, engine);
+	}
+
+	/** Every root-absolute href/src in the published HTML. */
+	private List<String> rootLinks() throws IOException {
+		Pattern link = Pattern.compile("(?:href|src)=\"(/[^\"]*)\"");
+		List<String> links = new ArrayList<>();
+		try (Stream<Path> files = Files.walk(htmlRoot)) {
+			for (Path file : files.filter(f -> f.toString().endsWith(".html")).toList()) {
+				Matcher m = link.matcher(Files.readString(file));
+				while (m.find()) links.add(m.group(1));
+			}
+		}
+		return links;
 	}
 
 	private String read(String relative) throws IOException {
@@ -168,6 +191,34 @@ class ThymeleafSiteBuilderTest {
 
 		assertThat(htmlRoot.resolve("index.html")).isNotEmptyFile();
 		assertThat(htmlRoot.resolve("about/index.html")).isNotEmptyFile();
+	}
+
+	@Test
+	void linksAreRootAbsoluteByDefault() throws IOException {
+		addExhibitions(9);
+
+		builder.buildSite(site);
+
+		String home = read("index.html");
+		assertThat(home).contains("href=\"/include/style.css\"", "href=\"/about/\"", "href=\"/exhibitions/\"");
+		assertThat(read("exhibitions/index.html")).contains("href=\"/exhibitions/page-2/\"", "href=\"/exhibitions/ex-8/\"");
+	}
+
+	@Test
+	void linksCarryTheBasePathWhenServedUnderAPrefix() throws IOException {
+		addExhibitions(9);
+		builder = builderWithBasePath("/gallery-cms/");
+
+		builder.buildSite(site);
+
+		String home = read("index.html");
+		assertThat(home).contains("href=\"/gallery-cms/include/style.css\"", "href=\"/gallery-cms/about/\"",
+				"href=\"/gallery-cms/exhibitions/\"");
+		assertThat(read("about/index.html")).contains("href=\"/gallery-cms/\"");
+		String exhibitions = read("exhibitions/page-2/index.html");
+		assertThat(exhibitions).contains("href=\"/gallery-cms/exhibitions/\"", "href=\"/gallery-cms/exhibitions/ex-1/\"");
+		assertThat(read("work/index.html")).contains("src=\"/gallery-cms/include/gallery.js\"", "src=\"images/a.jpg\"");
+		assertThat(rootLinks()).isNotEmpty().allMatch(l -> l.startsWith("/gallery-cms/"));
 	}
 
 	@Test

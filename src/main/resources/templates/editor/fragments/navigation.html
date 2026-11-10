@@ -12,7 +12,7 @@
         <!-- Navigation Menu -->
         <ul class="menu-items">
             <li th:each="item : ${menuItems}" class="links">
-                <a th:href="${item.url == 'exhibitions' ? '/' + item.url : '/page/' + item.url}"
+                <a th:href="@{${item.url == 'exhibitions' ? '/' + item.url : '/page/' + item.url}}"
                    th:text="${item.title}"
                    th:classappend="${currentPage == item.url ? 'active' : ''}">
                 </a>
@@ -28,7 +28,7 @@
             </pre>
         </h1>
         <div class="action-button home-button">
-            <a href="/">Return Home</a>
+            <a th:href="@{/}">Return Home</a>
         </div>
     </div>
 </nav>

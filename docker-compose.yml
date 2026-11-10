@@ -1,19 +1,28 @@
-# Served through the developmess proxy (Traefik), behind Cloudflare Access. No host ports:
-# the proxy reaches both services over the shared "web" network.
-# Both use root-absolute links, so each has its own subdomain rather than a dev.burl.es/<path>.
+# The site and editor are on the LAN at :6500 / :6501, and behind the proxy at
+# dev.burl.es${SITE_BASE_PATH}/ (site) and dev.burl.es/gallery-cms-editor/ (editor).
+# SITE_BASE_PATH is the prefix published links are built with; set it to empty to publish for the root.
+
 services:
   nginx:
     image: nginx:1.27-alpine
+    ports:
+      - "6500:80"     # public site
+    environment:
+      SITE_BASE_PATH: ${SITE_BASE_PATH-/gallery-cms}
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
     volumes:
       - ./appdata/html_root:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    networks: [web]
+      - ./nginx.conf:/etc/nginx/templates/nginx.conf.template:ro
+    networks: [default, web]
     labels:
       traefik.enable: "true"
-      developmess.title: Gallery site
-      developmess.description: Published Gallery-CMS site
-      traefik.http.routers.gallery-cms.rule: Host(`gallery-cms.burl.es`)
+      traefik.docker.network: web
+      traefik.http.routers.gallery-cms.rule: Host(`dev.burl.es`) && (Path(`/gallery-cms`) || PathPrefix(`/gallery-cms/`))
+      # no strip: the published links carry the prefix and nginx strips it
+      traefik.http.routers.gallery-cms.middlewares: add-slash@file
       traefik.http.services.gallery-cms.loadbalancer.server.port: "80"
+      developmess.title: Gallery CMS site
+      developmess.description: Published gallery site
     restart: always
     depends_on:
       - cms
@@ -22,20 +31,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "6501:8080"   # editor
     volumes:
       - ./appdata/:/appdata/
-    networks: [web]
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SITE_BASEPATH: ${SITE_BASE_PATH-/gallery-cms}   # site.base-path
+    networks: [default, web]
     labels:
       traefik.enable: "true"
-      developmess.title: Gallery editor
-      developmess.description: Gallery-CMS editor (no login of its own; Access only)
-      traefik.http.routers.gallery-cms-edit.rule: Host(`gallery-cms-edit.burl.es`)
-      traefik.http.services.gallery-cms-edit.loadbalancer.server.port: "8080"
+      traefik.docker.network: web
+      traefik.http.routers.gallery-cms-editor.rule: Host(`dev.burl.es`) && (Path(`/gallery-cms-editor`) || PathPrefix(`/gallery-cms-editor/`))
+      traefik.http.routers.gallery-cms-editor.middlewares: add-slash@file,gallery-cms-editor-strip
+      traefik.http.middlewares.gallery-cms-editor-strip.stripprefix.prefixes: /gallery-cms-editor
+      traefik.http.services.gallery-cms-editor.loadbalancer.server.port: "8080"
+      developmess.title: Gallery CMS editor
+      developmess.description: Edit and publish the gallery site
     restart: always
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      # Behind Traefik: take scheme/host from X-Forwarded-* so redirects stay on https.
-      - SERVER_FORWARD_HEADERS_STRATEGY=native
 
 networks:
   web:

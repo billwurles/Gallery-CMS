@@ -9,7 +9,7 @@
                 <div th:each="exhibition : ${exhibitions}" class="exhibition-post">
                     <h2>
                         <!-- Link to the exhibition details -->
-                        <a th:href="@{/exhibitions/{url}(url=${exhibition.url})}" th:text="${exhibition.title}"></a>
+                        <a th:href="@{/exhibitions/{url}/(url=${exhibition.url})}" th:text="${exhibition.title}"></a>
                     </h2>
                     <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'dd/MM/yyyy')}"></p>
                     <div class="exhibition-content" th:utext="${exhibition.content}"></div>
@@ -18,7 +18,7 @@
 
                 <div class="pagination">
                     <!-- Previous Button -->
-                    <a th:href="${exhibitionPage - 1 == 1 ? '/exhibitions' : '/exhibitions/page-' + (exhibitionPage - 1)}"
+                    <a th:href="@{${exhibitionPage - 1 == 1 ? '/exhibitions/' : '/exhibitions/page-' + (exhibitionPage - 1) + '/'}}"
                        th:classappend="${exhibitionPage == 1 ? 'disabled' : ''}">
                         « Previous
                     </a>
@@ -27,7 +27,7 @@
                     <span th:each="i : ${#numbers.sequence(1, totalPages)}">
                         <!-- Display first few pages, current page, last few pages -->
                         <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= exhibitionPage - 2 and i <= exhibitionPage + 2)}"
-                            th:href="${i == 1 ? '/exhibitions' : '/exhibitions/page-' + i}"
+                            th:href="@{${i == 1 ? '/exhibitions/' : '/exhibitions/page-' + i + '/'}}"
                             th:text="${i}"
                             th:classappend="${i == exhibitionPage ? 'active' : ''}"></a>
 
@@ -36,7 +36,7 @@
                     </span>
 
                     <!-- Next Button -->
-                    <a th:href="@{'/exhibitions/page-' + ${exhibitionPage + 1}}" th:classappend="${exhibitionPage == totalPages ? 'disabled' : ''}">
+                    <a th:href="@{'/exhibitions/page-' + ${exhibitionPage + 1} + '/'}" th:classappend="${exhibitionPage == totalPages ? 'disabled' : ''}">
                         Next »
                     </a>
                 </div>
