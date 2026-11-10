@@ -89,7 +89,7 @@ public class EditorController {
 		Painting homeImage = Filesystem.uploadPainting(imageData.getImages().get(0), 0, "", galleryRoot);
 
 		if (homeImage != null) {
-			Filesystem.deletePainting(site.getHomeImage().getFilename(), "", galleryRoot);
+			saveService.retireImage("", site.getHomeImage().getFilename()); // kept in the backup archive
 			site.setHomeImage(homeImage);
 			saveService.backup(site);
 			return ResponseEntity.ok("Image uploaded successfully");

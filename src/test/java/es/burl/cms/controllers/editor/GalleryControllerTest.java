@@ -16,6 +16,7 @@ import java.util.Base64;
 
 import static es.burl.cms.TestSites.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -124,21 +125,23 @@ class GalleryControllerTest {
 	}
 
 	@Test
-	void deletePaintingRemovesFileAndEntry() throws Exception {
-		Path file = Files.write(Files.createDirectories(galleryRoot.resolve("work")).resolve("a.jpg"), new byte[]{1});
+	void deletePaintingRetiresTheImageAndRemovesTheEntry() throws Exception {
+		when(backup.retireImage("work", "a.jpg")).thenReturn(true);
 
 		mvc.perform(delete("/page/work/gallery/image/a.jpg")).andExpect(status().isOk());
 
-		assertThat(file).doesNotExist();
+		verify(backup).retireImage("work", "a.jpg");
 		assertThat(site.getPage("work").getGallery().getGallery()).containsOnlyKeys("b.jpg");
 		verify(backup).backup(site);
 	}
 
 	@Test
-	void deletingAPaintingWithNoFileFailsAndKeepsTheEntry() throws Exception {
+	void deletingAPaintingThatCantBeRetiredFailsAndKeepsTheEntry() throws Exception {
+		when(backup.retireImage("work", "a.jpg")).thenReturn(false);
+
 		mvc.perform(delete("/page/work/gallery/image/a.jpg")).andExpect(status().isInternalServerError());
 
 		assertThat(site.getPage("work").getGallery().getGallery()).containsKey("a.jpg");
-		verifyNoInteractions(backup);
+		verify(backup, never()).backup(any());
 	}
 }

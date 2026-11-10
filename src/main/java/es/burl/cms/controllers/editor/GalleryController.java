@@ -118,8 +118,8 @@ public class GalleryController {
 	public  ResponseEntity<?> deletePainting(@PathVariable String pageUrl, @PathVariable String filename) {
 		log.debug("Deleting painting {}",filename);
 		Page page = site.getPage(pageUrl);
-		if(Filesystem.deletePainting(filename, pageUrl, galleryRoot)){
-			page.removePainting(filename); //TODO: delete from filesystem
+		if(saveService.retireImage(pageUrl, filename)){ // file leaves the gallery but stays in the backup archive
+			page.removePainting(filename);
 			saveService.backup(site);
 			return ResponseEntity.ok("Painting deleted successfully");
 		}  else {

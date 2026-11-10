@@ -148,6 +148,76 @@ class JsonBackupTest {
 		assertThat(backup.restore().getName()).isEqualTo("fresh install");
 	}
 
+	// ---- BUG-6 regressions
+
+	@Test
+	void filesThatAreNotBackupsAreIgnored() throws IOException {
+		Files.writeString(dir.resolve("notes-published.txt"), "not a backup");
+		Files.writeString(dir.resolve("1-published-12000020250101-other-name.json"), "{}");
+		Files.writeString(dir.resolve("x-unpublished-abc-site-data-backup.json"), "{}");
+		Files.createDirectories(dir.resolve("images"));
+		JsonBackup backup = backups(5, 10);
+
+		backup.backup(named("draft"));
+		backup.publish(named("pub"));
+
+		assertThat(backup.restore().getName()).isEqualTo("draft");
+		assertThat(dir.resolve("notes-published.txt")).exists();
+		assertThat(dir.resolve("1-published-12000020250101-other-name.json")).exists();
+	}
+
+	@Test
+	void restoreFindsTheOldestBackupWhenItIsTheOnlyOne() throws IOException {
+		JsonBackup backup = backups(5, 3);
+		backup.backup(named("only one"));
+		Path first = find("1-unpublished");
+		Files.move(first, dir.resolve(first.getFileName().toString().replaceFirst("^1-", "3-")));
+
+		assertThat(backup.restore().getName()).isEqualTo("only one");
+	}
+
+	@Test
+	void restoreSkipsACorruptNewestBackup() throws IOException {
+		JsonBackup backup = backups(5, 10);
+		backup.backup(named("good"));
+		backup.backup(named("will be corrupted"));
+		Files.writeString(find("1-unpublished"), "{\"name\": \"trunc");
+
+		assertThat(backup.restore().getName()).isEqualTo("good");
+	}
+
+	@Test
+	void restoreFallsBackToPublishedWhenEveryDraftIsCorrupt() throws IOException {
+		JsonBackup backup = backups(5, 10);
+		backup.publish(named("published"));
+		backup.backup(named("draft"));
+		Files.writeString(find("1-unpublished"), "garbage");
+
+		assertThat(backup.restore().getName()).isEqualTo("published");
+	}
+
+	@Test
+	void rotationDropsBackupsBeyondALoweredLimit() throws IOException {
+		JsonBackup generous = backups(5, 10);
+		for (int i = 0; i < 6; i++) generous.backup(named("u" + i));
+
+		backups(5, 3).backup(named("after lowering"));
+
+		assertThat(files("unpublished")).hasSize(3);
+		assertThat(backups(5, 3).restore().getName()).isEqualTo("after lowering");
+	}
+
+	@Test
+	void noTempFilesAreLeftBehind() throws IOException {
+		JsonBackup backup = backups(5, 10);
+		backup.backup(named("a"));
+		backup.publish(named("b"));
+
+		try (Stream<Path> s = Files.list(dir)) {
+			assertThat(s.map(p -> p.getFileName().toString())).noneMatch(n -> n.startsWith("."));
+		}
+	}
+
 	private Path find(String prefix) throws IOException {
 		try (Stream<Path> s = Files.list(dir)) {
 			return s.filter(p -> p.getFileName().toString().startsWith(prefix)).findFirst().orElseThrow();

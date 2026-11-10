@@ -47,6 +47,9 @@ public class AppConfig {
 	@Value("${num.unpublished.backups}")
 	private int unpublishedBackupsNum;
 
+	@Value("${backup.gc.dry-run:true}")
+	private boolean backupGcDryRun;
+
 	private JsonBackup saveService;
 
 	@Bean
@@ -60,6 +63,10 @@ public class AppConfig {
 					site = getSaveService().restore();
 				} catch (RuntimeException e) {
 					log.error("Unable to get Site from JSON backup", e);
+				}
+				if (site == null) {
+					log.error("No readable backup in {}: STARTING WITH AN EMPTY SITE. Old backups are left untouched.", backupPath);
+					site = Site.builder().build();
 				}
 			} else {
 				log.debug("No backup available, creating new site");
@@ -96,14 +103,13 @@ public class AppConfig {
 	@Bean
 	@Qualifier("saveService")
 	public BackupSite getSaveService(){
-		if(saveService == null) saveService = new JsonBackup(backupPath, backupFilename, publishedBackupsNum, unpublishedBackupsNum);
-		return saveService;
+		return getPublishService();
 	}
 
 	@Bean
 	@Qualifier("getPublishService")
 	public JsonBackup getPublishService(){
-		if(saveService == null) saveService = new JsonBackup(backupPath, backupFilename, publishedBackupsNum, unpublishedBackupsNum);
+		if(saveService == null) saveService = new JsonBackup(backupPath, backupFilename, publishedBackupsNum, unpublishedBackupsNum, galleryRoot, backupGcDryRun);
 		return saveService;
 	}
 }

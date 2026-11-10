@@ -81,7 +81,6 @@ class EditorControllerTest {
 
 	@Test
 	void uploadingAHomeImageReplacesTheOldOne() throws Exception {
-		Path old = Files.write(galleryRoot.resolve("old-home.jpg"), new byte[]{1});
 		site.setHomeImage(painting("old-home.jpg", 0));
 		String json = """
 				{"images":[{"title":"Home","filename":"h.jpg","dimensions":"","medium":"","sold":false,"order":0,"imageData":"%s"}]}"""
@@ -90,7 +89,7 @@ class EditorControllerTest {
 		mvc.perform(post("/upload").contentType(MediaType.APPLICATION_JSON).content(json))
 				.andExpect(status().isOk());
 
-		assertThat(old).doesNotExist();
+		verify(backup).retireImage("", "old-home.jpg");
 		assertThat(site.getHomeImage().getTitle()).isEqualTo("Home");
 		assertThat(galleryRoot.resolve(site.getHomeImage().getFilename())).hasBinaryContent(new byte[]{5, 5});
 		verify(backup).backup(site);
