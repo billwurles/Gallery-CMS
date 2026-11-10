@@ -1,5 +1,7 @@
 # The site and editor are on the LAN at :6500 / :6501, and behind the proxy at
-# dev.burl.es${SITE_BASE_PATH}/ (site) and dev.burl.es/gallery-cms-editor/ (editor).
+# dev.burl.es${SITE_BASE_PATH}/ or gallery-cms.burl.es (site) and
+# dev.burl.es/gallery-cms-editor/ or gallery-cms-edit.burl.es (editor).
+# Published links carry SITE_BASE_PATH; nginx strips it, so they work on every one of these.
 # SITE_BASE_PATH is the prefix published links are built with; set it to empty to publish for the root.
 
 services:
@@ -17,7 +19,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: web
-      traefik.http.routers.gallery-cms.rule: Host(`dev.burl.es`) && (Path(`/gallery-cms`) || PathPrefix(`/gallery-cms/`))
+      traefik.http.routers.gallery-cms.rule: Host(`gallery-cms.burl.es`) || (Host(`dev.burl.es`) && (Path(`/gallery-cms`) || PathPrefix(`/gallery-cms/`)))
       # no strip: the published links carry the prefix and nginx strips it
       traefik.http.routers.gallery-cms.middlewares: add-slash@file
       traefik.http.services.gallery-cms.loadbalancer.server.port: "80"
@@ -42,7 +44,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: web
-      traefik.http.routers.gallery-cms-editor.rule: Host(`dev.burl.es`) && (Path(`/gallery-cms-editor`) || PathPrefix(`/gallery-cms-editor/`))
+      traefik.http.routers.gallery-cms-editor.rule: Host(`gallery-cms-edit.burl.es`) || (Host(`dev.burl.es`) && (Path(`/gallery-cms-editor`) || PathPrefix(`/gallery-cms-editor/`)))
       traefik.http.routers.gallery-cms-editor.middlewares: add-slash@file,gallery-cms-editor-strip
       traefik.http.middlewares.gallery-cms-editor-strip.stripprefix.prefixes: /gallery-cms-editor
       traefik.http.services.gallery-cms-editor.loadbalancer.server.port: "8080"
