@@ -17,7 +17,10 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +34,10 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	Path htmlRoot;
 	/** Where the build in progress writes: a staging folder, swapped into htmlRoot when it completes. */
 	private Path out;
+	/** Content hash of the static includes in the build in progress, added to their links. */
+	private String assetVersion;
+
+	static final List<String> STATIC_INCLUDES = List.of("style.css", "gallery.js", "error.js");
 	Path galleryRoot;
 	String staticRoot;
 	SpringTemplateEngine engine;
@@ -127,11 +134,23 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		Path includesPath = out.resolve("include");
 		Files.createDirectories(includesPath);
 
-		Filesystem.copyClassPathResource("style.css", staticRoot, includesPath);
-		Filesystem.copyClassPathResource("gallery.js", staticRoot, includesPath);
-		Filesystem.copyClassPathResource("error.js", staticRoot, includesPath);
+		MessageDigest digest = sha256();
+		for (String file : STATIC_INCLUDES) {
+			Filesystem.copyClassPathResource(file, staticRoot, includesPath);
+			digest.update(Files.readAllBytes(includesPath.resolve(file)));
+		}
+		// Pages link to include/<file>?v=<this>, so a changed stylesheet or script gets a new address and
+		// no browser or proxy cache can pair new pages with an old copy
+		assetVersion = HexFormat.of().formatHex(digest.digest()).substring(0, 12);
 	}
 
+	private static MessageDigest sha256() {
+		try {
+			return MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException(e);
+		}
+	}
 
 	private void generateErrorPage(Site site, int code, String shortText, String message) throws IOException {
 		log.debug("Generating error page {}", code);
@@ -241,6 +260,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		context.setVariable("menuItems", menuItems);
 		context.setVariable("currentPage", currentPageUrl);
 		context.setVariable("currentYear", java.time.Year.now().getValue());
+		context.setVariable("assetVersion", assetVersion);
 		return context;
 	}
 

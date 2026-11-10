@@ -200,7 +200,7 @@ class ThymeleafSiteBuilderTest {
 		builder.buildSite(site);
 
 		String home = read("index.html");
-		assertThat(home).contains("href=\"/include/style.css\"", "href=\"/about/\"", "href=\"/exhibitions/\"");
+		assertThat(home).containsPattern("href=\"/include/style\\.css\\?v=[0-9a-f]{12}\"").contains("href=\"/about/\"", "href=\"/exhibitions/\"");
 		assertThat(read("exhibitions/index.html")).contains("href=\"/exhibitions/page-2/\"", "href=\"/exhibitions/ex-8/\"");
 	}
 
@@ -212,12 +212,12 @@ class ThymeleafSiteBuilderTest {
 		builder.buildSite(site);
 
 		String home = read("index.html");
-		assertThat(home).contains("href=\"/gallery-cms/include/style.css\"", "href=\"/gallery-cms/about/\"",
+		assertThat(home).containsPattern("href=\"/gallery-cms/include/style\\.css\\?v=[0-9a-f]{12}\"").contains("href=\"/gallery-cms/about/\"",
 				"href=\"/gallery-cms/exhibitions/\"");
 		assertThat(read("about/index.html")).contains("href=\"/gallery-cms/\"");
 		String exhibitions = read("exhibitions/page-2/index.html");
 		assertThat(exhibitions).contains("href=\"/gallery-cms/exhibitions/\"", "href=\"/gallery-cms/exhibitions/ex-1/\"");
-		assertThat(read("work/index.html")).contains("src=\"/gallery-cms/include/gallery.js\"", "src=\"images/a.jpg\"");
+		assertThat(read("work/index.html")).containsPattern("src=\"/gallery-cms/include/gallery\\.js\\?v=[0-9a-f]{12}\"").contains("src=\"images/a.jpg\"");
 		assertThat(rootLinks()).isNotEmpty().allMatch(l -> l.startsWith("/gallery-cms/"));
 	}
 
@@ -290,5 +290,19 @@ class ThymeleafSiteBuilderTest {
 
 		assertThat(htmlRoot.resolve("exhibitions/index.html")).exists();
 		assertThat(htmlRoot.resolve("exhibitions/page-2")).doesNotExist();
+	}
+
+	@Test
+	void stylesheetAndScriptLinksCarryTheirContentHash() throws Exception {
+		builder.buildSite(site);
+
+		// The version is the hash of the published includes, so it changes whenever any of them does
+		java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+		for (String file : ThymeleafSiteBuilder.STATIC_INCLUDES) digest.update(Files.readAllBytes(htmlRoot.resolve("include/" + file)));
+		String version = java.util.HexFormat.of().formatHex(digest.digest()).substring(0, 12);
+
+		assertThat(read("index.html")).contains("href=\"/include/style.css?v=" + version + "\"");
+		assertThat(read("work/index.html")).contains("src=\"/include/gallery.js?v=" + version + "\"");
+		assertThat(read("404.html")).contains("src=\"/include/error.js?v=" + version + "\"");
 	}
 }
