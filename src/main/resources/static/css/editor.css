@@ -90,6 +90,13 @@ a { color: var(--accent); }
 .nav-label { display: none; }
 .sidebar-actions { flex: none; }
 .menu-toggle, .menu-button { display: none; }
+.btn-published { background: var(--surface); color: var(--text); }
+.publish-status { margin: 8px 2px 0; font-size: 12px; line-height: 1.5; color: var(--bar-muted); }
+.publish-status .published-at { display: block; }
+.dot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }
+.dot-changed { background: #d97706; }
+.dot-live { background: var(--ok); }
+.preview-link { display: inline-block; margin: 6px 2px 0; font-size: 13px; font-weight: 500; color: var(--accent); }
 
 /* Page ------------------------------------------------------------- */
 .main { max-width: 1080px; margin: 0 auto; padding: 32px 24px 72px; }
@@ -370,6 +377,9 @@ dialog.confirm::backdrop { background: rgba(16, 24, 40, .45); }
     .brand-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sidebar-actions { order: 2; }
     .sidebar-actions .btn { padding: 7px 12px; }
+    .sidebar-actions { display: flex; align-items: center; gap: 8px; }
+    .publish-status .published-at, .preview-link { display: none; }
+    .publish-status { margin: 0; max-width: 9em; }
     .menu-button { order: 3; display: inline-flex; padding: 6px 12px; border: 1px solid var(--bar-border); border-radius: var(--radius); color: var(--bar-text); font-size: 14px; font-weight: 500; cursor: pointer; }
     .pages { display: none; order: 5; flex-basis: 100%; flex-direction: column; }
     .menu-toggle:checked ~ .pages { display: flex; }

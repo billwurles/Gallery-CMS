@@ -26,7 +26,48 @@ function flash(message, kind) {
     } catch (e) { /* no storage: the message is just not shown */ }
 }
 
+/** "just now", "5 min ago", "today 14:02", "10 Nov 14:02": for the publish status times. */
+function friendlyTime(date) {
+    const minutes = Math.round((Date.now() - date.getTime()) / 60000);
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return minutes + " min ago";
+    const time = date.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+    if (date.toDateString() === new Date().toDateString()) return "today " + time;
+    return date.toLocaleDateString([], {day: "numeric", month: "short"}) + " " + time;
+}
+
+function showTimes() {
+    document.querySelectorAll(".publish-status time[datetime]").forEach(t => {
+        const date = new Date(t.getAttribute("datetime"));
+        if (!isNaN(date)) t.textContent = (t.closest(".published-at") ? "" : "since ") + friendlyTime(date);
+    });
+}
+
+/** After a change is saved without a page load: the live site is now behind the draft. */
+function markUnpublished() {
+    const status = document.querySelector(".publish-status");
+    const button = document.querySelector(".sidebar-actions .btn");
+    if (button) { button.classList.add("btn-publish"); button.classList.remove("btn-published"); }
+    if (!status) return;
+    const published = status.querySelector(".published-at");
+    status.innerHTML = '<span class="dot dot-changed"></span>Unpublished changes <time datetime="' + new Date().toISOString() + '"></time>';
+    if (published) status.appendChild(published);
+    showTimes();
+}
+
+/** After a publish: the live site matches the draft. */
+function markPublished() {
+    const status = document.querySelector(".publish-status");
+    const button = document.querySelector(".sidebar-actions .btn");
+    if (button) { button.classList.remove("btn-publish"); button.classList.add("btn-published"); }
+    if (!status) return;
+    status.innerHTML = '<span class="dot dot-live"></span>Live site is up to date <span class="published-at">Published <time datetime="'
+        + new Date().toISOString() + '"></time></span>';
+    showTimes();
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+    showTimes();
     try {
         const stored = sessionStorage.getItem("flash");
         if (stored) {
@@ -83,6 +124,7 @@ async function confirmDelete(button) {
     try {
         const response = await fetch(button.dataset.url, {method: "DELETE"});
         if (!response.ok) throw new Error();
+        markUnpublished();
         if (button.dataset.remove) {
             button.closest(button.dataset.remove).remove();
             toast("Deleted " + what);
@@ -107,6 +149,7 @@ async function confirmSave(button) {
         const text = await response.text();
         if (!response.ok) throw new Error(text || "the server returned an error");
         toast("Site published");
+        markPublished();
     } catch (e) {
         toast("The site was not published: " + e.message, "error");
     } finally {

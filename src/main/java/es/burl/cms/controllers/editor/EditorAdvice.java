@@ -1,5 +1,6 @@
 package es.burl.cms.controllers.editor;
 
+import es.burl.cms.backup.JsonBackup;
 import es.burl.cms.data.Site;
 import es.burl.cms.helper.UploadedImages;
 import org.springframework.http.MediaType;
@@ -19,10 +20,23 @@ import org.springframework.web.servlet.ModelAndView;
 public class EditorAdvice {
 
 	private final Site site;
+	private final JsonBackup backups;
+
+	/** For tests that don't need the publish status. */
+	public EditorAdvice(Site site) {
+		this(site, null);
+	}
 
 	@Autowired
-	public EditorAdvice(@Qualifier("getSite") Site site) {
+	public EditorAdvice(@Qualifier("getSite") Site site, @Qualifier("getPublishService") JsonBackup backups) {
 		this.site = site;
+		this.backups = backups;
+	}
+
+	/** Whether there's anything to publish, for the Publish button and the status line on every page. */
+	@ModelAttribute("publishStatus")
+	public JsonBackup.PublishStatus publishStatus() {
+		return backups == null ? null : backups.status(site);
 	}
 
 	@ModelAttribute("siteName")

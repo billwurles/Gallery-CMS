@@ -50,7 +50,11 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	String staticRoot;
 	SpringTemplateEngine engine;
 	int postsPerPage;
-	String homeUrl;
+	/** The published site's base path ("/" or "/gallery-cms"). */
+	private final String publishedBase;
+	/** For the build in progress: link base, and for a preview the editor's home page. */
+	private String linkBase;
+	private String editorHome;
 
 	@Autowired
 	public ThymeleafSiteBuilder(@Qualifier("getHtmlRoot") Path htmlRoot,
@@ -67,7 +71,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		this.webImages = new WebImages(galleryRoot.toAbsolutePath().normalize().resolveSibling("web-images"));
 		this.engine.setLinkBuilder(new ServerlessLinkBuilder(basePath));
 		String base = ServerlessLinkBuilder.normalise(basePath);
-		this.homeUrl = base.equals("/") ? "/" : base + "/";
+		this.publishedBase = base;
 		log.info("Publishing with base path {}", ServerlessLinkBuilder.normalise(basePath));
 	}
 
@@ -83,25 +87,13 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		Path staging = htmlRoot.resolveSibling("." + htmlRoot.getFileName() + ".building");
 		deleteTree(staging);
 		Files.createDirectories(staging);
-		out = staging;
 		webImages.startBuild();
 		try {
-			copyStaticIncludes();
-
-			generateErrorPage(site, 404, "Not Found", "The page does not exist on this server, please return <a href=\"" + homeUrl + "\">home</a>");
-
-			generateHomePage(site);
-			generatePages(site);
-
-			Path exhibitionsPath = inside(out, site.getExhibitionRepo().getMenuItem().getUrl());
-			generateExhibitionsPages(site, exhibitionsPath);
-			generateExhibitionsDirectPages(site, exhibitionsPath);
+			render(site, staging, publishedBase, null);
 		} catch (IOException | RuntimeException e) {
 			log.error("Site build failed, the live site is unchanged", e);
 			deleteTree(staging);
 			throw e;
-		} finally {
-			out = null;
 		}
 
 		swapIn(staging);
@@ -111,6 +103,43 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 			log.warn("Couldn't tidy the resized image cache", e); // the site is published; this is housekeeping
 		}
 		log.info("Site rendering complete");
+	}
+
+	/**
+	 * Renders the draft site into {@code previewRoot} for the editor's preview, with links under
+	 * {@code basePath} (e.g. "/gallery-cms-editor/preview") and a banner linking to {@code editorHome}.
+	 * It never touches html_root, and doesn't tidy the image cache (the live site may still need entries
+	 * the draft doesn't).
+	 */
+	public synchronized void buildPreview(Site site, Path previewRoot, String basePath, String editorHome) throws IOException {
+		log.info("Generating preview of {} under {}", site.getName(), basePath);
+		deleteTree(previewRoot);
+		Files.createDirectories(previewRoot);
+		render(site, previewRoot, ServerlessLinkBuilder.normalise(basePath), editorHome);
+	}
+
+	/** Writes every file of the site into {@code target}, with links under {@code base}. */
+	private void render(Site site, Path target, String base, String previewHome) throws IOException {
+		out = target;
+		linkBase = base;
+		editorHome = previewHome;
+		String home = base.equals("/") ? "/" : base + "/";
+		try {
+			copyStaticIncludes();
+
+			generateErrorPage(site, 404, "Not Found", "The page does not exist on this server, please return <a href=\"" + home + "\">home</a>");
+
+			generateHomePage(site);
+			generatePages(site);
+
+			Path exhibitionsPath = inside(out, site.getExhibitionRepo().getMenuItem().getUrl());
+			generateExhibitionsPages(site, exhibitionsPath);
+			generateExhibitionsDirectPages(site, exhibitionsPath);
+		} finally {
+			out = null;
+			linkBase = null;
+			editorHome = null;
+		}
 	}
 
 	/** Replaces html_root's contents with the staging folder's, by renames on the same filesystem. */
@@ -292,6 +321,8 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		context.setVariable("currentPage", currentPageUrl);
 		context.setVariable("currentYear", java.time.Year.now().getValue());
 		context.setVariable("assetVersion", assetVersion);
+		context.setVariable(ServerlessLinkBuilder.LINK_BASE, linkBase);
+		context.setVariable("previewEditorHome", editorHome); // set only when building a preview
 		return context;
 	}
 

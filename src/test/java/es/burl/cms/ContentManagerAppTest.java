@@ -204,4 +204,30 @@ class ContentManagerAppTest {
 		// Inside the box, the editor would read the field as part of the content and save it
 		assertThat(body).contains("<div id=\"richTextEditor\"></div>").contains("<textarea");
 	}
+
+	@Test
+	void theDraftCanBePreviewedUnderTheEditorsAddress() throws Exception {
+		mvc.perform(get("/preview").header("X-Forwarded-Prefix", "/gallery-cms-editor"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("http://localhost/gallery-cms-editor/preview/"));
+
+		String home = mvc.perform(get("/preview/").header("X-Forwarded-Prefix", "/gallery-cms-editor"))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+		assertThat(home).contains("Preview of unpublished changes", "href=\"/gallery-cms-editor/preview/about/\"");
+
+		mvc.perform(get("/preview/about/")).andExpect(status().isOk());
+		mvc.perform(get("/preview/include/style.css")).andExpect(status().isOk())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentTypeCompatibleWith("text/css"));
+		mvc.perform(get("/preview/no-such-page/")).andExpect(status().isNotFound());
+		mvc.perform(get("/preview/..%2F..%2Fbackup/")).andExpect(status().isNotFound());
+		assertThat(HTML.resolve("index.html").toFile().exists() && Files.readString(HTML.resolve("index.html")).contains("Preview")).isFalse();
+	}
+
+	@Test
+	void everyEditorPageShowsThePublishStatus() throws Exception {
+		String home = mvc.perform(get("/")).andReturn().getResponse().getContentAsString();
+
+		assertThat(home).contains("class=\"publish-status\"").containsAnyOf("Unpublished changes", "Live site is up to date");
+	}
 }

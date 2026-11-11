@@ -235,4 +235,40 @@ class JsonBackupTest {
 			return s.filter(p -> p.getFileName().toString().startsWith(prefix)).findFirst().orElseThrow();
 		}
 	}
+
+	@Test
+	void neverPublishedMeansChanged() {
+		JsonBackup b = backups(5, 10);
+		Site site = twoPageSite();
+		b.backup(site);
+
+		JsonBackup.PublishStatus status = b.status(site);
+
+		assertThat(status.changed()).isTrue();
+		assertThat(status.lastPublished()).isNull();
+		assertThat(status.changedSince()).isNotNull();
+	}
+
+	@Test
+	void publishingClearsTheChangesUntilTheNextEdit() {
+		JsonBackup b = backups(5, 10);
+		Site site = twoPageSite();
+		b.backup(site);
+		b.publish(site);
+
+		JsonBackup.PublishStatus published = b.status(site);
+		assertThat(published.changed()).isFalse();
+		assertThat(published.lastPublished()).isNotNull();
+		assertThat(published.changedSince()).isNull();
+
+		site.addNewPage(es.burl.cms.TestSites.page("New", "new", 5));
+		b.backup(site);
+		JsonBackup.PublishStatus edited = b.status(site);
+		assertThat(edited.changed()).isTrue();
+		assertThat(edited.lastPublished()).isEqualTo(published.lastPublished());
+		assertThat(edited.changedSince()).isNotNull();
+
+		site.removePage("new");
+		assertThat(b.status(site).changed()).as("back to what's live").isFalse();
+	}
 }

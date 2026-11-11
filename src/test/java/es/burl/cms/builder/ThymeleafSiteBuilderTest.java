@@ -389,4 +389,23 @@ class ThymeleafSiteBuilderTest {
 		assertThat(tmp.resolve("escaped")).doesNotExist();
 		assertThat(read("about/index.html")).isEqualTo(before);
 	}
+
+	@Test
+	void thePreviewIsBuiltElsewhereWithItsOwnLinksAndBanner() throws IOException {
+		builder.buildSite(site);
+		String live = read("about/index.html");
+		Path preview = tmp.resolve("preview_root");
+		site.addNewPage(site.getPage("about").toBuilder().content("<p>Draft text</p>").build());
+
+		builder.buildPreview(site, preview, "/gallery-cms-editor/preview", "/gallery-cms-editor/");
+
+		String about = Files.readString(preview.resolve("about/index.html"));
+		assertThat(about).contains("<p>Draft text</p>", "Preview of unpublished changes",
+				"href=\"/gallery-cms-editor/\"", "href=\"/gallery-cms-editor/preview/about/\"");
+		assertThat(about).containsPattern("/gallery-cms-editor/preview/include/style\\.css\\?v=");
+		assertThat(read("about/index.html")).isEqualTo(live).doesNotContain("Preview of unpublished");
+		// the next real publish isn't affected by the preview's link base
+		builder.buildSite(site);
+		assertThat(read("about/index.html")).contains("<p>Draft text</p>", "href=\"/about/\"").doesNotContain("preview");
+	}
 }

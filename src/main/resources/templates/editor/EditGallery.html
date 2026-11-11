@@ -156,6 +156,7 @@
                     if (response.status === "success") {
                         setDirty(false);
                         toast("Gallery saved");
+                        markUnpublished();
                     } else {
                         toast("The gallery could not be saved", "error");
                     }

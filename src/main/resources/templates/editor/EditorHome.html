@@ -90,6 +90,7 @@
                     data: JSON.stringify(order),
                     success: function () {
                         $("#sortmsg").prop("hidden", false).stop(true, true).show().delay(3000).fadeOut();
+                        markUnpublished();
                     },
                     error: function () {
                         flash("The menu order could not be saved", "error");

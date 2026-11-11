@@ -6,7 +6,7 @@
         <div th:fragment="gallery(paintings, url)">
             <section th:if="${paintings}" class="grid">
                 <div th:each="painting, iterStat : ${paintings}" th:key="${iterStat.index}" class="painting">
-                    <!-- Thumbnail; its data-* attributes fill the shared full-size view below -->
+                    <!--/* Thumbnail; its data-* attributes fill the shared full-size view below */-->
                     <div class="painting-open" role="button" tabindex="0"
                          th:data-id="${iterStat.index}"
                          th:data-src="@{'images/' + ${painting.filename}}"
@@ -15,7 +15,7 @@
                          th:data-medium="${painting.medium}"
                          th:data-sold="${painting.sold ? 'Sold' : 'Available'}"
                          th:aria-label="|View ${painting.title}|">
-                        <!-- The grid loads a small copy; the full-size view loads images/<file> -->
+                        <!--/* The grid loads a small copy; the full-size view loads images/<file> */-->
                         <img th:src="@{'images/thumbs/' + ${painting.filename}}"
                              th:alt="${painting.title}" loading="lazy" />
                         <p class="caption" th:text="${painting.title}"></p>
@@ -23,7 +23,7 @@
                 </div>
             </section>
 
-            <!-- One full-size view for the whole gallery: the image shrinks to fit the screen, caption included -->
+            <!--/* One full-size view for the whole gallery: the image shrinks to fit the screen, caption included */-->
             <div th:if="${paintings}" id="painting-modal" class="painting-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
                 <button type="button" class="modal-close" aria-label="Close">Close</button>
                 <button type="button" class="modal-nav modal-prev" aria-label="Previous painting">&#8249;</button>

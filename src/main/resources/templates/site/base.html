@@ -9,6 +9,12 @@
     <script th:if="${pageType.equals('error') and errorCode != null}" th:src="@{/include/error.js(v=${assetVersion})}"></script>
 </head>
 <body>
+    <!--/* Only in the editor's preview: says so, and links back */-->
+    <div th:if="${previewEditorHome != null}"
+         style="position:sticky;top:0;z-index:2000;display:flex;justify-content:center;gap:16px;padding:8px 12px;background:#1d2530;color:#fff;font:500 14px/1.4 system-ui,sans-serif">
+        <span>Preview of unpublished changes</span>
+        <a th:href="${previewEditorHome}" style="color:#9cc0ff">Back to the editor</a>
+    </div>
     <div id="app">
         <nav
                 th:replace="~{site/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${currentPage}, siteName=${siteName})}">

@@ -162,6 +162,47 @@ public class JsonBackup implements BackupSite {
 		}
 	}
 
+	// ---------------------------------------------------------------- publish status
+
+	/**
+	 * Whether the site has changes the live site doesn't. {@code lastPublished} is when the newest published
+	 * backup was written (null if never), {@code changedSince} when the newest draft was (only when changed).
+	 */
+	public record PublishStatus(boolean changed, Instant lastPublished, Instant changedSince) {}
+
+	private record PublishedCopy(Path path, long modified, JsonNode content) {}
+	private PublishedCopy publishedCache;
+
+	/** Compares the site as it is now with the newest published backup (image manifests aside). */
+	public synchronized PublishStatus status(Site site) {
+		List<BackupFile> published = findBackups(true);
+		if (published.isEmpty()) return new PublishStatus(true, null, newestDraftTime());
+		BackupFile newest = published.get(0);
+		try {
+			long modified = Files.getLastModifiedTime(newest.path()).toMillis();
+			if (publishedCache == null || !publishedCache.path().equals(newest.path()) || publishedCache.modified() != modified) {
+				ObjectNode json = (ObjectNode) objectMapper.readTree(newest.path().toFile());
+				json.remove(MANIFEST_FIELD);
+				publishedCache = new PublishedCopy(newest.path(), modified, json);
+			}
+			boolean changed = !objectMapper.valueToTree(site).equals(publishedCache.content());
+			return new PublishStatus(changed, Instant.ofEpochMilli(modified), changed ? newestDraftTime() : null);
+		} catch (IOException | JacksonException | ClassCastException e) {
+			log.warn("Can't read the newest published backup to compare: {}", e.getMessage());
+			return new PublishStatus(true, null, newestDraftTime());
+		}
+	}
+
+	private Instant newestDraftTime() {
+		List<BackupFile> drafts = findBackups(false);
+		if (drafts.isEmpty()) return null;
+		try {
+			return Files.getLastModifiedTime(drafts.get(0).path()).toInstant();
+		} catch (IOException e) {
+			return null;
+		}
+	}
+
 	// ---------------------------------------------------------------- restore
 
 	public Site buildSiteFromPath(Path path) {

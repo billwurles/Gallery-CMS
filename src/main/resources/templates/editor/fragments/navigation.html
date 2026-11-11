@@ -21,9 +21,23 @@
     </nav>
 
     <div class="sidebar-actions">
-        <button type="button" class="btn btn-publish" th:data-url="@{/save}" onclick="confirmSave(this)">
+        <!-- Publish stands out only when the draft differs from the live site -->
+        <button type="button" class="btn" th:classappend="${publishStatus == null or publishStatus.changed} ? 'btn-publish' : 'btn-published'"
+                th:data-url="@{/save}" onclick="confirmSave(this)">
             Publish site
         </button>
+        <p class="publish-status" th:if="${publishStatus != null}">
+            <th:block th:if="${publishStatus.changed}">
+                <span class="dot dot-changed"></span>Unpublished changes
+                <time th:if="${publishStatus.changedSince != null}" th:attr="datetime=${publishStatus.changedSince}"></time>
+            </th:block>
+            <th:block th:unless="${publishStatus.changed}">
+                <span class="dot dot-live"></span>Live site is up to date
+            </th:block>
+            <span class="published-at" th:if="${publishStatus.lastPublished != null}">Published
+                <time th:attr="datetime=${publishStatus.lastPublished}"></time></span>
+        </p>
+        <a class="preview-link" th:href="@{/preview}" target="_blank" rel="noopener">Preview unpublished site</a>
     </div>
 </header>
 </html>

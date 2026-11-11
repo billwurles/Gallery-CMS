@@ -296,4 +296,13 @@ class ImageVersioningTest {
 
 		assertThat(backupDir.resolve("images").resolve(sha(A) + ".jpg")).exists();
 	}
+
+	@Test
+	void theImageManifestDoesntCountAsAChange() throws IOException {
+		JsonBackup b = backups();
+		b.publish(site);
+
+		assertThat(Files.readString(newest("published"))).contains(JsonBackup.MANIFEST_FIELD);
+		assertThat(b.status(site).changed()).isFalse();
+	}
 }

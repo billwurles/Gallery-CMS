@@ -15,6 +15,9 @@ class ServerlessLinkBuilder extends StandardLinkBuilder {
 
 	private final String basePath;
 
+	/** Context variable that overrides the base path for one build. */
+	static final String LINK_BASE = "linkBase";
+
 	ServerlessLinkBuilder() {
 		this("/");
 	}
@@ -43,7 +46,8 @@ class ServerlessLinkBuilder extends StandardLinkBuilder {
 		if (context instanceof IWebContext) {
 			return super.computeContextPath(context, base, parameters);
 		}
-		//Without this thymeleaf throws errors when building links
-		return basePath;
+		// A build can set its own base (the editor's preview lives under /preview); otherwise the published one
+		Object linkBase = context.getVariable(LINK_BASE);
+		return linkBase != null ? linkBase.toString() : basePath;
 	}
 }

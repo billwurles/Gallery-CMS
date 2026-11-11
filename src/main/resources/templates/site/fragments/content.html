@@ -3,11 +3,11 @@
     <div class="page" th:fragment="content(page)">
         <h1 th:text="${page.menuItem.title}"></h1>
         <section>
-            <!-- Text and gallery each appear only when the page has them and they aren't hidden -->
+            <!--/* Text and gallery each appear only when the page has them and they aren't hidden */-->
             <div class="content" th:if="${page.showsContent()}">
                 <div class="content-text" th:utext="${page.content}"></div>
             </div>
-            <!-- th:if goes on a wrapper: on the same element, th:replace runs first and drops it -->
+            <!--/* th:if goes on a wrapper: on the same element, th:replace runs first and drops it */-->
             <th:block th:if="${page.showsGallery()}">
                 <div th:replace="~{site/fragments/gallery :: gallery(paintings=${page.gallery.getGalleryInOrder()}, url=${page.menuItem.url})}"></div>
             </th:block>

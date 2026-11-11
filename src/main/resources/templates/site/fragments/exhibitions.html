@@ -5,10 +5,10 @@
             <div class="page">
                 <h1>Exhibitions</h1>
 
-                <!-- Loop through the list of exhibitions -->
+                <!--/* Loop through the list of exhibitions */-->
                 <div th:each="exhibition : ${exhibitions}" class="exhibition-post">
                     <h2>
-                        <!-- Link to the exhibition details -->
+                        <!--/* Link to the exhibition details */-->
                         <a th:href="@{/exhibitions/{url}/(url=${exhibition.url})}" th:text="${exhibition.title}"></a>
                     </h2>
                     <p class="exhibition-date" th:text="${#dates.format(exhibition.date, 'dd/MM/yyyy')}"></p>
@@ -16,20 +16,20 @@
                     <hr>
                 </div>
 
-                <!-- Only with more than one page; Previous/Next are links only when that page exists -->
+                <!--/* Only with more than one page; Previous/Next are links only when that page exists */-->
                 <div class="pagination" th:if="${totalPages > 1}">
                     <a th:if="${exhibitionPage > 1}"
                        th:href="@{${exhibitionPage - 1 == 1 ? '/exhibitions/' : '/exhibitions/page-' + (exhibitionPage - 1) + '/'}}">« Previous</a>
                     <span th:unless="${exhibitionPage > 1}" class="disabled">« Previous</span>
 
                     <span th:each="i : ${#numbers.sequence(1, totalPages)}">
-                        <!-- Display first few pages, current page, last few pages -->
+                        <!--/* Display first few pages, current page, last few pages */-->
                         <a th:if="${i <= 4 or (i >= totalPages - 3) or (i >= exhibitionPage - 2 and i <= exhibitionPage + 2)}"
                             th:href="@{${i == 1 ? '/exhibitions/' : '/exhibitions/page-' + i + '/'}}"
                             th:text="${i}"
                             th:classappend="${i == exhibitionPage ? 'active' : ''}"></a>
 
-                        <!-- Display '...' for skipped pages -->
+                        <!--/* Display '...' for skipped pages */-->
                         <span th:if="${(i == 5 and exhibitionPage > 5) or (i == totalPages - 4 and exhibitionPage < totalPages - 4)}">...</span>
                     </span>
 
