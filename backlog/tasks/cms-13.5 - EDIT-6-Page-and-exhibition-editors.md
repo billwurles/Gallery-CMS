@@ -1,10 +1,10 @@
 ---
 id: CMS-13.5
 title: 'EDIT-6: Page and exhibition editors'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T16:12:00Z'
+updated_date: '2026-11-11T11:03:00Z'
 labels:
   - editor
   - ui
