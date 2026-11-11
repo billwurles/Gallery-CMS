@@ -1,9 +1,10 @@
 ---
 id: CMS-21
 title: 'INFRA-4: Upgrade Spring Boot and keep dependencies current'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-09T16:52:00Z'
+updated_date: '2026-11-11T08:33:00Z'
 labels:
   - infra
 dependencies:
