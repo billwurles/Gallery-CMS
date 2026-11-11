@@ -1,10 +1,10 @@
 ---
 id: CMS-16
 title: 'SITE-3: Tidy public templates and CSS'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-09T16:12:00Z'
+updated_date: '2026-11-11T05:48:00Z'
 labels:
   - site
 dependencies:
