@@ -50,6 +50,7 @@ appdata/
       1-published-*.json     newest published version; older numbers are older versions
       images/<sha256>.<ext>  every image any kept backup needs, hard-linked from gallery/
   html_root/                 the published site, replaced as a whole on each publish
+  preview_root/              the draft site, built by "Preview unpublished site" (served only by the editor)
 ```
 
 Every save writes a new draft backup and every publish a published one; the oldest beyond
