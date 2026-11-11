@@ -46,6 +46,7 @@ public class GalleryController {
 		model.addAttribute("page", page);
 		model.addAttribute("galleryRoot", galleryRoot);
 		model.addAttribute("hasGallery", page.hasGallery());
+		model.addAttribute("fileSizes", fileSizes(page));
 		return "editor/EditGallery";
 	}
 
@@ -133,5 +134,20 @@ public class GalleryController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during painting delete");
 
 		}
+	}
+
+	/** Each painting's file size in bytes, for the editor to flag overly large uploads (0 if missing). */
+	private Map<String, Long> fileSizes(Page page) {
+		Map<String, Long> sizes = new HashMap<>();
+		if (page.getGallery() == null) return sizes;
+		for (Painting painting : page.getGallery().getGallery().values()) {
+			Path file = galleryRoot.resolve(page.getUrl()).resolve(painting.getFilename());
+			try {
+				sizes.put(painting.getFilename(), java.nio.file.Files.size(file));
+			} catch (java.io.IOException e) {
+				sizes.put(painting.getFilename(), 0L);
+			}
+		}
+		return sizes;
 	}
 }

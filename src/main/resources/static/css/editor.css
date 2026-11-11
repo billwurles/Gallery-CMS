@@ -234,7 +234,6 @@ input[readonly] { background: var(--surface-2); color: var(--muted); }
     padding: 0;
 }
 .painting {
-    float: left; /* no effect in a grid, but tells jQuery UI the cards flow sideways */
     display: flex;
     flex-direction: column;
     background: var(--surface);
@@ -242,7 +241,6 @@ input[readonly] { background: var(--surface-2); color: var(--muted); }
     border-radius: calc(var(--radius) + 2px);
     box-shadow: var(--shadow);
     overflow: hidden;
-    cursor: grab;
 }
 .painting-thumb {
     position: relative;
@@ -261,6 +259,19 @@ input[readonly] { background: var(--surface-2); color: var(--muted); }
     font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
 }
 .painting-fields { padding: 12px; }
+.card-grip { position: absolute; top: 8px; right: 8px; z-index: 1; display: flex; padding: 7px; border-radius: 6px;
+    background: var(--surface); box-shadow: var(--shadow); cursor: grab; touch-action: none; }
+.card-grip .grip { margin: 0; }
+.card-grip:hover .grip { color: var(--text); }
+.painting-size { margin: 0; padding: 6px 12px 0; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.painting-size.large { color: var(--danger); font-weight: 600; }
+.painting-size.large::after { content: " \00b7  large file"; }
+.save-bar {
+    position: fixed; left: 50%; bottom: 20px; z-index: 50; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 18px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px);
+    box-shadow: 0 10px 30px rgba(16, 24, 40, .18); font-size: 14px; font-weight: 500;
+}
 .painting-fields .field { margin-bottom: 8px; }
 .painting-fields .field-pair { gap: 8px; }
 .painting-fields input[type="text"] { padding: 6px 8px; font-size: 13px; }

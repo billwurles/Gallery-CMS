@@ -72,15 +72,25 @@ function confirmDialog(message, okLabel, danger) {
     });
 }
 
-/** For delete buttons: data-url is sent a DELETE, data-what names the thing in the question. */
+/**
+ * For delete buttons: data-url is sent a DELETE, data-what names the thing in the question. With
+ * data-remove (a selector), the closest matching element is removed instead of reloading the page,
+ * and a "deleted" event is sent on document.
+ */
 async function confirmDelete(button) {
     const what = button.dataset.what || "this";
     if (!await confirmDialog("Delete " + what + "?", "Delete", true)) return;
     try {
         const response = await fetch(button.dataset.url, {method: "DELETE"});
         if (!response.ok) throw new Error();
-        flash("Deleted");
-        location.reload();
+        if (button.dataset.remove) {
+            button.closest(button.dataset.remove).remove();
+            toast("Deleted " + what);
+            document.dispatchEvent(new CustomEvent("deleted"));
+        } else {
+            flash("Deleted");
+            location.reload();
+        }
     } catch (e) {
         toast("Could not delete " + what, "error");
     }

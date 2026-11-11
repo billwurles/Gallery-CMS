@@ -3,7 +3,7 @@
 <head>
     <title th:text="|Gallery Editor - ${page.menuItem.title}|"/>
     <th:block th:replace="~{editor/fragments/head :: common}"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.7/Sortable.min.js"></script>
 </head>
 <body>
 <header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage=${page.menuItem.url})}"></header>
@@ -13,8 +13,10 @@
         <div>
             <p class="crumb">Gallery</p>
             <h1 th:text="${page.menuItem.title}"></h1>
-            <p class="sub" th:if="${hasGallery}"
-               th:text="|${#lists.size(page.gallery.getGalleryInOrder())} paintings. Drag them to rearrange.|"></p>
+            <p class="sub" th:if="${hasGallery}">
+                <span id="painting-count" th:text="${#lists.size(page.gallery.getGalleryInOrder())}"></span> paintings.
+                Drag a card by its handle to rearrange.
+            </p>
         </div>
         <div class="page-actions">
             <a th:href="@{/page/{url}(url=${page.menuItem.url},edit='text')}" class="btn">Text and settings</a>
@@ -33,10 +35,13 @@
             <li th:each="painting : ${page.gallery.getGalleryInOrder()}" th:data-id="${painting.filename}"
                 class="painting">
                 <div class="painting-thumb">
+                    <span class="card-grip" title="Drag to rearrange" aria-hidden="true"><span class="grip"></span></span>
                     <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.menuItem.url},filename=${painting.filename})}"
                          th:alt="${painting.title}" loading="lazy"/>
                     <span class="sold-flag" th:if="${painting.sold}">Sold</span>
                 </div>
+                <!-- pixel size is filled in once the image has loaded; bytes come from the server -->
+                <p class="painting-size" th:data-bytes="${fileSizes.get(painting.filename)}"></p>
                 <div class="painting-fields">
                     <label class="field">
                         <span>Title</span>
@@ -59,6 +64,7 @@
                         <button type="button" class="btn btn-small btn-danger"
                                 th:data-url="@{/page/{url}/gallery/image/{filename}(url=${page.url}, filename=${painting.filename})}"
                                 th:data-what="|“${painting.title}”|"
+                                data-remove=".painting"
                                 onclick="confirmDelete(this)">Delete</button>
                     </div>
                 </div>
@@ -68,14 +74,60 @@
     </form>
 </main>
 
+<!-- Appears once anything has changed, until it's saved or discarded -->
+<div id="save-bar" class="save-bar" hidden>
+    <span>You have unsaved changes</span>
+    <button type="button" class="btn" id="discard-changes">Discard</button>
+    <button type="submit" form="galleryForm" class="btn btn-primary">Save changes</button>
+</div>
+
 <script>
     $(function () {
-        $("#image-list").sortable({
-            placeholder: "painting sortable-placeholder",
-            forcePlaceholderSize: true,
-            tolerance: "pointer",
-            cancel: "input, button, label"
+        let dirty = false;
+        function setDirty(value) {
+            dirty = value;
+            $('#save-bar').prop('hidden', !value);
+        }
+        // Leaving with unsaved changes asks first (the browser shows its own wording)
+        window.addEventListener('beforeunload', e => {
+            if (dirty) { e.preventDefault(); e.returnValue = ''; }
         });
+        $('#discard-changes').on('click', () => { setDirty(false); location.reload(); });
+
+        const list = document.getElementById('image-list');
+        if (list) {
+            Sortable.create(list, {
+                handle: '.card-grip',
+                animation: 150,
+                ghostClass: 'sortable-placeholder',
+                onEnd: e => { if (e.oldIndex !== e.newIndex) setDirty(true); }
+            });
+        }
+        $('#image-list').on('input change', 'input', function () {
+            setDirty(true);
+            if ($(this).hasClass('f-sold')) $(this).closest('.painting').find('.sold-flag').toggle(this.checked);
+        });
+        // The Sold badge can be switched on before there was one
+        $('#image-list .painting').each(function () {
+            if (!$(this).find('.sold-flag').length) $(this).find('.painting-thumb').append('<span class="sold-flag" style="display:none">Sold</span>');
+        });
+
+        // Image size under each card: pixels from the loaded image, bytes from the server; big files stand out
+        function showSize(img) {
+            const line = $(img).closest('.painting').find('.painting-size');
+            const bytes = Number(line.data('bytes')) || 0;
+            const mb = bytes / 1048576;
+            const size = bytes ? (mb >= 1 ? mb.toFixed(1) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB') : '';
+            line.text(img.naturalWidth + ' \u00d7 ' + img.naturalHeight + ' px' + (size ? ' \u00b7 ' + size : ''));
+            line.toggleClass('large', mb > 5 || Math.max(img.naturalWidth, img.naturalHeight) > 5000);
+        }
+        $('#image-list img').each(function () {
+            if (this.complete && this.naturalWidth) showSize(this);
+            else this.addEventListener('load', () => showSize(this));
+        });
+
+        // After a painting is deleted its card is removed (no reload, so other unsaved edits stay)
+        document.addEventListener('deleted', () => $('#painting-count').text($('#image-list li').length));
 
         $("#galleryForm").on("submit", function (event) {
             event.preventDefault();
@@ -102,13 +154,14 @@
                 data: JSON.stringify(galleryData),
                 success: function (response) {
                     if (response.status === "success") {
+                        setDirty(false);
                         toast("Gallery saved");
                     } else {
                         toast("The gallery could not be saved", "error");
                     }
                 },
                 error: function () {
-                    toast("The gallery could not be saved", "error");
+                    toast("The gallery could not be saved; your changes are still here", "error");
                 }
             });
         });
