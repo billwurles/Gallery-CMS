@@ -52,7 +52,11 @@ appdata/
   html_root/                 the published site, replaced as a whole on each publish
 ```
 
-On start the editor loads the newest draft backup. Each backup file lists the images it needs, and those
+Every save writes a new draft backup and every publish a published one; the oldest beyond
+`num.unpublished.backups` / `num.published.backups` are deleted. **Versions** in the editor lists them all,
+restores any of them (images included, after saving the current site so the restore can be undone),
+downloads one as a zip (`site.json` plus `images/`), and checks the image archive, which also runs once at
+startup and logs the result. On start the editor loads the newest draft backup. Each backup file lists the images it needs, and those
 images are kept in `backup/images/` for as long as any kept backup refers to them, so an older version
 never loses its photos. After each backup, images that nothing uses any more are removed
 (`backup.gc.dry-run=true` only logs what would go).

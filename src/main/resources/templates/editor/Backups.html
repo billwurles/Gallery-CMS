@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Versions</title>
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
+</head>
+<body>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='backups')}"></header>
+
+<main class="main">
+    <div class="page-head">
+        <div>
+            <h1>Versions</h1>
+            <p class="sub">Every change is kept as a version. Restoring one saves the current site first,
+                so you can always come back.</p>
+        </div>
+        <div class="page-actions">
+            <button type="button" class="btn" id="check-images" th:data-url="@{/backups/check}">Check images</button>
+        </div>
+    </div>
+
+    <div id="check-result" class="notice" hidden></div>
+
+    <div class="card version-list">
+        <table>
+            <thead>
+            <tr><th>When</th><th>Kind</th><th>Pages</th><th>Paintings</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="v : ${snapshots}">
+                <td><time th:attr="datetime=${v.time}" class="when"></time></td>
+                <td>
+                    <span class="kind" th:classappend="${v.published} ? 'kind-published'" th:text="${v.published} ? 'Published' : 'Draft'"></span>
+                    <span class="hint" th:if="${!v.hasManifest}" title="Saved before images were kept with versions">text only</span>
+                    <span class="missing" th:unless="${#lists.isEmpty(v.missing)}"
+                          th:title="${#strings.listJoin(v.missing, ', ')}"
+                          th:text="|${#lists.size(v.missing)} image(s) missing|"></span>
+                </td>
+                <td th:text="${v.pages}"></td>
+                <td th:text="${v.paintings}"></td>
+                <td class="row-actions">
+                    <a class="btn btn-small" th:href="@{/backups/{f}/download(f=${v.id})}">Download</a>
+                    <button type="button" class="btn btn-small" th:data-url="@{/backups/{f}/restore(f=${v.id})}"
+                            onclick="restoreVersion(this)">Restore</button>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(snapshots)}"><td colspan="5" class="hint">No versions yet.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<script>
+    document.querySelectorAll('time.when').forEach(t => {
+        const d = new Date(t.getAttribute('datetime'));
+        t.textContent = d.toLocaleString([], {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+        t.title = friendlyTime(d);
+    });
+
+    async function restoreVersion(button) {
+        const when = button.closest('tr').querySelector('time').textContent;
+        if (!await confirmDialog('Restore the version from ' + when + '? The site as it is now is saved first, '
+            + 'so you can restore it again from this list. The live site only changes when you publish.', 'Restore')) return;
+        button.disabled = true;
+        try {
+            const response = await fetch(button.dataset.url, {method: 'POST'});
+            const body = await response.json();
+            if (!response.ok) throw new Error(body.message || 'the server returned an error');
+            flash(body.missing.length
+                ? 'Restored, but ' + body.missing.length + ' image(s) couldn\'t be brought back: ' + body.missing.slice(0, 3).join(', ')
+                : 'Version restored', body.missing.length ? 'error' : undefined);
+            location.reload();
+        } catch (e) {
+            toast('Not restored: ' + e.message, 'error');
+            button.disabled = false;
+        }
+    }
+
+    document.getElementById('check-images').addEventListener('click', async function () {
+        const out = document.getElementById('check-result');
+        this.disabled = true;
+        out.hidden = false;
+        out.className = 'notice';
+        out.textContent = 'Checking every archived image…';
+        try {
+            const r = await (await fetch(this.dataset.url)).json();
+            const problems = [
+                [r.corrupt, 'archived image(s) no longer match their hash'],
+                [r.missingFromGallery, 'live painting(s) have no image file'],
+                [r.missingFromArchive, 'image(s) that versions need are missing from the archive']
+            ].filter(([list]) => list.length);
+            if (!problems.length) {
+                out.textContent = 'All ' + r.archived + ' archived images are intact, and every painting on the site has its image.';
+            } else {
+                out.className = 'notice notice-error';
+                out.textContent = problems.map(([list, what]) => list.length + ' ' + what + ': ' + list.slice(0, 5).join(', ')
+                    + (list.length > 5 ? '…' : '')).join(' · ');
+            }
+        } catch (e) {
+            out.className = 'notice notice-error';
+            out.textContent = 'The check failed: ' + e.message;
+        }
+        this.disabled = false;
+    });
+</script>
+</body>
+</html>

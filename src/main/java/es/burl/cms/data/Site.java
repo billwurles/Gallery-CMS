@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 public class Site {
 
 	@Getter
-	private final String name;
+	private String name; // not final: restoring a version replaces the site's contents in place
 	private Painting homeImage;
 	private final Map<String, Page> pages;
 	private final ExhibitionRepo exhibitionRepo;
@@ -30,6 +30,20 @@ public class Site {
 		private Painting homeImage = Painting.builder().build();
 		private Map<String, Page> pages = new HashMap<>();
 		private ExhibitionRepo exhibitionRepo = ExhibitionRepo.builder().build();
+	}
+
+	/**
+	 * Makes this site hold another's contents. The editor shares one Site object everywhere, so restoring
+	 * an older version replaces what it holds rather than the object.
+	 */
+	public synchronized void replaceWith(Site other) {
+		this.name = other.name;
+		this.homeImage = other.homeImage;
+		this.pages.clear();
+		this.pages.putAll(other.pages);
+		this.exhibitionRepo.getExhibitions().clear();
+		this.exhibitionRepo.getExhibitions().putAll(other.exhibitionRepo.getExhibitions());
+		this.exhibitionRepo.getMenuItem().setOrder(other.exhibitionRepo.getMenuItem().getOrder());
 	}
 
 	public Page getPage(String url) {

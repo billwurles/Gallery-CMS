@@ -41,7 +41,7 @@ class JsonBackupTest {
 
 		assertThat(files("unpublished")).singleElement()
 				.asString()
-				.matches("1-unpublished-\\d{14}-site-data-backup\\.json");
+				.matches("1-unpublished-\\d{17}-site-data-backup\\.json");
 		assertThat(files("published")).isEmpty();
 	}
 
@@ -51,7 +51,7 @@ class JsonBackupTest {
 
 		assertThat(files("published")).singleElement()
 				.asString()
-				.matches("1-published-\\d{14}-site-data-backup\\.json");
+				.matches("1-published-\\d{17}-site-data-backup\\.json");
 		assertThat(files("unpublished")).isEmpty();
 	}
 

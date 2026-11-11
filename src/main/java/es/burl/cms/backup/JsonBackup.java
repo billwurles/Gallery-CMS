@@ -142,7 +142,9 @@ public class JsonBackup implements BackupSite {
 	}
 
 	private void saveToJson(Site site, JsonNode json, boolean published) {
-		String newFilename = buildFilename(1, published, LocalDateTime.now().format(DateTimeFormatter.ofPattern("HHmmssyyyyMMdd")));
+		// Milliseconds, so two saves in the same second still get different names (and so different version ids).
+		// Older backups have HHmmssyyyyMMdd here; both are just digits, and only the file times are used for dates.
+		String newFilename = buildFilename(1, published, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")));
 		log.debug("Backing up to JSON - {}", newFilename);
 		try {
 			Files.createDirectories(backupPath);
@@ -201,6 +203,188 @@ public class JsonBackup implements BackupSite {
 		} catch (IOException e) {
 			return null;
 		}
+	}
+
+	// ---------------------------------------------------------------- versions (Backups page)
+
+	/**
+	 * One kept backup. {@code missing} lists images it needs that can't be brought back: manifest entries the
+	 * archive lacks, or, for a backup from before manifests, referenced files not in the gallery.
+	 */
+	public record Snapshot(String id, boolean published, Instant time, String siteName, int pages, int paintings,
+						   int images, boolean hasManifest, List<String> missing) {}
+
+	/** Every kept backup, newest first, drafts and published versions together. */
+	public synchronized List<Snapshot> snapshots() {
+		List<BackupFile> all = new ArrayList<>(findBackups(false));
+		all.addAll(findBackups(true));
+		List<Snapshot> out = new ArrayList<>();
+		for (BackupFile file : all) {
+			try {
+				JsonNode json = objectMapper.readTree(file.path().toFile());
+				int paintings = 0;
+				for (JsonNode page : json.path("pages")) paintings += page.path("gallery").path("gallery").size();
+				JsonNode manifest = json.path(MANIFEST_FIELD);
+				out.add(new Snapshot(versionId(file.path()), file.published(),
+						Files.getLastModifiedTime(file.path()).toInstant(), json.path("name").asText(""),
+						json.path("pages").size(), paintings, referencedImages(json).size(),
+						!manifest.isMissingNode(), missingImages(json)));
+			} catch (IOException | JacksonException e) {
+				log.warn("Can't read backup {} for the list: {}", file.path().getFileName(), e.getMessage());
+			}
+		}
+		out.sort(Comparator.comparing(Snapshot::time).reversed());
+		return out;
+	}
+
+	private List<String> missingImages(JsonNode json) {
+		List<String> missing = new ArrayList<>();
+		JsonNode manifest = json.path(MANIFEST_FIELD);
+		if (manifest.isMissingNode()) {
+			if (galleryRoot != null) {
+				for (String path : referencedImages(json)) {
+					if (!Files.isRegularFile(galleryRoot.resolve(path))) missing.add(path);
+				}
+			}
+			return missing;
+		}
+		for (JsonNode image : manifest.path("images")) {
+			String path = image.path("path").asText("");
+			if (!image.hasNonNull("sha256") || !archive.contains(image.get("sha256").asText(), path)) missing.add(path);
+		}
+		return missing;
+	}
+
+	/**
+	 * A version's id: its file name without the leading number. Saves renumber the files (1-, 2-, ...), so the
+	 * number can't identify a version, but the kind, time and name stay the same as it moves down the list.
+	 */
+	public static String versionId(Path file) {
+		return file.getFileName().toString().replaceFirst("^\\d+-", "");
+	}
+
+	/** The backup file for this version id, if it's one of the kept backups (nothing else can be named). */
+	private Path snapshotFile(String id) {
+		List<BackupFile> all = new ArrayList<>(findBackups(false));
+		all.addAll(findBackups(true));
+		return all.stream().map(BackupFile::path).filter(p -> versionId(p).equals(id)).findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("There's no kept version " + id));
+	}
+
+	/** The result of a restore: the site as it was, and any images that couldn't be brought back. */
+	public record Restored(Site site, List<String> missing) {}
+
+	/**
+	 * Reads a kept backup and puts its images back into the gallery from the archive (hard link, else copy,
+	 * checked against the hash). The caller saves the current site first, so the restore can be undone,
+	 * and saves the restored one after.
+	 */
+	public synchronized Restored restoreSnapshot(String file) {
+		Path path = snapshotFile(file);
+		JsonNode json = objectMapper.readTree(path.toFile());
+		List<String> missing = new ArrayList<>();
+		JsonNode manifest = json.path(MANIFEST_FIELD);
+		if (manifest.isMissingNode()) {
+			missing.addAll(missingImages(json)); // from before manifests: the JSON only
+		} else if (galleryRoot != null) {
+			for (JsonNode image : manifest.path("images")) {
+				String relative = image.path("path").asText("");
+				if (!image.hasNonNull("sha256")) { missing.add(relative); continue; }
+				try {
+					if (!rehydrate(relative, image.get("sha256").asText())) missing.add(relative);
+				} catch (IOException e) {
+					log.error("Couldn't restore image {}", relative, e);
+					missing.add(relative);
+				}
+			}
+		}
+		((ObjectNode) json).remove(MANIFEST_FIELD);
+		Site site = objectMapper.treeToValue(json, Site.class);
+		log.info("Restored {} ({} image(s) couldn't be brought back)", file, missing.size());
+		return new Restored(site, missing);
+	}
+
+	/** Makes gallery/relative hold the archived image with this hash; false if the archive doesn't have it. */
+	private boolean rehydrate(String relative, String sha) throws IOException {
+		Path target = galleryRoot.resolve(relative).normalize();
+		if (!target.startsWith(galleryRoot.normalize())) return false;
+		if (Files.isRegularFile(target) && archive.sha256(target).equals(sha)) return true;
+		Path source = archive.pathFor(sha, relative);
+		if (!Files.isRegularFile(source) || !ImageArchive.hashOf(source).equals(sha)) return false;
+		Files.createDirectories(target.getParent());
+		Files.deleteIfExists(target);
+		try {
+			Files.createLink(target, source);
+		} catch (IOException | UnsupportedOperationException e) {
+			Files.copy(source, target);
+		}
+		return ImageArchive.hashOf(target).equals(sha);
+	}
+
+	/** A kept backup as a zip: site.json (with its manifest) and images/<gallery path>. */
+	public synchronized void writeZip(String file, java.io.OutputStream out) throws IOException {
+		Path path = snapshotFile(file);
+		JsonNode json = objectMapper.readTree(path.toFile());
+		try (java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(out)) {
+			zip.putNextEntry(new java.util.zip.ZipEntry("site.json"));
+			zip.write(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(json));
+			zip.closeEntry();
+			JsonNode manifest = json.path(MANIFEST_FIELD);
+			Set<String> written = new HashSet<>();
+			for (String relative : referencedImages(json)) {
+				Path image = null;
+				for (JsonNode entry : manifest.path("images")) {
+					if (entry.path("path").asText("").equals(relative) && entry.hasNonNull("sha256")) {
+						image = archive.pathFor(entry.get("sha256").asText(), relative);
+					}
+				}
+				if ((image == null || !Files.isRegularFile(image)) && galleryRoot != null) image = galleryRoot.resolve(relative);
+				if (image == null || !Files.isRegularFile(image) || !written.add(relative)) continue;
+				zip.putNextEntry(new java.util.zip.ZipEntry("images/" + relative));
+				Files.copy(image, zip);
+				zip.closeEntry();
+			}
+		}
+	}
+
+	/**
+	 * What's wrong with the images, if anything: archive files whose content no longer matches their hash,
+	 * live paintings whose file is missing, and images a kept backup needs that the archive lacks.
+	 */
+	public record IntegrityReport(int archived, List<String> corrupt, List<String> missingFromGallery,
+								  List<String> missingFromArchive) {
+		public boolean ok() {
+			return corrupt.isEmpty() && missingFromGallery.isEmpty() && missingFromArchive.isEmpty();
+		}
+	}
+
+	public synchronized IntegrityReport checkIntegrity(Site site) {
+		List<String> corrupt = new ArrayList<>();
+		Set<String> archived = new TreeSet<>();
+		try {
+			archived.addAll(archive.list());
+		} catch (IOException e) {
+			log.error("Can't list the image archive", e);
+		}
+		for (String name : archived) {
+			String expected = name.contains(".") ? name.substring(0, name.indexOf('.')) : name;
+			try {
+				if (!ImageArchive.hashOf(archive.getArchiveDir().resolve(name)).equals(expected)) corrupt.add(name);
+			} catch (IOException e) {
+				corrupt.add(name);
+			}
+		}
+		List<String> missingFromGallery = new ArrayList<>();
+		if (galleryRoot != null) {
+			for (String path : referencedImages(objectMapper.valueToTree(site))) {
+				if (!Files.isRegularFile(galleryRoot.resolve(path))) missingFromGallery.add(path);
+			}
+		}
+		Set<String> missingFromArchive = new TreeSet<>();
+		for (Snapshot snapshot : snapshots()) {
+			if (snapshot.hasManifest()) snapshot.missing().forEach(m -> missingFromArchive.add(m + " (" + snapshot.id() + ")"));
+		}
+		return new IntegrityReport(archived.size(), corrupt, missingFromGallery, new ArrayList<>(missingFromArchive));
 	}
 
 	// ---------------------------------------------------------------- restore

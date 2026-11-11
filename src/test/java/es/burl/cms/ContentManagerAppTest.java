@@ -252,4 +252,28 @@ class ContentManagerAppTest {
 		byte[] original = mvc.perform(get("/page/work/gallery/image/" + name)).andReturn().getResponse().getContentAsByteArray();
 		assertThat(javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(original)).getWidth()).isEqualTo(3000);
 	}
+
+	@Test
+	void aVersionCanBeRestoredFromTheEditorAndUndone() throws Exception {
+		mvc.perform(post("/page/about").param("title", "About").param("url", "about").param("content", "<p>Version one</p>"));
+		String versionOne = mvc.perform(get("/backups")).andReturn().getResponse().getContentAsString();
+		java.util.regex.Matcher m = java.util.regex.Pattern.compile("/backups/(unpublished-[^/\"]+\\.json)/restore").matcher(versionOne);
+		assertThat(m.find()).isTrue();
+		String file = m.group(1);
+		mvc.perform(post("/page/about").param("title", "About").param("url", "about").param("content", "<p>Version two</p>"));
+
+		mvc.perform(post("/backups/" + file + "/restore"))
+				.andExpect(status().isOk())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.missing").isArray());
+		assertThat(mvc.perform(get("/page/about")).andReturn().getResponse().getContentAsString()).contains("Version one");
+
+		// the version just replaced ("Version two") is in the list, so the restore can be undone
+		String list = mvc.perform(get("/backups")).andReturn().getResponse().getContentAsString();
+		assertThat(list).contains("Restore");
+		mvc.perform(post("/backups/no-such-file.json/restore")).andExpect(status().isNotFound());
+		mvc.perform(get("/backups/" + file + "/download"))
+				.andExpect(status().isOk())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Type", "application/zip"));
+		mvc.perform(get("/backups/check")).andExpect(status().isOk());
+	}
 }

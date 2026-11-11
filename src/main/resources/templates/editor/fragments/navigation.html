@@ -38,6 +38,7 @@
                 <time th:attr="datetime=${publishStatus.lastPublished}"></time></span>
         </p>
         <a class="preview-link" th:href="@{/preview}" target="_blank" rel="noopener">Preview unpublished site</a>
+        <a class="preview-link" th:href="@{/backups}" th:classappend="${currentPage == 'backups'} ? 'active'">Versions</a>
     </div>
 </header>
 </html>

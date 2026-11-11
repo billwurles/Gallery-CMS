@@ -305,4 +305,92 @@ class ImageVersioningTest {
 		assertThat(Files.readString(newest("published"))).contains(JsonBackup.MANIFEST_FIELD);
 		assertThat(b.status(site).changed()).isFalse();
 	}
+
+	// ---------------------------------------------------------------- BACKUP-4: restore, check, download
+
+	@Test
+	void restoringAnOldVersionBringsBackADeletedPaintingByteForByte() throws IOException {
+		JsonBackup b = backups(5, 10, false);
+		b.backup(site);
+		String withA = JsonBackup.versionId(newest("unpublished"));
+
+		// a.jpg is deleted from the gallery and the site, and later saves move on
+		assertThat(b.retireImage("work", "a.jpg")).isTrue();
+		site.getPage("work").removePainting("a.jpg");
+		b.backup(site);
+		assertThat(gallery.resolve("work/a.jpg")).doesNotExist();
+
+		JsonBackup.Restored restored = b.restoreSnapshot(withA);
+
+		assertThat(restored.missing()).isEmpty();
+		assertThat(restored.site().getPage("work").getGallery().getGallery()).containsKeys("a.jpg", "b.jpg");
+		assertThat(gallery.resolve("work/a.jpg")).hasBinaryContent(A);
+	}
+
+	@Test
+	void theVersionListShowsCountsAndWhatCantBeRestored() throws IOException {
+		JsonBackup b = backups(5, 10, false);
+		b.backup(site);
+		b.publish(site);
+
+		List<JsonBackup.Snapshot> versions = b.snapshots();
+
+		assertThat(versions).hasSize(2);
+		assertThat(versions).extracting(JsonBackup.Snapshot::published).containsExactlyInAnyOrder(true, false);
+		JsonBackup.Snapshot v = versions.get(0);
+		assertThat(v.pages()).isEqualTo(2);
+		assertThat(v.paintings()).isEqualTo(2);
+		assertThat(v.images()).isEqualTo(3);
+		assertThat(v.hasManifest()).isTrue();
+		assertThat(v.missing()).isEmpty();
+
+		// lose one archived image: the version says so
+		Files.delete(b.getArchive().pathFor(ImageArchive.hashOf(gallery.resolve("work/b.jpg")), "work/b.jpg"));
+		assertThat(b.snapshots().get(0).missing()).containsExactly("work/b.jpg");
+	}
+
+	@Test
+	void onlyKeptBackupsCanBeRestored() {
+		JsonBackup b = backups();
+		b.backup(site);
+
+		org.assertj.core.api.Assertions.assertThatThrownBy(() -> b.restoreSnapshot("../../etc/passwd"))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void theIntegrityCheckFindsCorruptAndMissingImages() throws IOException {
+		JsonBackup b = backups();
+		b.backup(site);
+		assertThat(b.checkIntegrity(site).ok()).isTrue();
+
+		Path archived = b.getArchive().pathFor(ImageArchive.hashOf(gallery.resolve("work/a.jpg")), "work/a.jpg");
+		Files.delete(archived); // a hard link: replace its content without touching the gallery file
+		Files.write(archived, new byte[]{9, 9});
+		Files.delete(gallery.resolve("home.jpg"));
+
+		JsonBackup.IntegrityReport report = b.checkIntegrity(site);
+
+		assertThat(report.ok()).isFalse();
+		assertThat(report.corrupt()).containsExactly(archived.getFileName().toString());
+		assertThat(report.missingFromGallery()).containsExactly("home.jpg");
+	}
+
+	@Test
+	void aVersionDownloadsAsAZipOfItsJsonAndImages() throws IOException {
+		JsonBackup b = backups();
+		b.backup(site);
+		String file = JsonBackup.versionId(newest("unpublished"));
+		java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+
+		b.writeZip(file, out);
+
+		java.util.Map<String, byte[]> entries = new java.util.HashMap<>();
+		try (java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(out.toByteArray()))) {
+			for (java.util.zip.ZipEntry e; (e = zip.getNextEntry()) != null; ) entries.put(e.getName(), zip.readAllBytes());
+		}
+		assertThat(entries).containsOnlyKeys("site.json", "images/home.jpg", "images/work/a.jpg", "images/work/b.jpg");
+		assertThat(entries.get("images/work/a.jpg")).isEqualTo(A);
+		assertThat(new String(entries.get("site.json"))).contains(JsonBackup.MANIFEST_FIELD, "\"work\"");
+	}
 }
