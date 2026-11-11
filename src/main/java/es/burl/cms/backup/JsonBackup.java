@@ -271,6 +271,30 @@ public class JsonBackup implements BackupSite {
 				.orElseThrow(() -> new IllegalArgumentException("There's no kept version " + id));
 	}
 
+	/** A kept version's site, read without restoring anything (for comparing). */
+	public synchronized Site loadVersion(String id) {
+		JsonNode json = objectMapper.readTree(snapshotFile(id).toFile());
+		((ObjectNode) json).remove(MANIFEST_FIELD);
+		return objectMapper.treeToValue(json, Site.class);
+	}
+
+	/**
+	 * An image as a kept version had it: the archived copy named in its manifest, else the gallery file.
+	 * Null if neither exists or the path isn't one the version uses.
+	 */
+	public synchronized Path versionImage(String id, String relative) {
+		JsonNode json = objectMapper.readTree(snapshotFile(id).toFile());
+		if (!referencedImages(json).contains(relative)) return null;
+		for (JsonNode entry : json.path(MANIFEST_FIELD).path("images")) {
+			if (entry.path("path").asText("").equals(relative) && entry.hasNonNull("sha256")) {
+				Path archived = archive.pathFor(entry.get("sha256").asText(), relative);
+				if (Files.isRegularFile(archived)) return archived;
+			}
+		}
+		Path inGallery = galleryRoot == null ? null : galleryRoot.resolve(relative).normalize();
+		return inGallery != null && inGallery.startsWith(galleryRoot.normalize()) && Files.isRegularFile(inGallery) ? inGallery : null;
+	}
+
 	/** The result of a restore: the site as it was, and any images that couldn't be brought back. */
 	public record Restored(Site site, List<String> missing) {}
 

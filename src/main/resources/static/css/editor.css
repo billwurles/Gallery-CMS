@@ -417,3 +417,27 @@ dialog.confirm::backdrop { background: rgba(16, 24, 40, .45); }
 .kind { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--surface-2); font-size: 12px; font-weight: 600; }
 .kind-published { background: var(--accent-tint); color: var(--accent); }
 .missing { margin-left: 6px; color: var(--danger); font-size: 12px; font-weight: 600; }
+
+/* Compare versions -------------------------------------------------- */
+.compare-with { display: flex; align-items: center; gap: 6px; }
+.compare-with select { padding: 7px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font: 14px var(--font); color: var(--text); max-width: 260px; }
+.diff-summary ul, .diff-block .details { margin: 8px 0 0; padding-left: 0; list-style: none; }
+.diff-summary li { padding: 4px 0; }
+.diff-block { margin-top: 16px; }
+.diff-block h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.diff-block .details li { padding: 2px 0; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--surface-2); }
+.badge-added { background: #e3f4ea; color: var(--ok); }
+.badge-removed { background: var(--danger-tint); color: var(--danger); }
+.badge-changed { background: #fdf0dc; color: #a15c00; }
+.text-diff { margin-top: 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; max-height: 420px; overflow: auto; }
+.text-diff p { display: flex; gap: 8px; margin: 0; padding: 3px 10px; }
+.text-diff .op { flex: none; width: 1em; font-weight: 700; }
+.text-diff .add { background: #e9f7ef; }
+.text-diff .del { background: #fdecea; text-decoration: line-through; text-decoration-color: rgba(192, 57, 43, .5); }
+.text-diff .same { color: var(--muted); }
+.diff-paintings, .diff-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-top: 12px; }
+.diff-paintings figure, .diff-images figure { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.diff-paintings img, .diff-images img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: var(--surface-2); }
+.diff-paintings figcaption, .diff-images figcaption { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; font-size: 13px; }
+.painting-removed img { opacity: .55; }

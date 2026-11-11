@@ -1,6 +1,14 @@
 package es.burl.cms.controllers.editor;
 
 import es.burl.cms.backup.JsonBackup;
+import es.burl.cms.backup.VersionDiff;
+import es.burl.cms.builder.ThymeleafSiteBuilder;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaTypeFactory;
+
+import java.io.IOException;
+import java.nio.file.Path;
 import es.burl.cms.data.Site;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +35,46 @@ public class BackupController {
 
 	private final Site site;
 	private final JsonBackup backups;
+	private final ThymeleafSiteBuilder builder;
 
 	@Autowired
-	public BackupController(@Qualifier("getSite") Site site, @Qualifier("getPublishService") JsonBackup backups) {
+	public BackupController(@Qualifier("getSite") Site site, @Qualifier("getPublishService") JsonBackup backups,
+							ThymeleafSiteBuilder builder) {
 		this.site = site;
 		this.backups = backups;
+		this.builder = builder;
+	}
+
+	/**
+	 * What restoring a version would change: from the site now (or another version, ?from=<id>) to this one.
+	 */
+	@GetMapping("/{id}/compare")
+	public String compare(@PathVariable String id, @RequestParam(name = "from", defaultValue = "current") String from, Model model) {
+		List<JsonBackup.Snapshot> versions = backups.snapshots();
+		JsonBackup.Snapshot version = versions.stream().filter(v -> v.id().equals(id)).findFirst()
+				.orElseThrow(() -> new NotFoundException("The version " + id));
+		Site fromSite = from.equals("current") ? site : versions.stream().anyMatch(v -> v.id().equals(from))
+				? backups.loadVersion(from) : null;
+		if (fromSite == null) throw new NotFoundException("The version " + from);
+		model.addAttribute("menuItems", site.getMenuItems());
+		model.addAttribute("version", version);
+		model.addAttribute("from", from);
+		model.addAttribute("fromVersion", versions.stream().filter(v -> v.id().equals(from)).findFirst().orElse(null));
+		model.addAttribute("versions", versions);
+		model.addAttribute("diff", VersionDiff.between(fromSite, backups.loadVersion(id)));
+		return "editor/Compare";
+	}
+
+	/** A small copy of an image as a version had it (from the archive, so deleted paintings still show). */
+	@GetMapping("/{id}/image")
+	public ResponseEntity<Resource> versionImage(@PathVariable String id, @RequestParam String path) throws IOException {
+		if (backups.snapshots().stream().noneMatch(v -> v.id().equals(id))) return ResponseEntity.notFound().build();
+		Path image = backups.versionImage(id, path);
+		if (image == null) return ResponseEntity.notFound().build();
+		Path thumb = builder.thumbnail(image);
+		return ResponseEntity.ok()
+				.contentType(MediaTypeFactory.getMediaType(thumb.getFileName().toString()).orElse(MediaType.IMAGE_JPEG))
+				.body(new FileSystemResource(thumb));
 	}
 
 	@GetMapping(value = {"", "/"})

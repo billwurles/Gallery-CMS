@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Compare versions</title>
+    <th:block th:replace="~{editor/fragments/head :: common}"/>
+</head>
+<body>
+<header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='backups')}"></header>
+
+<!--/* Images: a painting on the "to" side comes from this version's archive; on the "from" side from the
+     other version's archive, or the gallery when comparing with the site now. */-->
+<main class="main" th:with="current=${from == 'current'}">
+    <div class="page-head">
+        <div>
+            <p class="crumb"><a th:href="@{/backups}">Versions</a></p>
+            <h1 th:if="${current}">What restoring this version changes</h1>
+            <h1 th:unless="${current}">Changes between two versions</h1>
+            <p class="sub">
+                From <strong th:if="${current}">the site now</strong>
+                <strong th:unless="${current}"><time class="when" th:attr="datetime=${fromVersion.time}"></time></strong>
+                to the <span th:text="${version.published} ? 'published version' : 'draft'"></span> of
+                <strong><time class="when" th:attr="datetime=${version.time}"></time></strong>.
+            </p>
+        </div>
+        <div class="page-actions">
+            <form class="compare-with" th:action="@{/backups/{id}/compare(id=${version.id})}" method="get">
+                <label for="from-select" class="hint">Compare with</label>
+                <select id="from-select" name="from" onchange="this.form.submit()">
+                    <option value="current" th:selected="${current}">the site now</option>
+                    <option th:each="v : ${versions}" th:unless="${v.id == version.id}" th:value="${v.id}"
+                            th:selected="${v.id == from}" th:attr="data-time=${v.time}"
+                            th:text="${v.published} ? 'Published version' : 'Draft'"></option>
+                </select>
+            </form>
+            <button type="button" class="btn btn-primary" th:data-url="@{/backups/{id}/restore(id=${version.id})}"
+                    onclick="restoreVersion(this)">Restore this version</button>
+        </div>
+    </div>
+
+    <p class="empty" th:if="${diff.empty}">No differences: this version is the same as what it's compared with.</p>
+
+    <!--/* Summary first */-->
+    <section class="card diff-summary" th:unless="${diff.empty}">
+        <h2>Summary</h2>
+        <ul>
+            <li th:each="p : ${diff.pages}">
+                <span class="badge" th:classappend="|badge-${#strings.toLowerCase(p.kind)}|"
+                      th:text="${p.kind.name() == 'ADDED'} ? 'Page comes back' : (${p.kind.name() == 'REMOVED'} ? 'Page goes' : 'Page changes')"></span>
+                <a th:href="|#page-${p.url}|" th:text="${p.title}"></a>
+                <span class="hint" th:if="${!#lists.isEmpty(p.paintings)}"
+                      th:text="|${#lists.size(p.paintings)} painting change(s)|"></span>
+            </li>
+            <li th:if="${diff.menuReordered}"><span class="badge badge-changed">Menu</span> The menu order changes</li>
+            <li th:if="${diff.homeImage != null}"><span class="badge badge-changed">Home</span> The home image changes</li>
+            <li th:each="e : ${diff.exhibitions}">
+                <span class="badge" th:classappend="|badge-${#strings.toLowerCase(e.kind)}|"
+                      th:text="${e.kind.name() == 'ADDED'} ? 'Exhibition comes back' : (${e.kind.name() == 'REMOVED'} ? 'Exhibition goes' : 'Exhibition changes')"></span>
+                <a th:href="|#exhibition-${e.url}|" th:text="${e.title}"></a>
+            </li>
+        </ul>
+    </section>
+
+    <section class="card diff-block" th:if="${diff.menuReordered}">
+        <h2>Menu order</h2>
+        <div class="field-pair">
+            <div><p class="hint">From</p><ol><li th:each="t : ${diff.menuFrom}" th:text="${t}"></li></ol></div>
+            <div><p class="hint">To</p><ol><li th:each="t : ${diff.menuTo}" th:text="${t}"></li></ol></div>
+        </div>
+    </section>
+
+    <section class="card diff-block" th:if="${diff.homeImage != null}">
+        <h2>Home image</h2>
+        <div class="diff-images">
+            <figure th:if="${!#strings.isEmpty(diff.homeImage.from)}">
+                <img th:src="${current} ? @{/image/{f}(f=${diff.homeImage.from})} : @{/backups/{id}/image(id=${from},path=${diff.homeImage.from})}" alt="Home image before">
+                <figcaption>From</figcaption>
+            </figure>
+            <figure th:if="${!#strings.isEmpty(diff.homeImage.to)}">
+                <img th:src="@{/backups/{id}/image(id=${version.id},path=${diff.homeImage.to})}" alt="Home image after">
+                <figcaption>To</figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <section class="card diff-block" th:each="p : ${diff.pages}" th:id="|page-${p.url}|">
+        <h2><span class="badge" th:classappend="|badge-${#strings.toLowerCase(p.kind)}|" th:text="${#strings.capitalize(#strings.toLowerCase(p.kind))}"></span>
+            <span th:text="${p.title}"></span> <span class="hint" th:text="|/${p.url}|"></span></h2>
+        <ul class="details" th:unless="${#lists.isEmpty(p.details)}"><li th:each="d : ${p.details}" th:text="${d}"></li></ul>
+
+        <div class="text-diff" th:unless="${#lists.isEmpty(p.text)}">
+            <p th:each="l : ${p.text}" th:classappend="${l.op == '+'} ? 'add' : (${l.op == '-'} ? 'del' : 'same')">
+                <span class="op" th:text="${l.op == '+'} ? '+' : (${l.op == '-'} ? '−' : '')"></span><span th:text="${l.text}"></span></p>
+        </div>
+
+        <div class="diff-paintings" th:unless="${#lists.isEmpty(p.paintings)}">
+            <figure th:each="c : ${p.paintings}" th:classappend="|painting-${#strings.toLowerCase(c.kind)}|">
+                <img th:alt="${c.title}"
+                     th:src="${c.side == 'to'} ? @{/backups/{id}/image(id=${version.id},path=|${p.url}/${c.filename}|)}
+                             : (${current} ? @{/page/{u}/gallery/image/{f}(u=${p.url},f=${c.filename},size='thumb')}
+                                           : @{/backups/{id}/image(id=${from},path=|${p.url}/${c.filename}|)})">
+                <figcaption>
+                    <span class="badge" th:classappend="|badge-${#strings.toLowerCase(c.kind)}|"
+                          th:text="${c.kind.name() == 'ADDED'} ? 'Comes back' : (${c.kind.name() == 'REMOVED'} ? 'Goes' : 'Changes')"></span>
+                    <strong th:text="${c.title}"></strong>
+                    <span class="hint" th:each="d : ${c.details}" th:text="${d}"></span>
+                </figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <section class="card diff-block" th:each="e : ${diff.exhibitions}" th:id="|exhibition-${e.url}|">
+        <h2><span class="badge" th:classappend="|badge-${#strings.toLowerCase(e.kind)}|" th:text="${#strings.capitalize(#strings.toLowerCase(e.kind))}"></span>
+            Exhibition: <span th:text="${e.title}"></span></h2>
+        <ul class="details" th:unless="${#lists.isEmpty(e.details)}"><li th:each="d : ${e.details}" th:text="${d}"></li></ul>
+        <div class="text-diff" th:unless="${#lists.isEmpty(e.text)}">
+            <p th:each="l : ${e.text}" th:classappend="${l.op == '+'} ? 'add' : (${l.op == '-'} ? 'del' : 'same')">
+                <span class="op" th:text="${l.op == '+'} ? '+' : (${l.op == '-'} ? '−' : '')"></span><span th:text="${l.text}"></span></p>
+        </div>
+    </section>
+</main>
+
+<script>
+    const fmt = d => d.toLocaleString([], {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+    document.querySelectorAll('time.when').forEach(t => t.textContent = fmt(new Date(t.getAttribute('datetime'))));
+    document.querySelectorAll('#from-select option[data-time]').forEach(o => o.textContent += ' of ' + fmt(new Date(o.dataset.time)));
+
+    async function restoreVersion(button) {
+        if (!await confirmDialog('Restore this version? The site as it is now is saved first, so you can come back to it from '
+            + 'Versions. The live site only changes when you publish.', 'Restore')) return;
+        button.disabled = true;
+        try {
+            const response = await fetch(button.dataset.url, {method: 'POST'});
+            const body = await response.json();
+            if (!response.ok) throw new Error(body.message || 'the server returned an error');
+            flash(body.missing.length ? 'Restored, but ' + body.missing.length + ' image(s) couldn\'t be brought back' : 'Version restored',
+                body.missing.length ? 'error' : undefined);
+            location.href = button.dataset.url.replace(/\/[^/]+\/restore$/, '');
+        } catch (e) {
+            toast('Not restored: ' + e.message, 'error');
+            button.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

@@ -276,4 +276,22 @@ class ContentManagerAppTest {
 				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Type", "application/zip"));
 		mvc.perform(get("/backups/check")).andExpect(status().isOk());
 	}
+
+	@Test
+	void aVersionCanBeComparedWithTheSiteNow() throws Exception {
+		mvc.perform(post("/page/about").param("title", "About").param("url", "about").param("content", "<p>Before compare</p>"));
+		String list = mvc.perform(get("/backups")).andReturn().getResponse().getContentAsString();
+		java.util.regex.Matcher m = java.util.regex.Pattern.compile("/backups/(unpublished-[^/\"]+\\.json)/compare").matcher(list);
+		assertThat(m.find()).isTrue();
+		String id = m.group(1);
+		mvc.perform(post("/page/about").param("title", "About").param("url", "about").param("content", "<p>After compare</p>"));
+
+		String page = mvc.perform(get("/backups/" + id + "/compare")).andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		assertThat(page).contains("What restoring this version changes", "Before compare", "After compare", "Restore this version");
+		mvc.perform(get("/backups/" + id + "/image").param("path", "work/a.jpg")).andExpect(status().isOk());
+		mvc.perform(get("/backups/" + id + "/image").param("path", "../../etc/passwd")).andExpect(status().isNotFound());
+		mvc.perform(get("/backups/nope.json/compare")).andExpect(status().isNotFound());
+	}
 }

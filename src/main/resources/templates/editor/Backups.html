@@ -39,6 +39,7 @@
                 <td th:text="${v.pages}"></td>
                 <td th:text="${v.paintings}"></td>
                 <td class="row-actions">
+                    <a class="btn btn-small" th:href="@{/backups/{f}/compare(f=${v.id})}">Compare with now</a>
                     <a class="btn btn-small" th:href="@{/backups/{f}/download(f=${v.id})}">Download</a>
                     <button type="button" class="btn btn-small" th:data-url="@{/backups/{f}/restore(f=${v.id})}"
                             onclick="restoreVersion(this)">Restore</button>
