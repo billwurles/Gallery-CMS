@@ -14,7 +14,7 @@
             <h1 th:text="${message}"></h1>
         </div>
         <div class="page-actions">
-            <button type="submit" form="metadata-form" id="upload-button" class="btn btn-primary" disabled>Upload images</button>
+            <button type="submit" form="metadata-form" id="upload-button" class="btn btn-primary" disabled>Upload image</button>
         </div>
     </div>
 
@@ -30,96 +30,122 @@
     </form>
 </main>
 
-<script>
+<script th:inline="javascript">
+    // Each chosen file gets a card (title, dimensions, medium, sold) and is sent on its own as a normal
+    // file upload, so each has a progress bar, and one bad file doesn't stop the rest.
     const previewContainer = $('#preview-container');
-    const images = [];   // base64 image data, by position
-    const names = [];    // the chosen files' names, for messages (the server names saved files itself)
+    const files = [];   // the chosen File objects, by card id
+    const homeImage = /*[[${page == ''}]]*/ false;
 
-    function addFiles(files) {
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const id = images.length;
-                images.push(e.target.result.split(',')[1]);
-                names.push(file.name);
-                const card = $(`
-                    <div class="painting" data-id="${id}">
-                        <div class="painting-thumb"><img alt="Preview"></div>
-                        <div class="painting-fields">
-                            <label class="field"><span>Title</span><input type="text" class="f-title"></label>
-                            <div class="field-pair">
-                                <label class="field"><span>Dimensions</span><input type="text" class="f-dimensions"></label>
-                                <label class="field"><span>Medium</span><input type="text" class="f-medium"></label>
-                            </div>
-                            <div class="painting-foot">
-                                <label class="check"><input type="checkbox" class="f-sold"> Sold</label>
-                            </div>
+    function addFiles(list) {
+        Array.from(list).forEach(file => {
+            const id = files.length;
+            files.push(file);
+            const card = $(`
+                <div class="painting" data-id="${id}">
+                    <div class="painting-thumb"><img alt="Preview"></div>
+                    <div class="painting-fields">
+                        <label class="field"><span>Title</span><input type="text" class="f-title"></label>
+                        <div class="field-pair">
+                            <label class="field"><span>Dimensions</span><input type="text" class="f-dimensions"></label>
+                            <label class="field"><span>Medium</span><input type="text" class="f-medium"></label>
                         </div>
-                    </div>`);
-                card.find('img').attr('src', e.target.result);
-                card.find('.f-title').val(file.name.replace(/\.[^/.]+$/, ''));
-                previewContainer.append(card);
-                $('#upload-button').prop('disabled', false);
-            };
-            reader.readAsDataURL(file);
+                        <div class="painting-foot">
+                            <label class="check"><input type="checkbox" class="f-sold"> Sold</label>
+                            <button type="button" class="btn btn-small remove-file">Remove</button>
+                        </div>
+                        <div class="upload-progress" hidden><div class="bar"></div></div>
+                        <p class="upload-message"></p>
+                    </div>
+                </div>`);
+            card.find('img').attr('src', URL.createObjectURL(file)); // a preview without reading the file into memory
+            card.find('.f-title').val(file.name.replace(/\.[^/.]+$/, ''));
+            card.find('.remove-file').on('click', () => { card.remove(); updateButton(); });
+            if (homeImage) card.find('.field-pair, .check').hide();
+            previewContainer.append(card);
+            updateButton();
         });
+    }
+
+    function updateButton() {
+        const waiting = previewContainer.find('.painting:not(.done)').length;
+        $('#upload-button').prop('disabled', waiting === 0)
+            .text(waiting > 1 ? 'Upload ' + waiting + ' images' : 'Upload image');
     }
 
     $('#file-input-trigger').on('click', () => $('#file-input').click());
     $('#file-input').on('change', function () {
         addFiles(this.files);
+        this.value = '';
     });
-
     $('#drag-and-drop-zone')
-        .on('dragover', function (e) {
-            e.preventDefault();
-            $(this).addClass('over');
-        })
-        .on('dragleave', function () {
-            $(this).removeClass('over');
-        })
+        .on('dragover', function (e) { e.preventDefault(); $(this).addClass('over'); })
+        .on('dragleave', function () { $(this).removeClass('over'); })
         .on('drop', function (e) {
             e.preventDefault();
             $(this).removeClass('over');
             addFiles(e.originalEvent.dataTransfer.files);
         });
 
-    $('#metadata-form').on('submit', function (e) {
-        e.preventDefault();
-        const uploadButton = $('#upload-button').prop('disabled', true).text('Uploading…');
-
-        const payload = {
-            images: previewContainer.find('.painting').map(function () {
-                const card = $(this);
-                return {
-                    title: card.find('.f-title').val(),
-                    filename: names[card.data('id')],
-                    dimensions: card.find('.f-dimensions').val(),
-                    medium: card.find('.f-medium').val(),
-                    sold: card.find('.f-sold').is(':checked'),
-                    order: "",
-                    imageData: images[card.data('id')]
-                };
-            }).get()
-        };
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(payload),
-            success: function () {
-                flash('Images uploaded');
-                const path = window.location.pathname;
-                window.location.href = path.substring(0, path.lastIndexOf('/')) || "/";
-            },
-            error: function (xhr) {
-                // A rejected file comes back as a 400 naming it and saying why
-                const reason = xhr.status === 400 && xhr.responseText ? xhr.responseText : 'the server returned an error';
-                toast('Nothing was uploaded: ' + reason, 'error');
-                uploadButton.prop('disabled', false).text('Upload images');
+    /** Sends one card's file; resolves true if it was saved. */
+    function upload(card, url) {
+        const file = files[card.data('id')];
+        const data = new FormData();
+        data.append('file', file, file.name);
+        data.append('title', card.find('.f-title').val());
+        data.append('dimensions', card.find('.f-dimensions').val() || '');
+        data.append('medium', card.find('.f-medium').val() || '');
+        data.append('sold', card.find('.f-sold').is(':checked'));
+        const progress = card.find('.upload-progress').prop('hidden', false), bar = progress.find('.bar');
+        const message = card.find('.upload-message').removeClass('error').text('Uploading…');
+        card.find('input, .remove-file').prop('disabled', true);
+        return new Promise(resolve => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            xhr.upload.onprogress = e => { if (e.lengthComputable) bar.css('width', (100 * e.loaded / e.total) + '%'); };
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    bar.css('width', '100%');
+                    card.addClass('done');
+                    message.text('Uploaded');
+                    resolve(true);
+                } else {
+                    fail(xhr.status === 400 && xhr.responseText ? xhr.responseText : 'the server returned an error (' + xhr.status + ')');
+                }
+            };
+            xhr.onerror = () => fail('the connection failed');
+            xhr.send(data);
+            function fail(reason) {
+                progress.prop('hidden', true);
+                message.addClass('error').text('Not uploaded: ' + reason);
+                card.find('input, .remove-file').prop('disabled', false);
+                resolve(false);
             }
         });
+    }
+
+    $('#metadata-form').on('submit', async function (e) {
+        e.preventDefault();
+        const url = $(this).attr('action');
+        const cards = previewContainer.find('.painting:not(.done)').toArray().map(c => $(c));
+        $('#upload-button').prop('disabled', true).text('Uploading…');
+        // Two at a time: quicker than one by one, without flooding a slow connection
+        let next = 0, failed = 0;
+        async function worker() {
+            while (next < cards.length) {
+                const card = cards[next++];
+                if (!await upload(card, url)) failed++;
+            }
+        }
+        await Promise.all([worker(), worker()]);
+        if (failed === 0) {
+            flash(cards.length === 1 ? 'Image uploaded' : cards.length + ' images uploaded');
+            const path = window.location.pathname;
+            window.location.href = path.substring(0, path.lastIndexOf('/')) || '/';
+        } else {
+            toast((cards.length - failed) + ' uploaded, ' + failed + ' not: see the cards marked in red', 'error');
+            updateButton();
+        }
     });
 </script>
 </body>

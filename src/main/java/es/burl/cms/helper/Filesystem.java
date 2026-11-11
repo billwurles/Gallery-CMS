@@ -51,7 +51,18 @@ public class Filesystem {
 	 */
 	public static Painting uploadPainting(ImageUploadDTO.ImageData newImage, int order, String url, Path galleryRoot) {
 		byte[] imageBytes = UploadedImages.decode(newImage.getImageData(), newImage.getFilename());
-		String extension = UploadedImages.extensionOf(imageBytes, newImage.getFilename());
+		return savePainting(imageBytes, newImage.getFilename(), newImage.getTitle(), newImage.getDimensions(),
+				newImage.getMedium(), newImage.isSold(), order, url, galleryRoot);
+	}
+
+	/**
+	 * Saves one uploaded image under a random name with the extension of what its bytes really are, and
+	 * returns its painting. Throws {@link UploadedImages.InvalidUploadException} if it isn't an image;
+	 * returns null if writing fails.
+	 */
+	public static Painting savePainting(byte[] imageBytes, String originalName, String title, String dimensions,
+										String medium, boolean sold, int order, String url, Path galleryRoot) {
+		String extension = UploadedImages.extensionOf(imageBytes, originalName);
 		String filename = UUID.randomUUID() + extension;
 
 		Path uploadPath = (url.equals("") ? galleryRoot : galleryRoot.resolve(url)).resolve(filename);
@@ -59,13 +70,21 @@ public class Filesystem {
 			Files.createDirectories(uploadPath.getParent());
 			Files.write(uploadPath, imageBytes);
 
-			Painting painting = Painting.builder().title(newImage.getTitle()).filename(filename).dimensions(newImage.getDimensions()).medium(newImage.getMedium()).sold(newImage.isSold()).order(order).build();
+			Painting painting = Painting.builder().title(title).filename(filename).dimensions(dimensions).medium(medium).sold(sold).order(order).build();
 			log.debug("Creating new Painting object: {}", painting);
 			return painting;
 		} catch (IOException e) {
-			log.error("Failed to save image: {}", newImage.getFilename(), e);
+			log.error("Failed to save image: {}", originalName, e);
 			return null;
 		}
+	}
+
+	/** "IMG_2041.JPG" -> "IMG_2041": the default title for an upload. */
+	public static String nameWithoutExtension(String name) {
+		if (name == null) return "";
+		String base = Path.of(name).getFileName().toString();
+		int dot = base.lastIndexOf('.');
+		return dot > 0 ? base.substring(0, dot) : base;
 	}
 
 	public static boolean deletePainting(String filename, String url, Path galleryRoot){

@@ -36,12 +36,13 @@
                 class="painting">
                 <div class="painting-thumb">
                     <span class="card-grip" title="Drag to rearrange" aria-hidden="true"><span class="grip"></span></span>
-                    <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.menuItem.url},filename=${painting.filename})}"
+                    <img th:src="@{/page/{url}/gallery/image/{filename}(url=${page.menuItem.url},filename=${painting.filename},size='thumb')}"
                          th:alt="${painting.title}" loading="lazy"/>
                     <span class="sold-flag" th:if="${painting.sold}">Sold</span>
                 </div>
-                <!-- pixel size is filled in once the image has loaded; bytes come from the server -->
-                <p class="painting-size" th:data-bytes="${fileSizes.get(painting.filename)}"></p>
+                <!-- the original's size (the grid shows a smaller copy) -->
+                <p class="painting-size" th:with="info=${fileSizes.get(painting.filename)}"
+                   th:data-bytes="${info.bytes}" th:data-width="${info.width}" th:data-height="${info.height}"></p>
                 <div class="painting-fields">
                     <label class="field">
                         <span>Title</span>
@@ -112,18 +113,14 @@
             if (!$(this).find('.sold-flag').length) $(this).find('.painting-thumb').append('<span class="sold-flag" style="display:none">Sold</span>');
         });
 
-        // Image size under each card: pixels from the loaded image, bytes from the server; big files stand out
-        function showSize(img) {
-            const line = $(img).closest('.painting').find('.painting-size');
-            const bytes = Number(line.data('bytes')) || 0;
+        // The original image's size under each card; big files stand out
+        $('.painting-size').each(function () {
+            const line = $(this), bytes = Number(line.data('bytes')) || 0;
+            const w = Number(line.data('width')) || 0, h = Number(line.data('height')) || 0;
             const mb = bytes / 1048576;
             const size = bytes ? (mb >= 1 ? mb.toFixed(1) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB') : '';
-            line.text(img.naturalWidth + ' \u00d7 ' + img.naturalHeight + ' px' + (size ? ' \u00b7 ' + size : ''));
-            line.toggleClass('large', mb > 5 || Math.max(img.naturalWidth, img.naturalHeight) > 5000);
-        }
-        $('#image-list img').each(function () {
-            if (this.complete && this.naturalWidth) showSize(this);
-            else this.addEventListener('load', () => showSize(this));
+            line.text([w && h ? w + ' \u00d7 ' + h + ' px' : '', size].filter(Boolean).join(' \u00b7 '));
+            line.toggleClass('large', mb > 5 || Math.max(w, h) > 5000);
         });
 
         // After a painting is deleted its card is removed (no reload, so other unsaved edits stay)

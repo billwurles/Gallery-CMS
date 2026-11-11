@@ -142,6 +142,14 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		}
 	}
 
+	/**
+	 * A copy of a gallery image no bigger than the published grid size, for the editor's own pages: the same
+	 * cached copy a publish uses, so it's usually already made. Returns the source if it's small already.
+	 */
+	public Path thumbnail(Path source) throws IOException {
+		return webImages.sized(source, THUMB_SIZE);
+	}
+
 	/** Replaces html_root's contents with the staging folder's, by renames on the same filesystem. */
 	private void swapIn(Path staging) throws IOException {
 		Files.createDirectories(htmlRoot);

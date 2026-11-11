@@ -230,4 +230,26 @@ class ContentManagerAppTest {
 
 		assertThat(home).contains("class=\"publish-status\"").containsAnyOf("Unpublished changes", "Live site is up to date");
 	}
+
+	@Test
+	void theEditorsGalleryShowsSmallCopies() throws Exception {
+		java.awt.image.BufferedImage big = new java.awt.image.BufferedImage(3000, 1500, java.awt.image.BufferedImage.TYPE_INT_RGB);
+		Path file = GALLERY.resolve("work/big.jpg");
+		javax.imageio.ImageIO.write(big, "jpg", file.toFile());
+		var site = mvc.perform(get("/page/work/gallery")).andReturn().getResponse().getContentAsString();
+		assertThat(site).contains("size=thumb");
+
+		// a painting needs to exist for its image to be served: upload one
+		var upload = new org.springframework.mock.web.MockMultipartFile("file", "big.jpg", "image/jpeg", Files.readAllBytes(file));
+		String name = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/page/work/gallery/upload").file(upload))
+				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+		byte[] thumb = mvc.perform(get("/page/work/gallery/image/" + name).param("size", "thumb"))
+				.andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+		var img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(thumb));
+		assertThat(img.getWidth()).isEqualTo(900);
+
+		byte[] original = mvc.perform(get("/page/work/gallery/image/" + name)).andReturn().getResponse().getContentAsByteArray();
+		assertThat(javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(original)).getWidth()).isEqualTo(3000);
+	}
 }

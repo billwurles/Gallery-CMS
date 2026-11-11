@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -106,9 +108,20 @@ public class EditorController {
 		return "editor/UploadGallery";
 	}
 
-	@PostMapping("/upload")
+	@PostMapping(value = "/upload", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> uploadGallery(@RequestBody ImageUploadDTO imageData, Model model) {
-		Painting homeImage = Filesystem.uploadPainting(imageData.getImages().get(0), 0, "", galleryRoot);
+		return replaceHomeImage(Filesystem.uploadPainting(imageData.getImages().get(0), 0, "", galleryRoot));
+	}
+
+	/** A new home image, uploaded as a normal file (multipart). */
+	@PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<?> uploadHomeImage(@RequestParam("file") MultipartFile file,
+											 @RequestParam(defaultValue = "") String title) throws IOException {
+		String name = title.isBlank() ? Filesystem.nameWithoutExtension(file.getOriginalFilename()) : title;
+		return replaceHomeImage(Filesystem.savePainting(file.getBytes(), file.getOriginalFilename(), name, "", "", false, 0, "", galleryRoot));
+	}
+
+	private synchronized ResponseEntity<?> replaceHomeImage(Painting homeImage) {
 
 		if (homeImage != null) {
 			if (site.getHomeImage() != null && !site.getHomeImage().getFilename().isBlank()) {

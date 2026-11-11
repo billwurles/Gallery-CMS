@@ -144,4 +144,17 @@ class EditorControllerTest {
 		assertThat(site.getHomeImage().getFilename()).isEqualTo("old-home.jpg");
 		verifyNoInteractions(backup);
 	}
+
+	@Test
+	void aHomeImageCanBeUploadedAsAFile() throws Exception {
+		site.setHomeImage(painting("old-home.jpg", 0));
+		var file = new org.springframework.mock.web.MockMultipartFile("file", "river.png", "image/png", es.burl.cms.TestSites.imageBytes("png"));
+
+		mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/upload").file(file))
+				.andExpect(status().isOk());
+
+		assertThat(site.getHomeImage().getTitle()).isEqualTo("river");
+		assertThat(site.getHomeImage().getFilename()).endsWith(".png");
+		verify(backup).retireImage("", "old-home.jpg");
+	}
 }

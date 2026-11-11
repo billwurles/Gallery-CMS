@@ -126,7 +126,7 @@ public class WebImages {
 	}
 
 	/** Width and height without decoding the pixels, or null if unreadable. */
-	static int[] dimensions(Path file) {
+	public static int[] dimensions(Path file) {
 		try (ImageInputStream in = ImageIO.createImageInputStream(file.toFile())) {
 			if (in == null) return null;
 			Iterator<ImageReader> readers = ImageIO.getImageReaders(in);

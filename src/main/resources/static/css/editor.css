@@ -305,6 +305,11 @@ input[readonly] { background: var(--surface-2); color: var(--muted); }
     text-align: center;
 }
 .dropzone.over { border-color: var(--accent); background: var(--accent-tint); }
+.upload-progress { height: 6px; margin-top: 10px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.upload-progress .bar { width: 0; height: 100%; background: var(--accent); transition: width .2s; }
+.painting.done .upload-progress .bar { background: var(--ok); }
+.upload-message { margin: 6px 0 0; font-size: 12px; color: var(--muted); min-height: 1em; }
+.upload-message.error { color: var(--danger); font-weight: 600; }
 
 /* Exhibitions ------------------------------------------------------ */
 .post + .post { margin-top: 16px; }

@@ -199,4 +199,35 @@ class GalleryControllerTest {
 		mvc.perform(get("/page/work/gallery/image/leftover.jpg")).andExpect(status().isNotFound()); // not a painting
 		mvc.perform(get("/page/test/gallery/image/private.jpg")).andExpect(status().isNotFound()); // not a page
 	}
+
+	@Test
+	void aFileUploadAddsOnePaintingAtTheEnd() throws Exception {
+		byte[] jpeg = es.burl.cms.TestSites.imageBytes("jpg");
+		var file = new org.springframework.mock.web.MockMultipartFile("file", "IMG_2041.JPG", "image/jpeg", jpeg);
+
+		String saved = mvc.perform(multipart("/page/work/gallery/upload").file(file).param("dimensions", "40x50cm").param("sold", "true"))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		Painting painting = site.getPage("work").getGallery().getPainting(saved);
+		assertThat(painting.getTitle()).isEqualTo("IMG_2041"); // no title given: the file's name
+		assertThat(painting.getDimensions()).isEqualTo("40x50cm");
+		assertThat(painting.isSold()).isTrue();
+		assertThat(painting.getOrder()).isGreaterThan(site.getPage("work").getGallery().getGalleryInOrder().get(0).getOrder());
+		assertThat(saved).endsWith(".jpg");
+		assertThat(galleryRoot.resolve("work").resolve(saved)).hasBinaryContent(jpeg);
+		verify(backup).backup(site);
+	}
+
+	@Test
+	void aNonImageFileUploadIsRefusedWithItsName() throws Exception {
+		var file = new org.springframework.mock.web.MockMultipartFile("file", "notes.txt", "text/plain", "hello".getBytes());
+
+		mvc.perform(multipart("/page/work/gallery/upload").file(file))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string("\"notes.txt\" isn't a JPEG, PNG, GIF or WebP image"));
+
+		assertThat(site.getPage("work").getGallery().getGallery()).hasSize(2);
+		verifyNoInteractions(backup);
+	}
 }
