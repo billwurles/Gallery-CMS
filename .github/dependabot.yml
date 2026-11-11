@@ -1,0 +1,22 @@
+# Weekly version-update PRs on the GitHub mirror. The dev remote is where work lands: apply an update
+# in ~/projects/Gallery-CMS and push it there, rather than merging the PR on GitHub.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      spring-boot:
+        patterns: ["org.springframework.boot*"]
+
+  - package-ecosystem: docker      # the maven and eclipse-temurin base images in Dockerfile
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker-compose   # the nginx image in docker-compose.yml
+    directory: /
+    schedule:
+      interval: weekly

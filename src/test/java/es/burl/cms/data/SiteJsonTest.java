@@ -1,7 +1,7 @@
 package es.burl.cms.data;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import es.burl.cms.data.ImageUploadDTO;
 import org.junit.jupiter.api.Test;
 
@@ -11,8 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** The JSON backups are the only copy of the content, so the format must round-trip. */
 class SiteJsonTest {
 
-	private final ObjectMapper mapper = new ObjectMapper()
-			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	private final ObjectMapper mapper = tools.jackson.databind.json.JsonMapper.builder()
+			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+			.build();
 
 	@Test
 	void siteRoundTrips() throws Exception {

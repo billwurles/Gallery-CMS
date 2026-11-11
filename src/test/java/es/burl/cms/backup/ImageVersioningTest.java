@@ -1,7 +1,7 @@
 package es.burl.cms.backup;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
 import org.junit.jupiter.api.BeforeEach;

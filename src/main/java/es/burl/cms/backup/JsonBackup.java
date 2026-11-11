@@ -1,10 +1,13 @@
 package es.burl.cms.backup;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import es.burl.cms.data.Site;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,8 +46,14 @@ public class JsonBackup implements BackupSite {
 	private final static String unpublishedExt = "-unpublished";
 	private final static String fileExt = ".json";
 
-	private final ObjectMapper objectMapper = new ObjectMapper()
-			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // Allow unknown properties in the json
+	/**
+	 * Backups are read leniently (fields from newer or older versions are ignored) and dates stay as
+	 * millisecond numbers, as every existing backup has them (Jackson 3 would otherwise write ISO text).
+	 */
+	private final ObjectMapper objectMapper = JsonMapper.builder()
+			.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+			.enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+			.build();
 
 	/** Backups without image versioning (no gallery to archive). */
 	public JsonBackup(Path backupPath, String filename, int numPublishedBackups, int numUnpublishedBackups) {
@@ -147,7 +156,7 @@ public class JsonBackup implements BackupSite {
 			} finally {
 				Files.deleteIfExists(tmp);
 			}
-		} catch (IOException e) {
+		} catch (IOException | JacksonException e) { // Jackson 3 errors are unchecked
 			log.error("Failed to backup site: {}", site.getName(), e);
 			throw new RuntimeException(e);
 		}
@@ -158,7 +167,7 @@ public class JsonBackup implements BackupSite {
 	public Site buildSiteFromPath(Path path) {
 		try {
 			return objectMapper.readValue(Files.readString(path), Site.class);
-		} catch (IOException e) {
+		} catch (IOException | JacksonException e) { // Jackson 3 errors are unchecked
 			log.error("Failed to read site from backup {}", path, e);
 			throw new RuntimeException(e);
 		}
@@ -195,7 +204,7 @@ public class JsonBackup implements BackupSite {
 		Set<String> paths = new LinkedHashSet<>();
 		String home = site.path("homeImage").path("filename").asText("");
 		if (!home.isBlank()) paths.add(home);
-		site.path("pages").fields().forEachRemaining(entry -> {
+		site.path("pages").properties().forEach(entry -> {
 			String url = entry.getValue().path("menuItem").path("url").asText(entry.getKey());
 			entry.getValue().path("gallery").path("gallery").forEach(painting -> {
 				String file = painting.path("filename").asText("");
@@ -272,7 +281,7 @@ public class JsonBackup implements BackupSite {
 							neededArchive.add(ImageArchive.archiveName(image.get("sha256").asText(), image.path("path").asText("")));
 						}
 					});
-				} catch (IOException e) {
+				} catch (JacksonException e) {
 					log.warn("Can't read backup {} during cleanup; skipping cleanup this time", file.path().getFileName());
 					allReadable = false;
 				}

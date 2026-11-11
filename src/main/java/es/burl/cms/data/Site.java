@@ -1,9 +1,8 @@
 package es.burl.cms.data;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import lombok.Builder;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Data
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
-@Builder(builderClassName = "Builder")
+@lombok.Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = Site.Builder.class)
 public class Site {
 
