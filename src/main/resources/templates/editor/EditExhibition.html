@@ -35,10 +35,13 @@
                        th:value="*{#dates.format(date, 'yyyy-MM-dd''T''HH:mm')}" required/>
             </label>
         </div>
-        <label class="field">
-            <span>Address <em>(made from the date and title)</em></span>
-            <input id="url" type="text" th:field="*{url}" required readonly>
-        </label>
+        <div class="field">
+            <span>Address
+                <em th:text="${newExhibition} ? '(made from the date and title)' : '(changing it moves the post)'"></em>
+                <button type="button" class="link-button" id="edit-url">Change</button></span>
+            <input id="url" type="text" th:field="*{url}" required readonly
+                   pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="100" title="Lowercase letters, numbers and single hyphens">
+        </div>
 
         <div class="field">
             <span>Content</span>
@@ -53,12 +56,9 @@
     $(function () {
         startRichText();
 
-        function generateUrl() {
-            const date = $('#date').val().replace('T', ' ').replace(':', '-');
-            $('#url').val(slugify(date + '-' + $('#title').val()));
-        }
-        $('#title').on('input', generateUrl);
-        $('#date').on('change', generateUrl);
+        // A new post's address follows its date and title; an existing one keeps its address unless changed by hand
+        addressField(/*[[${newExhibition}]]*/ true,
+            () => $('#date').val().replace('T', ' ').replace(':', '-') + '-' + $('#title').val(), ['#title', '#date']);
 
         $('#exhibitionForm').on('submit', function (event) {
             event.preventDefault();

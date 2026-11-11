@@ -161,6 +161,9 @@ a { color: var(--accent); }
 .field { display: block; margin-bottom: 14px; }
 .field > span { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
 .field > span em { font-style: normal; font-weight: 400; }
+.link-button { margin-left: 6px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
+.link-button:hover { text-decoration: underline; }
+input:invalid:not(:placeholder-shown):not([readonly]) { border-color: var(--danger); }
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .toggles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 4px 0; }
 

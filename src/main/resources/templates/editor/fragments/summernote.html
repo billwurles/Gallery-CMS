@@ -29,6 +29,23 @@
                 }
             }
 
+            /**
+             * The address field (#url): read-only, and either following source() as the fields in sources
+             * change (new pages) or fixed (existing ones). "Change" unlocks it for typing; once typed in,
+             * it stops following. Whatever is typed is tidied into a valid address when leaving the field.
+             */
+            function addressField(follows, source, sources) {
+                const url = $('#url');
+                let following = follows;
+                sources.forEach(sel => $(sel).on('input change', () => { if (following) url.val(slugify(source())); }));
+                $('#edit-url').on('click', function () {
+                    url.prop('readonly', false).trigger('focus');
+                    $(this).hide();
+                });
+                url.on('input', () => { following = false; });
+                url.on('change', () => url.val(slugify(url.val())));
+            }
+
             // "Café & Bar_2" -> "cafe-bar-2": lowercase letters, numbers and single hyphens, as the server requires
             function slugify(text) {
                 return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '')

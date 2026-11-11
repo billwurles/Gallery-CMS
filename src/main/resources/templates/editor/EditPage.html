@@ -32,10 +32,13 @@
                 <span>Title</span>
                 <input id="title" type="text" th:field="*{menuItem.title}" placeholder="Page title" required/>
             </label>
-            <label class="field">
-                <span>Address <em>(made from the title)</em></span>
-                <input id="url" type="text" th:field="*{menuItem.url}" required readonly/>
-            </label>
+            <div class="field">
+                <span>Address
+                    <em th:text="${newPage} ? '(made from the title)' : '(changing it moves the page)'"></em>
+                    <button type="button" class="link-button" id="edit-url">Change</button></span>
+                <input id="url" type="text" th:field="*{menuItem.url}" required readonly
+                       pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="100" title="Lowercase letters, numbers and single hyphens"/>
+            </div>
         </div>
 
         <div class="field">
@@ -62,13 +65,12 @@
     </form>
 </main>
 
-<script>
+<script th:inline="javascript">
     $(function () {
         startRichText();
 
-        $('#title').on('input', function () {
-            $('#url').val(slugify(this.value));
-        });
+        // A new page's address follows its title; an existing page keeps its address unless changed by hand
+        addressField(/*[[${newPage}]]*/ true, () => $('#title').val(), ['#title']);
 
         $('#pageForm').on('submit', function () {
             // The controller reads plain title, url and content parameters
