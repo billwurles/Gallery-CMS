@@ -19,17 +19,12 @@ html, body {
       font-family: Avenir, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      /* text-align: center; */
+
       color: #2c3e50;
   display: flex;
   flex-direction: column; /* Stack content vertically */
   min-height: 100vh; /* Ensure it takes up at least the full viewport height */
   flex: 1;
-}
-
-.page .home-title {
-    margin-top: 2%;
-    font-size: 36pt;
 }
 
 .page .home-inset {
@@ -39,10 +34,6 @@ html, body {
 }
 
 @media (max-width: 990px) {
-  .page .home-title {
-      margin-top: 8%;
-      font-size: 36pt;
-  }
 
   .page .home-inset {
       margin: 0 auto;
@@ -51,15 +42,15 @@ html, body {
   }
 }
 .page {
-  /*margin: 3% 5%;*/
+
 }
 
 .page h1 {
-    /* position: relative; */
+
     text-align: center;
     font-size: 24pt;
     margin-bottom: 30px;
-    /* float: left; */
+
 }
 
 /* Navigation ---------------------- */
@@ -116,7 +107,7 @@ html, body {
   text-decoration: none;
   font-weight: 500;
   font-weight: bold;
-  /* transition: color 0.3s ease-in-out; */
+
 }
 
 .navbar a.active {
@@ -241,57 +232,7 @@ html, body {
   .navbar-container input[type="checkbox"]:checked ~ .logo {
     display: none;
   }
-}
-/* #nav {
-    display: flex;
-    align-items: center;
-    top: 0;
-    z-index: 1;
-}
-
-nav {
-  padding: 0px 30px;
-}
-
-nav a {
-  padding-bottom: 10px;
-  font-weight: bold;
-  color: #33404e;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-nav a.active-nav-link {
-  color: #605f6c;
-}
-
-.nav-links {
-    display: flex;
-    flex-wrap: wrap;
-    padding-bottom: 5px;
-}
-.links {
-    padding-left: 20px;
-    padding-bottom: 10px;
-    list-style: none;
-}
-.links a:hover {
-    color: #706f7c;
-}
-.logo {
-    font-size: 20px;
-    color: darkslategray;
-    font-weight: bold;
-} */
-
-/* Content ----------------------- */
-
-.inset-image {
-  float: right;
-  width: 30%;
-  padding: 2%;
-  max-width: 100%;
-}
+}/* Content ----------------------- */
 .content-text {
   text-align: justify;
   width: 90%;
@@ -306,14 +247,6 @@ nav a.active-nav-link {
   font-size: 24pt;
   margin-left: 15%;
   float: left;
-}
-.content-details {
-  display: inline;
-  /* margin:  */
-  justify-content: left;
-  flex-wrap: wrap;
-  margin: 0 15%;
-  justify-content: space-between;
 }
 
 /* Gallery ---------------------- */
@@ -359,7 +292,7 @@ nav a.active-nav-link {
 .painting p {
   text-align: center;
     margin: 10px 0 0; /* Add 10px margin above the text */
-    font-size: 1rem; /* Optional: Adjust font size */
+    font-size: 1rem;
 }
 
 /* Prevent scaling issues for last row */
@@ -520,101 +453,6 @@ body.modal-open {
   .painting-modal .modal-nav { width: 40px; height: 56px; font-size: 2.4rem; background-color: rgba(0, 0, 0, 0.45); }
 }
 
-
-/* .modal img {
-  max-width: 100%;
-} */
-
-.modal-container {
-  background-color: rgba(0, 0, 0, 0.8);
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1050;
-  padding: 50px;
-}
-
-.modal-container .body {
-  /* background-color: #fff; */
-}
-.modal-container .close {
-  right: 5px;
-  position: relative;
-  color: white;
-  font-size: 30px;
-  text-align: right;
-  top: 30px;
-  cursor: pointer;
-}
-.close {
-  text-shadow: 4px 4px 3px black;
-}
-.modal {
-  /* display: block; */
-  /* margin: 0 auto; */
-}
-.modal img {
-  display: inline-block;
-  max-width: 100%;
-  box-shadow: 8px 8px 25px black;
-}
-.modal p {
-  display: block;
-  color: white;
-  text-align: center;
-  font-size: 1.3rem;
-  width: fit-content;
-  text-shadow: 4px 4px 3px black;
-  /* background-color: rgba(255, 255, 255, 0.2); */
-}
-.modal-container {
-  background-color: rgba(0, 0, 0, 0.8);
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1050;
-  padding: 50px;
-}
-
-.modal-container .body {
-  /* background-color: #fff; */
-}
-.modal-container .close {
-  right: 5px;
-  position: relative;
-  color: white;
-  font-size: 30px;
-  text-align: right;
-  top: 30px;
-  cursor: pointer;
-}
-.close {
-  text-shadow: 4px 4px 3px black;
-}
-.modal {
-  /* display: block; */
-  /* margin: 0 auto; */
-}
-.modal img {
-  display: inline-block;
-  max-width: 100%;
-  box-shadow: 8px 8px 25px black;
-}
-.modal p {
-  display: block;
-  color: white;
-  text-align: center;
-  font-size: 1.3rem;
-  width: fit-content;
-  text-shadow: 4px 4px 3px black;
-  /* background-color: rgba(255, 255, 255, 0.2); */
-}
-
-
 /* Exhibitions ---------------------- */
 
 .exhibition-post {
@@ -697,12 +535,9 @@ body.modal-open {
   font-weight: bold;
 }
 
-
 /* Footer ---------------------- */
 footer {
-    /* position: fixed;
-    bottom: 0;
-    margin: 25px; */
+
     text-align: center;
     padding: 20px;
     margin-top: auto;
