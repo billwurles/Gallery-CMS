@@ -185,8 +185,18 @@ input[readonly] { background: var(--surface-2); color: var(--muted); }
 .note-editor .note-editable { background: var(--surface); font-size: 15px; }
 
 /* Home ------------------------------------------------------------- */
-.home-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+.home-grid { display: grid; grid-template-columns: 320px 1fr; grid-template-areas: "image pages" "exhibitions pages"; gap: 20px; align-items: start; }
+.home-grid > * { min-width: 0; }
+.home-grid > .card:first-child { grid-area: image; }
+.home-grid > .home-exhibitions { grid-area: exhibitions; }
+.home-grid > .card:last-child { grid-area: pages; }
 .home-image { display: block; width: 100%; margin-bottom: 14px; border-radius: var(--radius); }
+.mini-list { list-style: none; margin: 0 0 12px; padding: 0; }
+.mini-list li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.mini-list li:last-child { border-bottom: 0; }
+.mini-list a { color: var(--text); font-weight: 500; text-decoration: none; min-width: 0; overflow-wrap: anywhere; }
+.mini-list a:hover { color: var(--accent); }
+.mini-list .hint { flex: none; }
 
 .page-list { list-style: none; margin: 0; padding: 0; }
 .page-row {
@@ -293,7 +303,8 @@ input[readonly] { background: var(--surface-2); color: var(--muted); }
 .post + .post { margin-top: 16px; }
 .post-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
 .post-date { color: var(--muted); font-size: 13px; }
-.post-content { overflow-wrap: anywhere; }
+.post-content { overflow-wrap: anywhere; overflow-x: auto; }
+.post-content table { max-width: 100%; }
 .post-content img { max-width: 100%; height: auto; }
 .post-content p { margin: 0 0 .7em; }
 
@@ -353,15 +364,30 @@ dialog.confirm::backdrop { background: rgba(16, 24, 40, .45); }
 
 /* Small screens ---------------------------------------------------- */
 @media (max-width: 860px) {
+    /* One row: site name (shortened if need be), Publish, Menu; the page list drops below when opened */
     .sidebar { flex-wrap: wrap; gap: 10px; padding: 8px 16px; }
-    .menu-button { display: inline-flex; margin-left: auto; padding: 6px 12px; border: 1px solid var(--bar-border); border-radius: var(--radius); color: var(--bar-text); font-size: 14px; font-weight: 500; cursor: pointer; }
+    .brand { flex: 1 1 0; min-width: 0; }
+    .brand-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sidebar-actions { order: 2; }
+    .sidebar-actions .btn { padding: 7px 12px; }
+    .menu-button { order: 3; display: inline-flex; padding: 6px 12px; border: 1px solid var(--bar-border); border-radius: var(--radius); color: var(--bar-text); font-size: 14px; font-weight: 500; cursor: pointer; }
     .pages { display: none; order: 5; flex-basis: 100%; flex-direction: column; }
     .menu-toggle:checked ~ .pages { display: flex; }
     .pages a { padding: 9px 10px; }
     .main { padding: 20px 16px 56px; }
     .home-grid, .field-pair { grid-template-columns: 1fr; }
+    .home-grid { grid-template-areas: "image" "pages" "exhibitions"; }
     .painting-fields .field-pair { grid-template-columns: 1fr 1fr; }
-    .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .save-bar { left: 12px; right: 12px; bottom: 12px; transform: none; justify-content: flex-end; }
+    .save-bar > span { margin-right: auto; }
     .page-url { visibility: hidden; }
     h1 { font-size: 22px; }
+}
+
+/* Touch screens: bigger targets for fingers ------------------------- */
+@media (pointer: coarse) {
+    .check input { width: 22px; height: 22px; }
+    .page-row .grip { box-sizing: content-box; padding: 10px; margin: -10px -6px; background-origin: content-box; background-clip: content-box; }
+    .btn-small { padding: 7px 12px; }
 }

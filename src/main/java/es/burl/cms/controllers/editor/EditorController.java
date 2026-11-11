@@ -52,6 +52,8 @@ public class EditorController {
 		model.addAttribute("name", site.getName());
 		model.addAttribute("menuItems", site.getMenuItems());
 		model.addAttribute("homeImage", site.getHomeImage());
+		List<Exhibition> exhibitions = site.getExhibitionRepo().getExhibitionsInDateOrder();
+		model.addAttribute("latestExhibitions", exhibitions.subList(0, Math.min(3, exhibitions.size())));
 //		model.addAttribute("pages", site.getPagesInOrder());
 		return "editor/EditorHome";
 	}

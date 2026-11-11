@@ -3,7 +3,7 @@
 <head>
     <title th:text="|Editor Home - ${name}|"/>
     <th:block th:replace="~{editor/fragments/head :: common}"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.7/Sortable.min.js"></script>
 </head>
 <body>
 <header th:replace="~{editor/fragments/navigation :: navbar(menuItems=${menuItems}, currentPage='')}"></header>
@@ -24,6 +24,21 @@
             <img th:if="${homeImage != null}" th:src="@{/image/{f}(f=${homeImage.filename})}"
                  th:alt="${homeImage.title}" class="home-image"/>
             <a th:href="@{/upload}" class="btn btn-block">Replace image</a>
+        </section>
+
+        <section class="card home-exhibitions">
+            <div class="card-head">
+                <h2>Latest exhibitions</h2>
+                <a class="hint" th:href="@{/exhibitions}">All exhibitions</a>
+            </div>
+            <ul class="mini-list">
+                <li th:each="exhibition : ${latestExhibitions}">
+                    <a th:href="@{/exhibitions/{url}(url=${exhibition.url})}" th:text="${exhibition.title}"></a>
+                    <span class="hint" th:text="${#dates.format(exhibition.date, 'd MMM yyyy')}"></span>
+                </li>
+                <li th:if="${#lists.isEmpty(latestExhibitions)}" class="hint">No exhibitions yet.</li>
+            </ul>
+            <a th:href="@{/exhibitions/new}" class="new-row">+ New exhibition</a>
         </section>
 
         <section class="card">
@@ -56,11 +71,13 @@
 
 <script th:inline="javascript">
     $(function () {
-        $("#sortable").sortable({
-            handle: ".grip",
-            placeholder: "sortable-placeholder",
-            forcePlaceholderSize: true,
-            update: function () {
+        // Drag by the handle to reorder the menu (SortableJS: mouse and touch); saved straight away
+        Sortable.create(document.getElementById('sortable'), {
+            handle: '.grip',
+            animation: 150,
+            ghostClass: 'sortable-placeholder',
+            onEnd: function (e) {
+                if (e.oldIndex === e.newIndex) return;
                 // The new menu order, as {position: page url}
                 const order = {};
                 $("#sortable li").each(function (index) {
