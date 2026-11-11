@@ -62,7 +62,7 @@ class PageControllerTest {
 		mvc.perform(post("/page").param("title", "Another").param("url", "about").param("content", "x"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("editor/EditPage"))
-				.andExpect(model().attribute("message", "Page url (about) is already in use"))
+				.andExpect(model().attribute("error", "The address \"about\" is already used by another page"))
 				.andExpect(model().attribute("newPage", true));
 
 		assertThat(site.getPage("about").getTitle()).isEqualTo("About");
@@ -145,7 +145,7 @@ class PageControllerTest {
 	void renameOntoATakenUrlShowsAnError() throws Exception {
 		mvc.perform(post("/page/work").param("title", "Work").param("url", "about").param("content", "c"))
 				.andExpect(view().name("editor/EditPage"))
-				.andExpect(model().attribute("message", "Page URL about is already in use"));
+				.andExpect(model().attribute("error", "The address \"about\" is already used by another page"));
 
 		assertThat(site.getPage("work")).isNotNull();
 		assertThat(site.getPage("about").getTitle()).isEqualTo("About");
@@ -242,5 +242,26 @@ class PageControllerTest {
 		mvc.perform(get("/page/work").param("edit", "text"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("editor/EditPage"));
+	}
+
+	@org.junit.jupiter.params.ParameterizedTest
+	@org.junit.jupiter.params.provider.ValueSource(strings = {"../../etc", "a/b", "..", "UPPER", "with space", "under_score", "trailing-", "exhibitions", "include", "images", ""})
+	void unsafeOrReservedAddressesAreRefused(String url) throws Exception {
+		mvc.perform(post("/page").param("title", "T").param("url", url).param("content", "x"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("editor/EditPage"))
+				.andExpect(model().attributeExists("error"));
+		mvc.perform(post("/page/about").param("title", "T").param("url", url).param("content", "x"))
+				.andExpect(view().name("editor/EditPage"))
+				.andExpect(model().attributeExists("error"));
+
+		assertThat(site.getPage("about")).isNotNull();
+		verifyNoInteractions(backup);
+	}
+
+	@Test
+	void theRefusalSaysWhy() throws Exception {
+		mvc.perform(post("/page").param("title", "T").param("url", "../x").param("content", "x"))
+				.andExpect(model().attribute("error", "The address \"../x\" can only use lowercase letters, numbers and single hyphens"));
 	}
 }

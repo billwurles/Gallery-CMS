@@ -1,6 +1,9 @@
 package es.burl.cms.controllers.editor;
 
 import es.burl.cms.data.Site;
+import es.burl.cms.helper.UploadedImages;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,6 +28,13 @@ public class EditorAdvice {
 	@ModelAttribute("siteName")
 	public String siteName() {
 		return site.getName();
+	}
+
+	/** An upload that isn't a usable image: 400 with a message the editor shows as it is. */
+	@ExceptionHandler(UploadedImages.InvalidUploadException.class)
+	public ResponseEntity<String> badUpload(UploadedImages.InvalidUploadException e) {
+		log.info("Rejected upload: {}", e.getMessage());
+		return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN).body(e.getMessage());
 	}
 
 	@ExceptionHandler(NotFoundException.class)

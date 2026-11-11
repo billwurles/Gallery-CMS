@@ -41,7 +41,8 @@ class EditorControllerTest {
 		backup = mock(BackupSite.class);
 		publisher = mock(JsonBackup.class);
 		builder = mock(ThymeleafSiteBuilder.class);
-		mvc = MockMvcBuilders.standaloneSetup(new EditorController(site, galleryRoot, backup, publisher, builder)).build();
+		mvc = MockMvcBuilders.standaloneSetup(new EditorController(site, galleryRoot, backup, publisher, builder))
+				.setControllerAdvice(new EditorAdvice(site)).build();
 	}
 
 	@Test
@@ -88,9 +89,12 @@ class EditorControllerTest {
 
 	@Test
 	void servesTheHomeImage() throws Exception {
+		site.setHomeImage(painting("home.jpg", 0));
 		Files.write(galleryRoot.resolve("home.jpg"), new byte[]{9});
+		Files.write(galleryRoot.resolve("other.jpg"), new byte[]{8});
 
 		mvc.perform(get("/image/home.jpg")).andExpect(content().bytes(new byte[]{9}));
+		mvc.perform(get("/image/other.jpg")).andExpect(status().isNotFound()); // only the current home image
 	}
 
 	@Test
@@ -105,14 +109,15 @@ class EditorControllerTest {
 		site.setHomeImage(painting("old-home.jpg", 0));
 		String json = """
 				{"images":[{"title":"Home","filename":"h.jpg","dimensions":"","medium":"","sold":false,"order":0,"imageData":"%s"}]}"""
-				.formatted(Base64.getEncoder().encodeToString(new byte[]{5, 5}));
+				.formatted(Base64.getEncoder().encodeToString(es.burl.cms.TestSites.imageBytes("png")));
 
 		mvc.perform(post("/upload").contentType(MediaType.APPLICATION_JSON).content(json))
 				.andExpect(status().isOk());
 
 		verify(backup).retireImage("", "old-home.jpg");
 		assertThat(site.getHomeImage().getTitle()).isEqualTo("Home");
-		assertThat(galleryRoot.resolve(site.getHomeImage().getFilename())).hasBinaryContent(new byte[]{5, 5});
+		assertThat(galleryRoot.resolve(site.getHomeImage().getFilename())).hasBinaryContent(es.burl.cms.TestSites.imageBytes("png"));
+		assertThat(site.getHomeImage().getFilename()).endsWith(".png");
 		verify(backup).backup(site);
 	}
 
@@ -124,5 +129,19 @@ class EditorControllerTest {
 
 		assertThat(site.getMenuItems()).extracting(MenuItem::getUrl).containsExactly("work", "exhibitions", "about");
 		verify(backup).backup(site);
+	}
+
+	@Test
+	void aNonImageHomeImageIsRefused() throws Exception {
+		site.setHomeImage(painting("old-home.jpg", 0));
+		String json = """
+				{"images":[{"title":"Home","filename":"h.svg","dimensions":"","medium":"","sold":false,"order":0,"imageData":"%s"}]}"""
+				.formatted(Base64.getEncoder().encodeToString("<svg onload=alert(1)></svg>".getBytes()));
+
+		mvc.perform(post("/upload").contentType(MediaType.APPLICATION_JSON).content(json))
+				.andExpect(status().isBadRequest());
+
+		assertThat(site.getHomeImage().getFilename()).isEqualTo("old-home.jpg");
+		verifyNoInteractions(backup);
 	}
 }

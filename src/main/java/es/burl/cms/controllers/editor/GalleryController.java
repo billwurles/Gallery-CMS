@@ -110,6 +110,11 @@ public class GalleryController {
 
 	@GetMapping("/image/{filename}")
 	public ResponseEntity<Resource> getImage(@PathVariable String pageUrl, @PathVariable String filename) {
+		// Only images of paintings on an existing page: never arbitrary files from the gallery folder
+		Page page = site.getPage(pageUrl);
+		if (page == null || page.getGallery() == null || page.getGallery().getPainting(filename) == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
 		return Filesystem.getImageFromPainting(filename, pageUrl, galleryRoot);
 	}
 

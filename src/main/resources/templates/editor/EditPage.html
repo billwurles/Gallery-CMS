@@ -21,7 +21,7 @@
     </div>
 
     <p class="notice" th:if="${newPage}">Save the page first, then add pictures to its gallery.</p>
-    <p class="notice notice-error" th:if="${message != null and #strings.contains(message, 'already in use')}" th:text="${message}"></p>
+    <p class="notice notice-error" th:if="${error}" th:text="${error}"></p>
 
     <form id="pageForm" class="card"
           th:action="${newPage} ? @{/page/} : @{/page/{url}/(url=${page.menuItem.url})}"

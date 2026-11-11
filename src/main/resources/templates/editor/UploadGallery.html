@@ -33,11 +33,7 @@
 <script>
     const previewContainer = $('#preview-container');
     const images = [];   // base64 image data, by position
-
-    function randomId() {
-        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        return 'xxx-xxx'.replace(/x/g, () => chars.charAt(Math.floor(Math.random() * chars.length)));
-    }
+    const names = [];    // the chosen files' names, for messages (the server names saved files itself)
 
     function addFiles(files) {
         Array.from(files).forEach(file => {
@@ -45,6 +41,7 @@
             reader.onload = function (e) {
                 const id = images.length;
                 images.push(e.target.result.split(',')[1]);
+                names.push(file.name);
                 const card = $(`
                     <div class="painting" data-id="${id}">
                         <div class="painting-thumb"><img alt="Preview"></div>
@@ -94,10 +91,9 @@
         const payload = {
             images: previewContainer.find('.painting').map(function () {
                 const card = $(this);
-                const title = card.find('.f-title').val();
                 return {
-                    title: title,
-                    filename: `${title.replace(/[^a-zA-Z0-9]/g, '_')}_${randomId()}.jpg`,
+                    title: card.find('.f-title').val(),
+                    filename: names[card.data('id')],
                     dimensions: card.find('.f-dimensions').val(),
                     medium: card.find('.f-medium').val(),
                     sold: card.find('.f-sold').is(':checked'),
@@ -117,8 +113,10 @@
                 const path = window.location.pathname;
                 window.location.href = path.substring(0, path.lastIndexOf('/')) || "/";
             },
-            error: function () {
-                toast('The images could not be uploaded', 'error');
+            error: function (xhr) {
+                // A rejected file comes back as a 400 naming it and saying why
+                const reason = xhr.status === 400 && xhr.responseText ? xhr.responseText : 'the server returned an error';
+                toast('Nothing was uploaded: ' + reason, 'error');
                 uploadButton.prop('disabled', false).text('Upload images');
             }
         });

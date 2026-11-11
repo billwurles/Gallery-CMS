@@ -1,5 +1,8 @@
 package es.burl.cms.controllers.editor;
 
+import es.burl.cms.data.Slugs;
+import org.springframework.http.MediaType;
+
 import es.burl.cms.backup.BackupSite;
 import es.burl.cms.data.Exhibition;
 import es.burl.cms.data.Site;
@@ -60,6 +63,10 @@ public class ExhibitionController {
 
 	@PostMapping("/{url}/save")
 	public ResponseEntity<?> saveExhibition(@PathVariable("url") String url, @RequestBody Exhibition exhibition) {
+		String urlProblem = Slugs.exhibitionProblem(exhibition.getUrl());
+		if (urlProblem != null) {
+			return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN).body(urlProblem);
+		}
 		try {
 			// A changed title or date changes the address: replace the old entry instead of keeping both
 			if (!url.equals(exhibition.getUrl()) && site.getExhibitionRepo().get(url) != null) {

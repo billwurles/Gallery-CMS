@@ -73,12 +73,12 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(exhibition)
             })
-                .then(response => {
-                    if (!response.ok) throw new Error();
+                .then(async response => {
+                    if (!response.ok) throw new Error(await response.text());
                     flash("Exhibition saved");
                     window.location.href = /*[[@{/exhibitions}]]*/ "/exhibitions";
                 })
-                .catch(() => toast("The exhibition could not be saved", "error"));
+                .catch(e => toast("The exhibition was not saved: " + (e.message || "the server returned an error"), "error"));
         });
     });
 </script>

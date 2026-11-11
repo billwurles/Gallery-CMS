@@ -89,6 +89,10 @@ public class EditorController {
 
 	@GetMapping("/image/{filename}")
 	public ResponseEntity<Resource> getHomeImage(@PathVariable String filename) {
+		// Only the current home image: never arbitrary files from the gallery folder
+		if (site.getHomeImage() == null || !filename.equals(site.getHomeImage().getFilename())) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
 		return Filesystem.getImageFromPainting(filename, "", galleryRoot);
 	}
 
@@ -105,7 +109,9 @@ public class EditorController {
 		Painting homeImage = Filesystem.uploadPainting(imageData.getImages().get(0), 0, "", galleryRoot);
 
 		if (homeImage != null) {
-			saveService.retireImage("", site.getHomeImage().getFilename()); // kept in the backup archive
+			if (site.getHomeImage() != null && !site.getHomeImage().getFilename().isBlank()) {
+				saveService.retireImage("", site.getHomeImage().getFilename()); // kept in the backup archive
+			}
 			site.setHomeImage(homeImage);
 			saveService.backup(site);
 			return ResponseEntity.ok("Image uploaded successfully");

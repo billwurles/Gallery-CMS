@@ -93,7 +93,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 			generateHomePage(site);
 			generatePages(site);
 
-			Path exhibitionsPath = out.resolve(site.getExhibitionRepo().getMenuItem().getUrl());
+			Path exhibitionsPath = inside(out, site.getExhibitionRepo().getMenuItem().getUrl());
 			generateExhibitionsPages(site, exhibitionsPath);
 			generateExhibitionsDirectPages(site, exhibitionsPath);
 		} catch (IOException | RuntimeException e) {
@@ -127,6 +127,20 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 		}
 		deleteTree(staging);
 		deleteTree(old);
+	}
+
+	/**
+	 * {@code base/name}, refusing a name that leads outside {@code base} ("..", "/", an absolute path).
+	 * The editor only accepts plain addresses (see Slugs); this guards against anything older or edited by
+	 * hand, and fails the build so the live site stays as it is.
+	 */
+	static Path inside(Path base, String name) throws IOException {
+		Path root = base.toAbsolutePath().normalize();
+		Path resolved = root.resolve(name == null ? "" : name).normalize();
+		if (name == null || name.isBlank() || !resolved.startsWith(root) || resolved.equals(root)) {
+			throw new IOException("Refusing to publish \"" + name + "\": it isn't a plain page or exhibition address");
+		}
+		return resolved;
 	}
 
 	private static List<Path> list(Path dir) throws IOException {
@@ -196,7 +210,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 	private void generatePages(Site site) throws IOException {
 		for (Page page : site.getPages().values()) {
 			log.debug("Generating page {} -hasGallery:{} -content:{}", page.getMenuItem().getUrl(), page.hasGallery(), page.hasContent());
-			Path pagePath = out.resolve(page.getMenuItem().getUrl());
+			Path pagePath = inside(out, page.getMenuItem().getUrl());
 			Files.createDirectories(pagePath);
 			copyPageGallery(page, pagePath);
 
@@ -234,7 +248,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 
 	private void generateExhibitionsDirectPages(Site site, Path exhibitionsPath) throws IOException {
 		for (Exhibition exhibition : site.getExhibitionRepo().getExhibitionsInDateOrder()) {
-			Path exhibitionPath = exhibitionsPath.resolve(exhibition.getUrl());
+			Path exhibitionPath = inside(exhibitionsPath, exhibition.getUrl());
 			Files.createDirectories(exhibitionPath);
 			generateFullExhibitionPage(site, exhibition, exhibitionPath);
 		}
@@ -252,7 +266,7 @@ public class ThymeleafSiteBuilder implements SiteBuilder {
 			log.debug("Copying gallery for {}",page.getMenuItem().getUrl());
 			// Construct the page path and image directory path, create dirs if they don't exist
 			Path imageDir = pagePath.resolve("images");
-			Path cmsImageDir = galleryRoot.resolve(page.getMenuItem().getUrl());
+			Path cmsImageDir = inside(galleryRoot, page.getMenuItem().getUrl());
 			Files.createDirectories(imageDir);
 
 			// Each painting gets images/<file> for the full-size view and images/thumbs/<file> for the grid;

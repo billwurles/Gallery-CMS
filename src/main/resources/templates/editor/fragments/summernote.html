@@ -29,12 +29,12 @@
                 }
             }
 
-            // "My Title" -> "my-title"
+            // "Café & Bar_2" -> "cafe-bar-2": lowercase letters, numbers and single hyphens, as the server requires
             function slugify(text) {
-                return text.toLowerCase()
-                    .replace(/[^\w\s-]/g, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-');
+                return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
             }
         </script>
     </th:block>

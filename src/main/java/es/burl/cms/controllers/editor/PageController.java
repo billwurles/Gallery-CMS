@@ -4,6 +4,7 @@ import es.burl.cms.backup.BackupSite;
 import es.burl.cms.data.MenuItem;
 import es.burl.cms.data.Page;
 import es.burl.cms.data.Site;
+import es.burl.cms.data.Slugs;
 import es.burl.cms.helper.Filesystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,19 @@ public class PageController {
 							  @RequestParam(required = false) Boolean showContent,
 							  @RequestParam(required = false) Boolean showGallery, Model model) {
 		content = cleanContent(content);
+		String urlProblem = Slugs.pageProblem(url);
+		if (urlProblem != null) {
+			model.addAttribute("menuItems", site.getMenuItems());
+			model.addAttribute("error", urlProblem);
+			model.addAttribute("newPage", true);
+			model.addAttribute("page", Page.builder()
+					.menuItem(MenuItem.builder().url(url).title(title).build())
+					.content(content)
+					.showContent(showContent == null || showContent)
+					.showGallery(showGallery == null || showGallery)
+					.build());
+			return "editor/EditPage";
+		}
 		// Save the page content (title, url, content)
 
 		log.debug("Saving new page: {}"+title);
@@ -58,7 +72,7 @@ public class PageController {
 
 		for(MenuItem menuItem : site.getMenuItems()){
 			if(menuItem.getUrl().equals(url)){
-				model.addAttribute("message", "Page url ("+url+") is already in use");
+				model.addAttribute("error", "The address \"" + url + "\" is already used by another page");
 				model.addAttribute("newPage", true);
 				model.addAttribute("page", Page.builder()
 						.menuItem(MenuItem.builder()
@@ -135,10 +149,19 @@ public class PageController {
 				.showGallery(showGallery == null ? originalPage.isShowGallery() : showGallery)
 				.build();
 
+		String urlProblem = originalPageUrl.equals(url) ? null : Slugs.pageProblem(url);
+		if (urlProblem != null) {
+			model.addAttribute("error", urlProblem);
+			model.addAttribute("page", newPage);
+			model.addAttribute("hasGallery", newPage.hasGallery());
+			model.addAttribute("newPage", false);
+			return "editor/EditPage";
+		}
+
 		if (!originalPageUrl.equals(url)) {
 			for(MenuItem menuItem : site.getMenuItems()){
 				if(menuItem != originalPage.getMenuItem() && menuItem.getUrl().equals(newPage.getUrl())){
-					model.addAttribute("message", "Page URL " + newPage.getMenuItem().getUrl() +" is already in use");
+					model.addAttribute("error", "The address \"" + newPage.getMenuItem().getUrl() + "\" is already used by another page");
 					model.addAttribute("page", newPage);
 					model.addAttribute("hasGallery", newPage.hasGallery());
 					return "editor/EditPage";

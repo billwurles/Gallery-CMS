@@ -84,7 +84,8 @@ class GalleryControllerTest {
 
 	@Test
 	void uploadAddsPaintingsAndWritesFiles() throws Exception {
-		String data = Base64.getEncoder().encodeToString(new byte[]{7, 7, 7});
+		byte[] jpeg = es.burl.cms.TestSites.imageBytes("jpg");
+		String data = Base64.getEncoder().encodeToString(jpeg);
 		String json = """
 				{"images":[
 				  {"title":"New one","filename":"x.jpg","dimensions":"","medium":"","sold":false,"order":0,"imageData":"%s"},
@@ -99,7 +100,8 @@ class GalleryControllerTest {
 		assertThat(gallery.getGalleryInOrder()).extracting(Painting::getTitle).endsWith("New one", "New two");
 		for (Painting p : gallery.getGallery().values()) {
 			if (p.getTitle().startsWith("New")) {
-				assertThat(galleryRoot.resolve("work").resolve(p.getFilename())).hasBinaryContent(new byte[]{7, 7, 7});
+				assertThat(galleryRoot.resolve("work").resolve(p.getFilename())).hasBinaryContent(jpeg);
+				assertThat(p.getFilename()).endsWith(".jpg"); // from the bytes, not the "y.png" the browser sent
 			}
 		}
 		verify(backup).backup(site);
@@ -169,5 +171,32 @@ class GalleryControllerTest {
 		mvc.perform(delete("/page/missing/gallery/image/a.jpg")).andExpect(status().isNotFound());
 
 		verifyNoInteractions(backup);
+	}
+
+	@Test
+	void aNonImageUploadIsRefusedWithAReason() throws Exception {
+		String json = """
+				{"images":[{"title":"x","filename":"page.html","dimensions":"","medium":"","sold":false,"order":0,"imageData":"%s"}]}"""
+				.formatted(Base64.getEncoder().encodeToString("<script>alert(1)</script>".getBytes()));
+
+		mvc.perform(post("/page/work/gallery/upload").contentType(MediaType.APPLICATION_JSON).content(json))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string("\"page.html\" isn't a JPEG, PNG, GIF or WebP image"));
+
+		assertThat(site.getPage("work").getGallery().getGallery()).hasSize(2);
+		verifyNoInteractions(backup);
+	}
+
+	@Test
+	void onlyImagesOfPaintingsOnTheSiteAreServed() throws Exception {
+		java.nio.file.Files.createDirectories(galleryRoot.resolve("work"));
+		java.nio.file.Files.write(galleryRoot.resolve("work/a.jpg"), new byte[]{1});
+		java.nio.file.Files.write(galleryRoot.resolve("work/leftover.jpg"), new byte[]{2});
+		java.nio.file.Files.createDirectories(galleryRoot.resolve("test"));
+		java.nio.file.Files.write(galleryRoot.resolve("test/private.jpg"), new byte[]{3});
+
+		mvc.perform(get("/page/work/gallery/image/a.jpg")).andExpect(status().isOk());
+		mvc.perform(get("/page/work/gallery/image/leftover.jpg")).andExpect(status().isNotFound()); // not a painting
+		mvc.perform(get("/page/test/gallery/image/private.jpg")).andExpect(status().isNotFound()); // not a page
 	}
 }

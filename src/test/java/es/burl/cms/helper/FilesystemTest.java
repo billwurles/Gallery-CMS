@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
 
+import static es.burl.cms.TestSites.imageBytes;
 import static es.burl.cms.TestSites.page;
 import static es.burl.cms.TestSites.painting;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,18 +29,23 @@ class FilesystemTest {
 	Path galleryRoot;
 
 	private static final byte[] BYTES = {1, 2, 3, 4, 5};
+	private static final byte[] JPEG = imageBytes("jpg");
 
 	private static ImageUploadDTO.ImageData upload(String filename) {
+		return upload(filename, JPEG);
+	}
+
+	private static ImageUploadDTO.ImageData upload(String filename, byte[] bytes) {
 		return new ImageUploadDTO.ImageData("My title", filename, "30x40cm", "Acrylic", true, 0,
-				Base64.getEncoder().encodeToString(BYTES));
+				Base64.getEncoder().encodeToString(bytes));
 	}
 
 	@Test
 	void uploadPaintingWritesDecodedBytesUnderARandomName() throws IOException {
 		Painting painting = Filesystem.uploadPainting(upload("photo.JPG"), 7, "work", galleryRoot);
 
-		assertThat(painting.getFilename()).matches("[0-9a-f-]{36}\\.JPG");
-		assertThat(Files.readAllBytes(galleryRoot.resolve("work").resolve(painting.getFilename()))).isEqualTo(BYTES);
+		assertThat(painting.getFilename()).matches("[0-9a-f-]{36}\\.jpg");
+		assertThat(Files.readAllBytes(galleryRoot.resolve("work").resolve(painting.getFilename()))).isEqualTo(JPEG);
 		assertThat(painting.getTitle()).isEqualTo("My title");
 		assertThat(painting.getDimensions()).isEqualTo("30x40cm");
 		assertThat(painting.getMedium()).isEqualTo("Acrylic");
@@ -201,5 +207,58 @@ class FilesystemTest {
 
 	static void writePng(Path path, int width, int height) throws IOException {
 		ImageIO.write(new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", path.toFile());
+	}
+
+	@Test
+	void theExtensionComesFromTheBytesNotTheName() {
+		assertThat(Filesystem.uploadPainting(upload("photo", JPEG), 0, "work", galleryRoot).getFilename()).endsWith(".jpg");
+		assertThat(Filesystem.uploadPainting(upload("photo.jpg", imageBytes("png")), 0, "work", galleryRoot).getFilename()).endsWith(".png");
+		assertThat(Filesystem.uploadPainting(upload("page.html", JPEG), 0, "work", galleryRoot).getFilename()).endsWith(".jpg");
+	}
+
+	@org.junit.jupiter.params.ParameterizedTest
+	@org.junit.jupiter.params.provider.ValueSource(strings = {
+			"<html><script>alert(1)</script></html>",
+			"<svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(1)\"></svg>",
+			"just some text, not an image at all"})
+	void nonImagesAreRejectedWithTheirName(String content) {
+		org.assertj.core.api.Assertions.assertThatThrownBy(
+						() -> Filesystem.uploadPainting(upload("evil.jpg", content.getBytes()), 0, "work", galleryRoot))
+				.isInstanceOf(UploadedImages.InvalidUploadException.class)
+				.hasMessageContaining("\"evil.jpg\"");
+		assertThat(galleryRoot.resolve("work")).doesNotExist();
+	}
+
+	@Test
+	void aDamagedImageIsRejected() {
+		byte[] truncated = java.util.Arrays.copyOf(JPEG, 12); // a JPEG header and nothing else
+		org.assertj.core.api.Assertions.assertThatThrownBy(() -> Filesystem.uploadPainting(upload("cut.jpg", truncated), 0, "work", galleryRoot))
+				.isInstanceOf(UploadedImages.InvalidUploadException.class)
+				.hasMessageContaining("can't be read");
+	}
+
+	@Test
+	void oneBadFileRejectsTheWholeBatchAndSavesNothing() {
+		Page work = page("Work", "work", 0);
+		ImageUploadDTO dto = new ImageUploadDTO(List.of(upload("good.jpg"), upload("bad.jpg", BYTES)));
+
+		org.assertj.core.api.Assertions.assertThatThrownBy(() -> Filesystem.uploadNewPaintings(dto, work, galleryRoot))
+				.isInstanceOf(UploadedImages.InvalidUploadException.class)
+				.hasMessageContaining("\"bad.jpg\"");
+		assertThat(work.getGallery().getGallery()).isEmpty();
+		assertThat(galleryRoot.resolve("work")).doesNotExist();
+	}
+
+	@Test
+	void webpIsAcceptedByItsHeader() {
+		byte[] webp = "RIFF\0\0\0\0WEBPVP8 rest-of-file".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
+		assertThat(Filesystem.uploadPainting(upload("a.webp", webp), 0, "work", galleryRoot).getFilename()).endsWith(".webp");
+	}
+
+	@Test
+	void imagesOutsideTheGalleryAreNotServed() throws IOException {
+		Files.write(galleryRoot.resolveSibling("secret.txt"), BYTES);
+		assertThat(Filesystem.getImageFromPainting("secret.txt", "..", galleryRoot).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+		assertThat(Filesystem.getImageFromPainting("../secret.txt", "", galleryRoot).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 	}
 }

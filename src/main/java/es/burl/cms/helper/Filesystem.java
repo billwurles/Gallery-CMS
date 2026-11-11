@@ -26,33 +26,40 @@ public class Filesystem {
 
 	//TODO: Move all my filesystem crap into here
 
+	/**
+	 * Saves a batch of uploaded paintings to a page's gallery. Every file is checked first, so one that
+	 * isn't an image rejects the whole batch (an {@link UploadedImages.InvalidUploadException}) and saves nothing.
+	 */
 	public static boolean uploadNewPaintings(ImageUploadDTO imageUploadDTO, Page page, Path galleryRoot){
-		log.debug("Got imageDTO: {}", imageUploadDTO.toString());
+		log.debug("Uploading {} image(s) to {}", imageUploadDTO.getImages().size(), page.getUrl());
+		for (ImageUploadDTO.ImageData newImage : imageUploadDTO.getImages()) {
+			UploadedImages.extensionOf(UploadedImages.decode(newImage.getImageData(), newImage.getFilename()), newImage.getFilename());
+		}
 
-		// Iterate over the images and metadata
 		int order = page.getGallery().getGallery().size();
 		for (ImageUploadDTO.ImageData newImage : imageUploadDTO.getImages()) {
-			page.addPaintingToGallery(uploadPainting(newImage, order++, page.getUrl(), galleryRoot));
+			Painting painting = uploadPainting(newImage, order++, page.getUrl(), galleryRoot);
+			if (painting == null) return false;
+			page.addPaintingToGallery(painting);
 		}
 		return true;
 	}
 
+	/**
+	 * Saves one uploaded image under a random name with the extension of what its bytes really are.
+	 * Throws {@link UploadedImages.InvalidUploadException} if it isn't an image; returns null if writing fails.
+	 */
 	public static Painting uploadPainting(ImageUploadDTO.ImageData newImage, int order, String url, Path galleryRoot) {
-		String imageData = newImage.getImageData();
-		byte[] imageBytes = Base64.getDecoder().decode(imageData); // Decode base64 image
-
-		String extension = newImage.getFilename().substring(newImage.getFilename().lastIndexOf("."));
+		byte[] imageBytes = UploadedImages.decode(newImage.getImageData(), newImage.getFilename());
+		String extension = UploadedImages.extensionOf(imageBytes, newImage.getFilename());
 		String filename = UUID.randomUUID() + extension;
-		// Construct the file path and save the image
 
 		Path uploadPath = (url.equals("") ? galleryRoot : galleryRoot.resolve(url)).resolve(filename);
 		try {
 			Files.createDirectories(uploadPath.getParent());
-			Files.write(uploadPath, imageBytes);  // Save the image file
+			Files.write(uploadPath, imageBytes);
 
-			// Create a Painting object and update gallery
 			Painting painting = Painting.builder().title(newImage.getTitle()).filename(filename).dimensions(newImage.getDimensions()).medium(newImage.getMedium()).sold(newImage.isSold()).order(order).build();
-
 			log.debug("Creating new Painting object: {}", painting);
 			return painting;
 		} catch (IOException e) {
@@ -73,8 +80,12 @@ public class Filesystem {
 	public static ResponseEntity<Resource> getImageFromPainting(String filename, String url, Path galleryRoot) {
 		try {
 			log.debug("trying to get image {}", filename);
-			// Construct the path to the image
-			Path imagePath = galleryRoot.resolve(url).resolve(filename);
+			Path root = galleryRoot.toAbsolutePath().normalize();
+			Path imagePath = root.resolve(url).resolve(filename).normalize();
+			if (!imagePath.startsWith(root) || filename.contains("/") || filename.contains("\\")) {
+				log.warn("Refusing image request outside the gallery: {}/{}", url, filename);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+			}
 			String mimeType = Files.probeContentType(imagePath);
 			Resource resource = new UrlResource(imagePath.toUri());
 

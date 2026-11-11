@@ -127,4 +127,17 @@ class ExhibitionControllerTest {
 		assertThat(site.getExhibitionRepo().get("renamed").getTitle()).isEqualTo("Renamed");
 		assertThat(site.getExhibitionRepo().getExhibitions()).hasSize(before);
 	}
+
+	@Test
+	void anUnsafeExhibitionAddressIsRefused() throws Exception {
+		int before = site.getExhibitionRepo().getExhibitions().size();
+		String json = "{\"url\":\"../../escape\",\"title\":\"X\",\"date\":\"2024-05-01T10:00\",\"content\":\"\"}";
+
+		mvc.perform(post("/exhibitions/new/save").contentType(MediaType.APPLICATION_JSON).content(json))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("lowercase letters")));
+
+		assertThat(site.getExhibitionRepo().getExhibitions()).hasSize(before);
+		verifyNoInteractions(backup);
+	}
 }

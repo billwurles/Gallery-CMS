@@ -9,6 +9,18 @@ public final class TestSites {
 
 	private TestSites() {}
 
+	/** A real (tiny) image file's bytes, for upload tests: "jpg" or "png". */
+	public static byte[] imageBytes(String format) {
+		try {
+			java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(4, 3, java.awt.image.BufferedImage.TYPE_INT_RGB);
+			java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+			javax.imageio.ImageIO.write(img, format, out);
+			return out.toByteArray();
+		} catch (java.io.IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
 	public static MenuItem menuItem(String title, String url, int order) {
 		return MenuItem.builder().title(title).url(url).order(order).build();
 	}

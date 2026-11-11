@@ -375,4 +375,18 @@ class ThymeleafSiteBuilderTest {
 		String work = read("work/index.html");
 		assertThat(work).contains("src=\"images/thumbs/a.jpg\"", "data-src=\"images/a.jpg\"");
 	}
+
+	@Test
+	void aPageAddressLeadingOutsideTheSiteFailsThePublish() throws IOException {
+		builder.buildSite(site);
+		String before = read("about/index.html");
+		// can't be made in the editor any more, but an old or hand-edited backup could hold one
+		site.addNewPage(page("Escape", "../escaped", 9));
+
+		org.assertj.core.api.Assertions.assertThatThrownBy(() -> builder.buildSite(site))
+				.isInstanceOf(IOException.class).hasMessageContaining("../escaped");
+
+		assertThat(tmp.resolve("escaped")).doesNotExist();
+		assertThat(read("about/index.html")).isEqualTo(before);
+	}
 }
