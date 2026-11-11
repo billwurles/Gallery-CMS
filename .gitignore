@@ -8,4 +8,3 @@
 /src/main/resources/templates/VueJS-ToConvert/
 /appdata/old_stuff/
 *.DS_Store
-target/classes/es/burl/cms/ContentManagerApp.class
