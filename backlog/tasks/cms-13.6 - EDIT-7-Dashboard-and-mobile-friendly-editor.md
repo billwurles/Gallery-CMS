@@ -4,7 +4,7 @@ title: 'EDIT-7: Dashboard and mobile-friendly editor'
 status: Done
 assignee: []
 created_date: '2026-11-09T16:11:00Z'
-updated_date: '2026-11-11T11:11:00Z'
+updated_date: '2026-11-11T11:19:00Z'
 labels:
   - editor
   - ui
@@ -26,7 +26,7 @@ artist can mark a painting sold or upload from their phone.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The dashboard shows the home image, the pages in menu order (drag to reorder with SortableJS), the latest exhibitions and the publish status
+- [x] #1 The dashboard shows the home image, the pages in menu order (drag to reorder with SortableJS), the latest exhibitions and the publish status
 - [x] #2 Every editor page works on a phone and a tablet with no sideways scrolling
 - [x] #3 A painting can be marked sold, and images uploaded, from a phone
 <!-- AC:END -->
@@ -41,4 +41,15 @@ Checked with Playwright on iPhone 13, iPad (gen 7) and desktop for home, gallery
 Commits:
 - `80db9b2` EDIT-4: gallery editor save bar, drag handles and image sizes (2026-11-11)
 - `3e690c3` EDIT-7: dashboard exhibitions, touch reordering and a phone layout (2026-11-11)
+
+2026-11-11: EDIT-3 (`006c91a`) puts the publish status (unpublished changes, last published) and the Preview link in the sidebar of every page, the dashboard included, which covers criterion 1.
+
+Commits:
+- `006c91a` EDIT-3: publish status and a preview of the draft site (2026-11-11)
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The dashboard shows the home image, the pages in menu order (drag to reorder, touch too), the latest exhibitions and the publish status. Every editor page works on a phone and tablet, so paintings can be marked sold or uploaded from a phone.
+<!-- SECTION:FINAL_SUMMARY:END -->
