@@ -1,10 +1,10 @@
 ---
 id: CMS-23.5
 title: 'BACKUP-6: Review the image cleanup dry run, then switch it on'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-10T01:24:00Z'
-updated_date: '2026-11-10T12:33:00Z'
+updated_date: '2026-11-12T15:17:00Z'
 labels:
   - data
   - backup
@@ -34,7 +34,7 @@ Rehearsal on a copy of the live appdata (2026-11-10):
 <!-- AC:BEGIN -->
 - [x] #1 The dry-run log from the deployed app has been reviewed
 - [x] #2 backup.gc.dry-run is false in the deployed app
-- [ ] #3 The 91 never-archived orphan files are either deleted or accounted for
+- [x] #3 The 91 never-archived orphan files are either deleted or accounted for
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -45,4 +45,17 @@ Rehearsal on a copy of the live appdata (2026-11-10):
 `backup.gc.dry-run=false` is committed in application.properties (`c511ec8`) and takes effect on the next deploy. The 90 files go on the first save or publish after that. Still to do: confirm it after the deploy, and decide on the 91 never-archived orphans.
 
 2026-11-10: confirmed after the deploy: none of the 90 files on the dry-run list is still in the gallery, and the 12:29 publish logged "91 gallery files aren't used by the site or any backup and were never archived; left in place" (most are under gallery/test/). Only criterion 3 remains, and it needs Will's decision.
+
+2026-11-12: Will asked for the 91 never-archived orphans to be deleted. They were all of gallery/wales (53), gallery/new-work (20) and gallery/test (18, including a passport photo), 87 MB; none is a current page. I took the list from the editor's own cleanup log lines and checked that every file existed, no backup JSON named any of them, and each folder held only listed files. Then I deleted them and the three empty folders in the cms container (/appdata/cms/gallery); the gallery is 33 MB now, and the editor and site answer as before. ~/send.zip still holds copies (left as Will's original export). The prod server follow-up is CMS-29.
+
+Commits:
+- `c511ec8` BACKUP-6: switch the image cleanup on (2026-11-10)
+- `a42dc35` Backlog: BUG-8 done, BACKUP-6 cleanup confirmed, image sizes on SITE-2 (2026-11-10)
+(The 91 files were deleted on the server by hand, not by a commit.)
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The image cleanup is switched on and has run: the 90 duplicate files went automatically, and the 91 never-archived leftovers were deleted by hand at Will's request. The same clean-up on the prod server is tracked in CMS-29.
+<!-- SECTION:FINAL_SUMMARY:END -->
