@@ -91,6 +91,7 @@ a { color: var(--accent); }
 .pages .nav-new:hover, .new-row:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-tint); }
 .nav-label { display: none; }
 .sidebar-actions { flex: none; }
+.sidebar-actions .btn-preview { margin-bottom: 6px; }
 .menu-toggle, .menu-button { display: none; }
 .btn-published { background: var(--surface); color: var(--text); }
 .publish-status { margin: 8px 2px 0; font-size: 12px; line-height: 1.5; color: var(--bar-muted); }
