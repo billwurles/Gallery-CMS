@@ -94,6 +94,10 @@ a { color: var(--accent); }
 .sidebar-actions .btn-preview { margin-bottom: 6px; }
 .menu-toggle, .menu-button { display: none; }
 .btn-published { background: var(--surface); color: var(--text); }
+.btn-versions { display: flex; width: 100%; margin-top: 18px; background: #f5c518; border-color: #d9a90f; color: #1d2530; }
+.btn-versions:hover { background: #e6b400; border-color: #c49500; }
+.btn-versions.active { box-shadow: inset 0 0 0 2px #1d2530; }
+@media (max-width: 860px) { .btn-versions { width: auto; margin-top: 0; } }
 .publish-status { margin: 8px 2px 0; font-size: 12px; line-height: 1.5; color: var(--bar-muted); }
 .publish-status .published-at { display: block; }
 .dot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }

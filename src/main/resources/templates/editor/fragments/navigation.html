@@ -38,7 +38,7 @@
             <span class="published-at" th:if="${publishStatus.lastPublished != null}">Published
                 <time th:attr="datetime=${publishStatus.lastPublished}"></time></span>
         </p>
-        <a class="preview-link" th:href="@{/backups}" th:classappend="${currentPage == 'backups'} ? 'active'">Versions</a>
+        <a class="btn btn-versions" th:href="@{/backups}" th:classappend="${currentPage == 'backups'} ? 'active'">Previous Versions</a>
     </div>
 </header>
 </html>
