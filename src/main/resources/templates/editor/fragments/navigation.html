@@ -23,7 +23,7 @@
     <div class="sidebar-actions">
         <a class="btn btn-preview" th:href="@{/preview}" target="_blank" rel="noopener">Preview site</a>
         <!-- Publish stands out only when the draft differs from the live site -->
-        <button type="button" class="btn" th:classappend="${publishStatus == null or publishStatus.changed} ? 'btn-publish' : 'btn-published'"
+        <button type="button" id="publish-button" class="btn" th:classappend="${publishStatus == null or publishStatus.changed} ? 'btn-publish' : 'btn-published'"
                 th:data-url="@{/save}" onclick="confirmSave(this)">
             Publish site
         </button>

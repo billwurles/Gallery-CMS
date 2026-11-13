@@ -46,7 +46,7 @@ function showTimes() {
 /** After a change is saved without a page load: the live site is now behind the draft. */
 function markUnpublished() {
     const status = document.querySelector(".publish-status");
-    const button = document.querySelector(".sidebar-actions .btn");
+    const button = document.getElementById("publish-button");
     if (button) { button.classList.add("btn-publish"); button.classList.remove("btn-published"); }
     if (!status) return;
     const published = status.querySelector(".published-at");
@@ -58,7 +58,7 @@ function markUnpublished() {
 /** After a publish: the live site matches the draft. */
 function markPublished() {
     const status = document.querySelector(".publish-status");
-    const button = document.querySelector(".sidebar-actions .btn");
+    const button = document.getElementById("publish-button");
     if (button) { button.classList.remove("btn-publish"); button.classList.add("btn-published"); }
     if (!status) return;
     status.innerHTML = '<span class="dot dot-live"></span>Live site is up to date <span class="published-at">Published <time datetime="'
