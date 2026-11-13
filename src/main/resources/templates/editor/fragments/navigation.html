@@ -21,6 +21,7 @@
     </nav>
 
     <div class="sidebar-actions">
+        <a class="btn btn-preview" th:href="@{/preview}" target="_blank" rel="noopener">Preview site</a>
         <!-- Publish stands out only when the draft differs from the live site -->
         <button type="button" class="btn" th:classappend="${publishStatus == null or publishStatus.changed} ? 'btn-publish' : 'btn-published'"
                 th:data-url="@{/save}" onclick="confirmSave(this)">
@@ -37,7 +38,6 @@
             <span class="published-at" th:if="${publishStatus.lastPublished != null}">Published
                 <time th:attr="datetime=${publishStatus.lastPublished}"></time></span>
         </p>
-        <a class="preview-link" th:href="@{/preview}" target="_blank" rel="noopener">Preview unpublished site</a>
         <a class="preview-link" th:href="@{/backups}" th:classappend="${currentPage == 'backups'} ? 'active'">Versions</a>
     </div>
 </header>
